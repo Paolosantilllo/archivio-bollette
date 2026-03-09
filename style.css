@@ -331,3 +331,132 @@ main {
   font-size: 24px;
   flex-shrink: 0;
 }
+#deadlineEditor {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+}
+
+#deadlineEditor.hidden {
+  display: none;
+}
+
+#deadlineEditorBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#deadlineEditorPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #f2f2f7;
+  border-radius: 18px;
+  padding: 16px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.deadlineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.deadlineHeader h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#closeDeadlineEditorBtn {
+  border: none;
+  background: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.deadlineForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.deadlineForm label {
+  font-size: 14px;
+  color: #555;
+  margin-top: 6px;
+}
+
+.deadlineForm input,
+.deadlineForm select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  background: white;
+}
+
+#deadlineListBox {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.deadlineItem {
+  padding: 12px 14px;
+  border-bottom: 1px solid #ececec;
+  font-size: 14px;
+}
+
+.deadlineItem:last-child {
+  border-bottom: none;
+}
+
+.deadlineEmpty {
+  padding: 14px;
+  color: #777;
+  font-size: 14px;
+}
+
+.deadlineButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.dangerBtn {
+  width: 100%;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  background: #007aff;
+  color: white;
+}
+
+.secondaryBtn {
+  background: white;
+  color: #111;
+}
+
+.dangerBtn {
+  background: #ff3b30;
+  color: white;
+}
