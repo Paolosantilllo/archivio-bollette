@@ -590,5 +590,25 @@ actionSheetBackdrop.onclick = closeActionSheet;
 closePdfBtn.onclick = closePdfViewer;
 
 /* -------------------- AVVIO -------------------- */
+data = [
+  {
+    name: "CASA",
+    sub: [],
+    files: [],
+    deadlines: [
+      {
+        label: "Gennaio 2026",
+        dueDate: "2026-01-10",
+        requiredText: "2026-01"
+      },
+      {
+        label: "Febbraio 2026",
+        dueDate: "2026-02-10",
+        requiredText: "2026-02"
+      }
+    ]
+  }
+];
 
+save();
 render();
