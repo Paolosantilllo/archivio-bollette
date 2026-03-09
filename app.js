@@ -34,19 +34,10 @@ li.className="folder";
 li.innerHTML="📁 "+item.name;
 
 li.onclick=function(){
-
-if(currentFolder === null){
 currentFolder=i;
-}else{
-alert("Qui inseriremo i PDF");
-}
-
 render();
-
 }
-
 list.appendChild(li);
-
 });
 
 }
