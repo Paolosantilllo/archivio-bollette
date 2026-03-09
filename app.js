@@ -108,7 +108,8 @@ addBtn.onclick = function () {
 
   items.push({
     name: name.trim(),
-    sub: []
+    sub: [],
+    files: []
   });
 
   save();
