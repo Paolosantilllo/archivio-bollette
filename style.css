@@ -1,127 +1,43 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f2f2f7;
-  margin: 0;
-  color: #111;
-}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-header {
-  background: white;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
+  <title>Archivio Bollette</title>
 
-h1 {
-  margin: 0;
-  font-size: 28px;
-}
+  <link rel="manifest" href="manifest.json">
 
-#search {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #eee;
-  font-size: 16px;
-  box-sizing: border-box;
-}
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Bollette">
 
-main {
-  padding: 10px 0 100px 0;
-}
+  <link rel="stylesheet" href="style.css">
+</head>
 
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 15px 10px 15px;
-}
+<body>
+  <header>
+    <h1>Archivio</h1>
+    <input type="text" id="search" placeholder="🔍 Cerca documento o cartella">
+  </header>
 
-#backBtn {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
-}
+  <main>
+    <div class="topbar">
+      <button id="backBtn">⬅️ Indietro</button>
+      <div id="path">Home</div>
+    </div>
 
-#path {
-  font-size: 14px;
-  color: #666;
-  word-break: break-word;
-}
+    <ul id="folders"></ul>
+  </main>
 
-#folders {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
+  <div class="floatingButtons">
+    <button id="addYear" title="Aggiungi anno">🗓️</button>
+    <button id="addFile" title="Aggiungi documento">📄</button>
+    <button id="addFolder" title="Aggiungi cartella">＋</button>
+  </div>
 
-.folder,
-.fileItem {
-  background: white;
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
+  <input type="file" id="fileInput" accept=".pdf,image/*" hidden>
 
-.folderName,
-.fileName {
-  flex: 1;
-  cursor: pointer;
-  word-break: break-word;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.actions button {
-  border: none;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 14px;
-  cursor: pointer;
-  background: #e9e9ee;
-}
-
-.floatingButtons {
-  position: fixed;
-  right: 20px;
-  bottom: 25px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-#addFolder,
-#addFile {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: none;
-  color: white;
-  font-size: 28px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-#addFolder {
-  background: #007aff;
-}
-
-#addFile {
-  background: #34c759;
-}
+  <script src="app.js"></script>
+</body>
+</html>
