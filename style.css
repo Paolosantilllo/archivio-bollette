@@ -128,7 +128,14 @@ main {
   background: #ff9500;
 }
 
-/* menu azioni */
+/* utility */
+
+.hidden {
+  display: none !important;
+}
+
+/* action sheet */
+
 #actionSheet {
   position: fixed;
   inset: 0;
@@ -183,9 +190,8 @@ main {
   border-radius: 18px;
   font-weight: 600;
 }
-.hidden {
-  display: none !important;
-}
+
+/* pdf viewer */
 
 #pdfViewer {
   position: fixed;
@@ -231,6 +237,9 @@ main {
   border: none;
   background: #f2f2f7;
 }
+
+/* nuova cartella */
+
 #iconPicker {
   position: fixed;
   inset: 0;
@@ -321,6 +330,8 @@ main {
   cursor: pointer;
 }
 
+/* eventuale layout nome cartella */
+
 .folderLabel {
   display: flex;
   align-items: center;
@@ -331,6 +342,9 @@ main {
   font-size: 24px;
   flex-shrink: 0;
 }
+
+/* editor scadenze */
+
 #deadlineEditor {
   position: fixed;
   inset: 0;
