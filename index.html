@@ -38,6 +38,21 @@
 
   <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
 
+    <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
+
+  <div id="actionSheet">
+    <div id="actionSheetBackdrop"></div>
+
+    <div id="actionSheetPanel">
+      <button id="renameActionBtn" class="actionBtn">Rinomina</button>
+      <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
+
+      <div class="cancelWrap">
+        <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
