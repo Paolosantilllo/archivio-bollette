@@ -1,29 +1,76 @@
-="57028"}
-let folders = JSON.parse(localStorage.getItem("folders")) || [];
+}
+let data = JSON.parse(localStorage.getItem("archivio")) || [];
+
+let currentFolder = null;
 
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 
+function save(){
+localStorage.setItem("archivio", JSON.stringify(data));
+}
+
 function render(){
+
 list.innerHTML="";
 
-folders.forEach((f,i)=>{
+let items;
+
+if(currentFolder === null){
+items = data;
+}else{
+items = data[currentFolder].sub;
+}
+
+items.forEach((item,i)=>{
+
 let li=document.createElement("li");
 li.className="folder";
-li.innerText="📁 "+f;
+
+li.innerHTML="📁 "+item.name;
+
+li.onclick=function(){
+
+if(currentFolder === null){
+currentFolder=i;
+}else{
+alert("Qui inseriremo i PDF");
+}
+
+render();
+
+}
+
 list.appendChild(li);
+
 });
 
-localStorage.setItem("folders",JSON.stringify(folders));
 }
 
 addBtn.onclick=function(){
 
 let name=prompt("Nome cartella");
 
-if(name){
-folders.push(name);
-render();
-}
+if(!name) return;
+
+if(currentFolder === null){
+
+data.push({
+name:name,
+sub:[]
+});
+
+}else{
+
+data[currentFolder].sub.push({
+name:name
+});
 
 }
+
+save();
+render();
+
+}
+
+render()
