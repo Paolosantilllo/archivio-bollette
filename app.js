@@ -1,3 +1,4 @@
+alert("app caricata");
 }
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
 
