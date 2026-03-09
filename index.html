@@ -1,128 +1,43 @@
-alert("app caricata");
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-let data = JSON.parse(localStorage.getItem("archivio")) || [];
-let currentPath = [];
+  <title>Archivio Bollette</title>
 
-const list = document.getElementById("folders");
-const addBtn = document.getElementById("addFolder");
-const backBtn = document.getElementById("backBtn");
-const pathBox = document.getElementById("path");
-const searchInput = document.getElementById("search");
+  <link rel="manifest" href="manifest.json">
 
-function save() {
-  localStorage.setItem("archivio", JSON.stringify(data));
-}
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Bollette">
 
-function getCurrentLevel() {
-  let level = data;
+  <link rel="stylesheet" href="style.css">
+</head>
 
-  for (let i = 0; i < currentPath.length; i++) {
-    level = level[currentPath[i]].sub;
-  }
+<body>
+  <header>
+    <h1>Archivio</h1>
+    <input type="text" id="search" placeholder="🔍 Cerca documento o cartella">
+  </header>
 
-  return level;
-}
+  <main>
+    <div class="topbar">
+      <button id="backBtn">⬅️ Indietro</button>
+      <div id="path">Home</div>
+    </div>
 
-function getPathNames() {
-  let names = ["Home"];
-  let level = data;
+    <ul id="folders"></ul>
+  </main>
 
-  for (let i = 0; i < currentPath.length; i++) {
-    let folder = level[currentPath[i]];
-    names.push(folder.name);
-    level = folder.sub;
-  }
+  <div class="floatingButtons">
+    <button id="addYear" title="Aggiungi anno">🗓️</button>
+    <button id="addFile" title="Aggiungi documento">📄</button>
+    <button id="addFolder" title="Aggiungi cartella">＋</button>
+  </div>
 
-  return names.join(" / ");
-}
+  <input type="file" id="fileInput" accept=".pdf,image/*" hidden>
 
-function render() {
-  backBtn.style.display = currentPath.length === 0 ? "none" : "inline-block";
-  pathBox.textContent = getPathNames();
-  list.innerHTML = "";
-
-  let items = getCurrentLevel();
-  let searchText = searchInput.value.toLowerCase().trim();
-
-  items.forEach((item, i) => {
-    if (searchText && !item.name.toLowerCase().includes(searchText)) {
-      return;
-    }
-
-    let li = document.createElement("li");
-    li.className = "folder";
-
-    let nameSpan = document.createElement("span");
-    nameSpan.className = "folderName";
-    nameSpan.textContent = "📁 " + item.name;
-
-    nameSpan.onclick = function () {
-      currentPath.push(i);
-      render();
-    };
-
-    let actions = document.createElement("div");
-    actions.className = "actions";
-
-    let renameBtn = document.createElement("button");
-    renameBtn.textContent = "Rinomina";
-    renameBtn.onclick = function (e) {
-      e.stopPropagation();
-
-      let newName = prompt("Nuovo nome cartella", item.name);
-      if (!newName) return;
-
-      item.name = newName.trim();
-      save();
-      render();
-    };
-
-    let deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Elimina";
-    deleteBtn.onclick = function (e) {
-      e.stopPropagation();
-
-      let ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
-      if (!ok) return;
-
-      items.splice(i, 1);
-      save();
-      render();
-    };
-
-    actions.appendChild(renameBtn);
-    actions.appendChild(deleteBtn);
-
-    li.appendChild(nameSpan);
-    li.appendChild(actions);
-
-    list.appendChild(li);
-  });
-}
-
-addBtn.onclick = function () {
-  let name = prompt("Nome cartella");
-  if (!name) return;
-
-  let items = getCurrentLevel();
-
-  items.push({
-    name: name.trim(),
-    sub: [],
-    files: []
-  });
-
-  save();
-  render();
-};
-
-backBtn.onclick = function () {
-  currentPath.pop();
-  render();
-};
-
-searchInput.addEventListener("input", render);
-
-render();
+  <script src="app.js"></script>
 </body>
 </html>
