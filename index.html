@@ -1,120 +1,152 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Archivio Bollette</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="manifest" href="manifest.json">
+<title>Archivio Bollette</title>
 
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Bollette">
+<link rel="manifest" href="manifest.json">
 
-  <link rel="stylesheet" href="style.css">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bollette">
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
-  <header>
-    <h1>Archivio</h1>
-    <input type="text" id="search" placeholder="🔍 Cerca documento o cartella">
-  </header>
 
-  <main>
-    <div class="topbar">
-      <button id="backBtn">⬅️ Indietro</button>
-      <div id="path">Home</div>
-    </div>
+<header>
+<h1>Archivio</h1>
+<input type="text" id="search" placeholder="🔍 Cerca documento">
+</header>
 
-    <ul id="folders"></ul>
-  </main>
+<main>
 
-  <div class="floatingButtons">
-    <button id="addYear" title="Aggiungi anno">🗓️</button>
-    <button id="addFile" title="Aggiungi documento">📄</button>
-    <button id="addFolder" title="Aggiungi cartella">＋</button>
-  </div>
+<div class="topbar">
+<button id="backBtn">⬅️</button>
+<div id="path"></div>
+</div>
 
-  <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
+<ul id="folders"></ul>
 
-    <input type="file" id="fileInput" accept=".pdf,application/pdf" hidden>
+</main>
 
-  <div id="actionSheet">
-    <div id="actionSheetBackdrop"></div>
+<div class="floatingButtons">
 
-    <div id="actionSheetPanel">
-  <button id="editActionBtn" class="actionBtn">Modifica</button>
+<button id="addFolder">＋</button>
+
+<button id="addFile">📄</button>
+
+<button id="addYear">🗓️</button>
+
+</div>
+
+<input type="file" id="fileInput" accept="application/pdf" hidden>
+
+<!-- action sheet -->
+
+<div id="actionSheet">
+
+<div id="actionSheetBackdrop"></div>
+
+<div id="actionSheetPanel">
+
+<button id="editActionBtn" class="actionBtn">Modifica</button>
+
 <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
-  <div class="cancelWrap">
-    <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
-  </div>
+
+<div class="cancelWrap">
+<button id="cancelActionBtn" class="cancelBtn">Annulla</button>
 </div>
-  </div>
 
-  <div id="pdfViewer" class="hidden">
-  <div id="pdfViewerHeader">
-    <button id="closePdfBtn">Chiudi</button>
-    <span id="pdfTitle">PDF</span>
-  </div>
-  <iframe id="pdfFrame"></iframe>
 </div>
-  <div id="iconPicker" class="hidden">
-  <div id="iconPickerBackdrop"></div>
 
-  <div id="iconPickerPanel">
-    <div class="iconPickerHeader">
-      <h3>Nuova cartella</h3>
-      <button id="closeIconPickerBtn">✕</button>
-    </div>
-
-    <input type="text" id="newFolderName" placeholder="Nome cartella">
-
-
-    <button id="createFolderConfirmBtn">Crea cartella</button>
-  </div>
 </div>
- <div id="deadlineEditor" class="hidden">
-  <div id="deadlineEditorBackdrop"></div>
 
-  <div id="deadlineEditorPanel">
-    <div class="deadlineHeader">
-      <h3>Scadenze</h3>
-      <button id="closeDeadlineEditorBtn">✕</button>
-    </div>
+<!-- viewer pdf -->
 
-    <div class="deadlineForm">
-  <label>Nome cartella</label>
-  <input type="text" id="deadlineFolderNameInput" placeholder="Es. Internet">
+<div id="pdfViewer" class="hidden">
 
-  <label>Nome scadenza</label>
-  <input type="text" id="deadlineLabelInput" placeholder="Es. Internet">
-      <label>Prima scadenza</label>
-      <input type="date" id="deadlineFirstDateInput">
+<div id="pdfViewerHeader">
 
-      <label>Ripetizione</label>
-      <select id="deadlineIntervalSelect">
-        <option value="1">Ogni 1 mese</option>
-        <option value="2">Ogni 2 mesi</option>
-        <option value="3">Ogni 3 mesi</option>
-        <option value="4">Ogni 4 mesi</option>
-        <option value="6">Ogni 6 mesi</option>
-        <option value="12">Ogni 12 mesi</option>
-      </select>
+<button id="closePdfBtn">Chiudi</button>
 
-      <label>Prefisso PDF</label>
-      <input type="text" id="deadlinePrefixInput" placeholder="Es. internet">
-    </div>
+<div id="pdfTitle">PDF</div>
 
-    <div id="deadlineListBox"></div>
-
-    <div class="deadlineButtons">
-      <button id="saveDeadlineBtn" class="primaryBtn">Salva scadenza</button>
-      <button id="replaceDeadlinesBtn" class="secondaryBtn">Sostituisci tutte</button>
-      <button id="clearDeadlinesBtn" class="dangerBtn">Elimina scadenze</button>
-    </div>
-  </div>
 </div>
-  <script src="app.js"></script>
+
+<iframe id="pdfFrame"></iframe>
+
+</div>
+
+<!-- editor scadenze -->
+
+<div id="deadlineEditor" class="hidden">
+
+<div id="deadlineEditorBackdrop"></div>
+
+<div id="deadlineEditorPanel">
+
+<div class="deadlineHeader">
+
+<h3>Modifica cartella</h3>
+
+<button id="closeDeadlineEditorBtn">✕</button>
+
+</div>
+
+<div class="deadlineForm">
+
+<label>Nome cartella</label>
+<input type="text" id="deadlineFolderNameInput">
+
+<label>Nome scadenza</label>
+<input type="text" id="deadlineLabelInput">
+
+<label>Prima scadenza</label>
+<input type="date" id="deadlineFirstDateInput">
+
+<label>Ripetizione</label>
+
+<select id="deadlineIntervalSelect">
+<option value="1">Ogni 1 mese</option>
+<option value="2">Ogni 2 mesi</option>
+<option value="3">Ogni 3 mesi</option>
+<option value="4">Ogni 4 mesi</option>
+<option value="6">Ogni 6 mesi</option>
+<option value="12">Ogni 12 mesi</option>
+</select>
+
+<label>Prefisso PDF</label>
+<input type="text" id="deadlinePrefixInput">
+
+</div>
+
+<div id="deadlineListBox"></div>
+
+<div class="deadlineButtons">
+
+<button id="saveDeadlineBtn" class="primaryBtn">Salva</button>
+
+<button id="replaceDeadlinesBtn" class="secondaryBtn">
+Sostituisci scadenza
+</button>
+
+<button id="clearDeadlinesBtn" class="dangerBtn">
+Elimina scadenze
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+
 </body>
 </html>
