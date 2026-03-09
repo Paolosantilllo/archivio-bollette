@@ -231,3 +231,103 @@ main {
   border: none;
   background: #f2f2f7;
 }
+#iconPicker {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+}
+
+#iconPicker.hidden {
+  display: none;
+}
+
+#iconPickerBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#iconPickerPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  background: #f2f2f7;
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.iconPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.iconPickerHeader h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#closeIconPickerBtn {
+  border: none;
+  background: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#newFolderName {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  margin-bottom: 14px;
+  background: white;
+}
+
+#iconGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.iconChoice {
+  border: none;
+  background: white;
+  border-radius: 16px;
+  height: 62px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.iconChoice.selected {
+  outline: 3px solid #007aff;
+}
+
+#createFolderConfirmBtn {
+  width: 100%;
+  border: none;
+  background: #007aff;
+  color: white;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.folderLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.folderEmoji {
+  font-size: 24px;
+  flex-shrink: 0;
+}
