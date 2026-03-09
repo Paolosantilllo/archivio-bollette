@@ -212,7 +212,7 @@ function createFolder(name, icon = "📁") {
   render();
 }
 
-/* -------------------- DATE / SCADENZE -------------------- */
+/* -------------------- UTILITA TESTO E DATE -------------------- */
 
 function normalizeText(text) {
   return (text || "")
@@ -229,24 +229,51 @@ function formatYearMonth(date) {
   return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
 }
 
+function formatDateIT(date) {
+  return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+function parseItalianDate(dateString) {
+  if (!dateString) return null;
+
+  const parts = dateString.split("/");
+  if (parts.length !== 3) return null;
+
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+
+  if (!day || !month || !year) return null;
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+
+  const date = new Date(year, month - 1, day);
+
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 function addMonths(date, months) {
   const d = new Date(date);
-  const day = d.getDate();
+  const originalDay = d.getDate();
 
   d.setMonth(d.getMonth() + months);
 
-  if (d.getDate() < day) {
+  if (d.getDate() < originalDay) {
     d.setDate(0);
   }
 
   return d;
 }
 
-function buildDueDate(year, month, day) {
-  const lastDay = new Date(year, month, 0).getDate();
-  const safeDay = Math.min(day, lastDay);
-  return new Date(year, month - 1, safeDay);
-}
+/* -------------------- CONTROLLO PDF / SCADENZE -------------------- */
 
 function hasRequiredPdf(folder, requiredText) {
   ensureFolderStructure(folder);
@@ -276,19 +303,21 @@ function getDeadlineOccurrences(deadline) {
   const result = [];
 
   if (!deadline) return result;
-  if (!deadline.startYear || !deadline.startMonth || !deadline.dueDay) return result;
+  if (!deadline.firstDueDate) return result;
   if (!deadline.intervalMonths || deadline.intervalMonths < 1) return result;
 
   const today = new Date();
-  const startDate = buildDueDate(deadline.startYear, deadline.startMonth, deadline.dueDay);
+  const firstDate = parseItalianDate(deadline.firstDueDate);
 
-  let current = new Date(startDate);
+  if (!firstDate) return result;
+
+  let current = new Date(firstDate);
 
   while (current <= today) {
     result.push({
       dueDate: new Date(current),
       requiredText: `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`,
-      label: `${deadline.label || "Scadenza"} ${formatYearMonth(current)}`
+      label: `${deadline.label || "Scadenza"} ${formatDateIT(current)}`
     });
 
     current = addMonths(current, deadline.intervalMonths);
@@ -405,81 +434,140 @@ async function openFile(file) {
 
 /* -------------------- GESTIONE SCADENZE -------------------- */
 
-function configureDeadlinesForFolder(folder) {
+function addDeadlineRuleToFolder(folder) {
   ensureFolderStructure(folder);
 
-  const ruleName = prompt("Nome scadenza", folder.name);
+  const ruleName = prompt(
+    "Nome scadenza (es. Internet, Bollo, Acqua, Telepass)",
+    folder.name
+  );
   if (!ruleName || !ruleName.trim()) return;
 
-  let type = prompt("Tipo scadenza: mensile / annuale / personalizzata", "mensile");
-  if (!type || !type.trim()) return;
+  let firstDueDate = prompt(
+    "Inserisci la prima scadenza nel formato GG/MM/AAAA",
+    "05/01/2026"
+  );
+  if (!firstDueDate || !firstDueDate.trim()) return;
 
-  type = type.trim().toLowerCase();
+  firstDueDate = firstDueDate.trim();
 
-  let intervalMonths = 1;
-
-  if (type === "mensile") {
-    intervalMonths = 1;
-  } else if (type === "annuale") {
-    intervalMonths = 12;
-  } else if (type === "personalizzata") {
-    let customMonths = prompt("Ogni quanti mesi?", "3");
-    if (!customMonths || !customMonths.trim()) return;
-
-    intervalMonths = parseInt(customMonths, 10);
-
-    if (!intervalMonths || intervalMonths < 1) {
-      alert("Numero mesi non valido.");
-      return;
-    }
-  } else {
-    alert("Tipo non valido.");
+  if (!parseItalianDate(firstDueDate)) {
+    alert("Data non valida. Usa il formato GG/MM/AAAA, ad esempio 05/01/2026");
     return;
   }
 
-  let dueDay = prompt("Giorno del mese di scadenza (1-31)", "5");
-  if (!dueDay || !dueDay.trim()) return;
-  dueDay = parseInt(dueDay, 10);
+  let intervalMonths = prompt(
+    "Ogni quanti mesi si ripete?\n1 = mensile\n2 = bimestrale\n3 = trimestrale\n6 = semestrale\n12 = annuale",
+    "1"
+  );
+  if (!intervalMonths || !intervalMonths.trim()) return;
 
-  if (!dueDay || dueDay < 1 || dueDay > 31) {
-    alert("Giorno non valido.");
+  intervalMonths = parseInt(intervalMonths, 10);
+
+  if (!intervalMonths || intervalMonths < 1) {
+    alert("Numero mesi non valido.");
     return;
   }
 
-  let startYear = prompt("Anno iniziale", String(new Date().getFullYear()));
-  if (!startYear || !startYear.trim()) return;
-  startYear = parseInt(startYear, 10);
-
-  if (!startYear || startYear < 2000 || startYear > 3000) {
-    alert("Anno iniziale non valido.");
-    return;
-  }
-
-  let startMonth = prompt("Mese iniziale (1-12)", String(new Date().getMonth() + 1));
-  if (!startMonth || !startMonth.trim()) return;
-  startMonth = parseInt(startMonth, 10);
-
-  if (!startMonth || startMonth < 1 || startMonth > 12) {
-    alert("Mese iniziale non valido.");
-    return;
-  }
-
-  let requiredPrefix = prompt("Prefisso da cercare nel nome PDF", "");
+  let requiredPrefix = prompt(
+    "Prefisso da cercare nel nome PDF, es. internet oppure acqua oppure bollo",
+    ""
+  );
   if (requiredPrefix === null) return;
 
   folder.deadlines.push({
     label: ruleName.trim(),
-    type: type,
+    firstDueDate: firstDueDate,
     intervalMonths: intervalMonths,
-    dueDay: dueDay,
-    startYear: startYear,
-    startMonth: startMonth,
     requiredPrefix: requiredPrefix.trim()
   });
 
   save();
   render();
   alert("Scadenza salvata.");
+}
+
+function configureDeadlinesForFolder(folder) {
+  ensureFolderStructure(folder);
+
+  if (folder.deadlines.length === 0) {
+    addDeadlineRuleToFolder(folder);
+    return;
+  }
+
+  let summary = folder.deadlines
+    .map((d, index) => {
+      return (
+        (index + 1) +
+        ") " +
+        d.label +
+        " - ogni " +
+        d.intervalMonths +
+        " mese/i - prima scadenza " +
+        d.firstDueDate
+      );
+    })
+    .join("\n");
+
+  let choice = prompt(
+    "Scadenze già presenti in '" +
+      folder.name +
+      "':\n\n" +
+      summary +
+      "\n\n" +
+      "Scegli:\n" +
+      "1 = sostituisci tutte le scadenze\n" +
+      "2 = aggiungi una nuova scadenza\n" +
+      "3 = elimina tutte le scadenze\n" +
+      "4 = annulla",
+    "1"
+  );
+
+  if (!choice) return;
+
+  choice = choice.trim();
+
+  if (choice === "1") {
+    let ok = confirm(
+      "Vuoi sostituire tutte le scadenze di '" +
+        folder.name +
+        "'?\nI PDF NON verranno eliminati."
+    );
+    if (!ok) return;
+
+    folder.deadlines = [];
+    save();
+    render();
+
+    addDeadlineRuleToFolder(folder);
+    return;
+  }
+
+  if (choice === "2") {
+    addDeadlineRuleToFolder(folder);
+    return;
+  }
+
+  if (choice === "3") {
+    let ok = confirm(
+      "Vuoi eliminare tutte le scadenze di '" +
+        folder.name +
+        "'?\nI PDF NON verranno eliminati."
+    );
+    if (!ok) return;
+
+    folder.deadlines = [];
+    save();
+    render();
+    alert("Scadenze eliminate.");
+    return;
+  }
+
+  if (choice === "4") {
+    return;
+  }
+
+  alert("Scelta non valida.");
 }
 
 /* -------------------- SWIPE -------------------- */
@@ -520,7 +608,15 @@ function attachSwipe(contentEl, onSwipeLeft) {
   });
 }
 
-function createSwipeRow(mainClass, labelClass, labelHTML, openAction, renameAction, deleteAction, deadlineAction) {
+function createSwipeRow(
+  mainClass,
+  labelClass,
+  labelHTML,
+  openAction,
+  renameAction,
+  deleteAction,
+  deadlineAction
+) {
   const row = document.createElement("li");
   row.className = "swipeRow";
 
