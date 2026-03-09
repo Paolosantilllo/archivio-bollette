@@ -6,6 +6,7 @@ let currentFolder = null;
 
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
+const backBtn = document.getElementById("backBtn");
 
 function save(){
 localStorage.setItem("archivio", JSON.stringify(data));
@@ -13,7 +14,9 @@ localStorage.setItem("archivio", JSON.stringify(data));
 
 function render(){
 
-list.innerHTML="";
+  backBtn.style.display = currentFolder === null ? "none" : "block";
+
+  list.innerHTML="";
 
 let items;
 
@@ -73,5 +76,8 @@ save();
 render();
 
 }
-
+backBtn.onclick = function(){
+  currentFolder = null;
+  render();
+}
 render()
