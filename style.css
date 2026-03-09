@@ -1,43 +1,185 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f2f2f7;
+  margin: 0;
+  color: #111;
+  overflow-x: hidden;
+}
 
-  <title>Archivio Bollette</title>
+header {
+  background: white;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
-  <link rel="manifest" href="manifest.json">
+h1 {
+  margin: 0;
+  font-size: 28px;
+}
 
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Bollette">
+#search {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  font-size: 16px;
+  box-sizing: border-box;
+}
 
-  <link rel="stylesheet" href="style.css">
-</head>
+main {
+  padding: 10px 0 110px 0;
+}
 
-<body>
-  <header>
-    <h1>Archivio</h1>
-    <input type="text" id="search" placeholder="🔍 Cerca documento o cartella">
-  </header>
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px 10px 15px;
+}
 
-  <main>
-    <div class="topbar">
-      <button id="backBtn">⬅️ Indietro</button>
-      <div id="path">Home</div>
-    </div>
+#backBtn {
+  border: none;
+  background: #007aff;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
 
-    <ul id="folders"></ul>
-  </main>
+#path {
+  font-size: 14px;
+  color: #666;
+  word-break: break-word;
+}
 
-  <div class="floatingButtons">
-    <button id="addYear" title="Aggiungi anno">🗓️</button>
-    <button id="addFile" title="Aggiungi documento">📄</button>
-    <button id="addFolder" title="Aggiungi cartella">＋</button>
-  </div>
+#folders {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
 
-  <input type="file" id="fileInput" accept=".pdf,image/*" hidden>
+.swipeRow {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #ddd;
+  background: #f2f2f7;
+}
 
-  <script src="app.js"></script>
-</body>
-</html>
+.folder,
+.fileItem {
+  background: white;
+  padding: 15px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+  transform: translateX(0);
+  transition: transform 0.18s ease;
+  touch-action: pan-y;
+}
+
+.folderName,
+.fileName {
+  flex: 1;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.floatingButtons {
+  position: fixed;
+  right: 20px;
+  bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#addFolder,
+#addFile,
+#addYear {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+#addFolder {
+  background: #007aff;
+}
+
+#addFile {
+  background: #34c759;
+}
+
+#addYear {
+  background: #ff9500;
+}
+
+/* menu azioni */
+#actionSheet {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 999;
+}
+
+#actionSheet.show {
+  display: block;
+}
+
+#actionSheetBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#actionSheetPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  background: #f2f2f7;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.actionBtn,
+.cancelBtn {
+  width: 100%;
+  border: none;
+  background: white;
+  padding: 18px;
+  font-size: 18px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e5ea;
+}
+
+.actionBtn:last-child {
+  border-bottom: none;
+}
+
+.deleteAction {
+  color: #ff3b30;
+}
+
+.cancelWrap {
+  margin-top: 8px;
+}
+
+.cancelBtn {
+  border-radius: 18px;
+  font-weight: 600;
+}
