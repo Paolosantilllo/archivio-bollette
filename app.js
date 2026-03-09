@@ -16,7 +16,13 @@ const renameActionBtn = document.getElementById("renameActionBtn");
 const deleteActionBtn = document.getElementById("deleteActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
 
+const pdfViewer = document.getElementById("pdfViewer");
+const pdfFrame = document.getElementById("pdfFrame");
+const pdfTitle = document.getElementById("pdfTitle");
+const closePdfBtn = document.getElementById("closePdfBtn");
+
 let currentActionTarget = null;
+let currentPdfUrl = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -210,18 +216,40 @@ function closeActionSheet() {
   actionSheet.classList.remove("show");
 }
 
-/* -------------------- PDF -------------------- */
+/* -------------------- PDF VIEWER -------------------- */
+
+function closePdfViewer() {
+  pdfViewer.classList.add("hidden");
+  pdfFrame.src = "";
+  pdfTitle.textContent = "PDF";
+
+  if (currentPdfUrl) {
+    URL.revokeObjectURL(currentPdfUrl);
+    currentPdfUrl = null;
+  }
+}
 
 async function openFile(file) {
   if (!file.pdfId) return;
 
   try {
     const pdfRecord = await getPdfFromDB(file.pdfId);
-    if (!pdfRecord || !pdfRecord.data) return;
+    if (!pdfRecord || !pdfRecord.data) {
+      alert("PDF non trovato.");
+      return;
+    }
+
+    if (currentPdfUrl) {
+      URL.revokeObjectURL(currentPdfUrl);
+      currentPdfUrl = null;
+    }
 
     const blob = new Blob([pdfRecord.data], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
+    currentPdfUrl = URL.createObjectURL(blob);
+
+    pdfTitle.textContent = file.name || "PDF";
+    pdfFrame.src = currentPdfUrl;
+    pdfViewer.classList.remove("hidden");
   } catch (error) {
     alert("Errore nell'apertura del PDF.");
   }
@@ -494,6 +522,7 @@ deleteActionBtn.onclick = function () {
 
 cancelActionBtn.onclick = closeActionSheet;
 actionSheetBackdrop.onclick = closeActionSheet;
+closePdfBtn.onclick = closePdfViewer;
 
 /* -------------------- AVVIO -------------------- */
 
