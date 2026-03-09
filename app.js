@@ -12,8 +12,7 @@ const fileInput = document.getElementById("fileInput");
 
 const actionSheet = document.getElementById("actionSheet");
 const actionSheetBackdrop = document.getElementById("actionSheetBackdrop");
-const deadlineActionBtn = document.getElementById("deadlineActionBtn");
-const renameActionBtn = document.getElementById("renameActionBtn");
+const editActionBtn = document.getElementById("editActionBtn");
 const deleteActionBtn = document.getElementById("deleteActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
 
@@ -32,6 +31,7 @@ const iconChoices = document.querySelectorAll(".iconChoice");
 const deadlineEditor = document.getElementById("deadlineEditor");
 const deadlineEditorBackdrop = document.getElementById("deadlineEditorBackdrop");
 const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
+const deadlineFolderNameInput = document.getElementById("deadlineFolderNameInput");
 const deadlineLabelInput = document.getElementById("deadlineLabelInput");
 const deadlineFirstDateInput = document.getElementById("deadlineFirstDateInput");
 const deadlineIntervalSelect = document.getElementById("deadlineIntervalSelect");
@@ -456,7 +456,7 @@ async function openFile(file) {
   }
 }
 
-/* -------------------- EDITOR SCADENZE -------------------- */
+/* -------------------- EDITOR MODIFICA CARTELLA -------------------- */
 
 function renderDeadlineList(folder) {
   ensureFolderStructure(folder);
@@ -481,6 +481,7 @@ function renderDeadlineList(folder) {
 }
 
 function clearDeadlineForm() {
+  deadlineFolderNameInput.value = "";
   deadlineLabelInput.value = "";
   deadlineFirstDateInput.value = "";
   deadlineIntervalSelect.value = "1";
@@ -491,10 +492,20 @@ function openDeadlineEditor(folder) {
   currentDeadlineFolder = folder;
   ensureFolderStructure(folder);
 
-  deadlineLabelInput.value = folder.name || "";
-  deadlineFirstDateInput.value = "";
-  deadlineIntervalSelect.value = "1";
-  deadlinePrefixInput.value = "";
+  deadlineFolderNameInput.value = folder.name || "";
+
+  if (folder.deadlines.length > 0) {
+    const firstDeadline = folder.deadlines[0];
+    deadlineLabelInput.value = firstDeadline.label || folder.name || "";
+    deadlineFirstDateInput.value = formatDateForInput(firstDeadline.firstDueDate);
+    deadlineIntervalSelect.value = String(firstDeadline.intervalMonths || 1);
+    deadlinePrefixInput.value = firstDeadline.requiredPrefix || "";
+  } else {
+    deadlineLabelInput.value = folder.name || "";
+    deadlineFirstDateInput.value = "";
+    deadlineIntervalSelect.value = "1";
+    deadlinePrefixInput.value = "";
+  }
 
   renderDeadlineList(folder);
   deadlineEditor.classList.remove("hidden");
@@ -505,13 +516,28 @@ function closeDeadlineEditor() {
   deadlineEditor.classList.add("hidden");
 }
 
-function saveDeadlineToCurrentFolder(replaceAll = false) {
+function saveFolderEdit(replaceAll = false) {
   if (!currentDeadlineFolder) return;
 
+  const folderName = deadlineFolderNameInput.value.trim();
   const label = deadlineLabelInput.value.trim();
   const inputDate = deadlineFirstDateInput.value;
   const intervalMonths = parseInt(deadlineIntervalSelect.value, 10);
   const prefix = deadlinePrefixInput.value.trim();
+
+  if (!folderName) {
+    alert("Inserisci il nome della cartella.");
+    return;
+  }
+
+  currentDeadlineFolder.name = folderName;
+
+  if (!inputDate && !label && !prefix) {
+    save();
+    render();
+    renderDeadlineList(currentDeadlineFolder);
+    return;
+  }
 
   if (!label) {
     alert("Inserisci il nome della scadenza.");
@@ -541,17 +567,25 @@ function saveDeadlineToCurrentFolder(replaceAll = false) {
     currentDeadlineFolder.deadlines = [];
   }
 
-  currentDeadlineFolder.deadlines.push({
-    label: label,
-    firstDueDate: firstDueDate,
-    intervalMonths: intervalMonths,
-    requiredPrefix: prefix
-  });
+  if (!replaceAll && currentDeadlineFolder.deadlines.length > 0) {
+    currentDeadlineFolder.deadlines[0] = {
+      label: label,
+      firstDueDate: firstDueDate,
+      intervalMonths: intervalMonths,
+      requiredPrefix: prefix
+    };
+  } else {
+    currentDeadlineFolder.deadlines.push({
+      label: label,
+      firstDueDate: firstDueDate,
+      intervalMonths: intervalMonths,
+      requiredPrefix: prefix
+    });
+  }
 
   save();
   render();
   renderDeadlineList(currentDeadlineFolder);
-  clearDeadlineForm();
 }
 
 function clearDeadlinesFromCurrentFolder() {
@@ -619,9 +653,8 @@ function createSwipeRow(
   labelClass,
   labelHTML,
   openAction,
-  renameAction,
-  deleteAction,
-  deadlineAction
+  editAction,
+  deleteAction
 ) {
   const row = document.createElement("li");
   row.className = "swipeRow";
@@ -641,9 +674,8 @@ function createSwipeRow(
 
   attachSwipe(content, function () {
     openActionSheet({
-      renameAction,
-      deleteAction,
-      deadlineAction
+      editAction,
+      deleteAction
     });
   });
 
@@ -685,13 +717,7 @@ function renderFolders(items, searchText) {
         render();
       },
       function () {
-        let newName = prompt("Nuovo nome cartella", item.name);
-        if (!newName || !newName.trim()) return;
-
-        item.name = newName.trim();
-        sortFolders(items);
-        save();
-        render();
+        openDeadlineEditor(item);
       },
       function () {
         let ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
@@ -700,9 +726,6 @@ function renderFolders(items, searchText) {
         items.splice(i, 1);
         save();
         render();
-      },
-      function () {
-        openDeadlineEditor(item);
       }
     );
 
@@ -740,8 +763,7 @@ function renderFiles(files, searchText) {
         files.splice(i, 1);
         save();
         render();
-      },
-      null
+      }
     );
 
     list.appendChild(row);
@@ -874,24 +896,16 @@ backBtn.onclick = function () {
 
 searchInput.addEventListener("input", render);
 
-deadlineActionBtn.onclick = function () {
-  if (!currentActionTarget || !currentActionTarget.deadlineAction) return;
+editActionBtn.onclick = function () {
+  if (!currentActionTarget || !currentActionTarget.editAction) return;
 
-  const action = currentActionTarget.deadlineAction;
-  closeActionSheet();
-  action();
-};
-
-renameActionBtn.onclick = function () {
-  if (!currentActionTarget) return;
-
-  const action = currentActionTarget.renameAction;
+  const action = currentActionTarget.editAction;
   closeActionSheet();
   action();
 };
 
 deleteActionBtn.onclick = function () {
-  if (!currentActionTarget) return;
+  if (!currentActionTarget || !currentActionTarget.deleteAction) return;
 
   const action = currentActionTarget.deleteAction;
   closeActionSheet();
@@ -906,7 +920,7 @@ closeDeadlineEditorBtn.onclick = closeDeadlineEditor;
 deadlineEditorBackdrop.onclick = closeDeadlineEditor;
 
 saveDeadlineBtn.onclick = function () {
-  saveDeadlineToCurrentFolder(false);
+  saveFolderEdit(false);
 };
 
 replaceDeadlinesBtn.onclick = function () {
@@ -915,7 +929,7 @@ replaceDeadlinesBtn.onclick = function () {
   );
   if (!ok) return;
 
-  saveDeadlineToCurrentFolder(true);
+  saveFolderEdit(true);
 };
 
 clearDeadlinesBtn.onclick = function () {
