@@ -252,7 +252,21 @@ function hasRequiredPdf(folder, requiredText) {
 
   const check = normalizeText(requiredText);
 
-  return folder.files.some(file => normalizeText(file.name).includes(check));
+  const foundInCurrentFolder = folder.files.some(file =>
+    normalizeText(file.name).includes(check)
+  );
+
+  if (foundInCurrentFolder) {
+    return true;
+  }
+
+  for (const subFolder of folder.sub) {
+    if (hasRequiredPdf(subFolder, requiredText)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function getDeadlineOccurrences(deadline) {
