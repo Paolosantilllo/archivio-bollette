@@ -22,8 +22,16 @@ const pdfFrame = document.getElementById("pdfFrame");
 const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
 
+const iconPicker = document.getElementById("iconPicker");
+const iconPickerBackdrop = document.getElementById("iconPickerBackdrop");
+const closeIconPickerBtn = document.getElementById("closeIconPickerBtn");
+const newFolderName = document.getElementById("newFolderName");
+const createFolderConfirmBtn = document.getElementById("createFolderConfirmBtn");
+const iconChoices = document.querySelectorAll(".iconChoice");
+
 let currentActionTarget = null;
 let currentPdfUrl = null;
+let selectedFolderIcon = "📁";
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -120,6 +128,7 @@ function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
   if (!folder.deadlines) folder.deadlines = [];
+  if (!folder.icon) folder.icon = "📁";
 }
 
 function isYearName(name) {
@@ -187,11 +196,12 @@ function getPathNames() {
   return names.join(" / ");
 }
 
-function createFolder(name) {
+function createFolder(name, icon = "📁") {
   const items = getCurrentLevel();
 
   items.push({
     name: name.trim(),
+    icon: icon,
     sub: [],
     files: [],
     deadlines: []
@@ -308,6 +318,34 @@ function closeActionSheet() {
   actionSheet.classList.remove("show");
 }
 
+/* -------------------- ICON PICKER -------------------- */
+
+function openIconPicker() {
+  newFolderName.value = "";
+  selectedFolderIcon = "📁";
+
+  iconChoices.forEach(btn => {
+    btn.classList.remove("selected");
+    if (btn.dataset.icon === selectedFolderIcon) {
+      btn.classList.add("selected");
+    }
+  });
+
+  iconPicker.classList.remove("hidden");
+}
+
+function closeIconPicker() {
+  iconPicker.classList.add("hidden");
+}
+
+function selectFolderIcon(icon) {
+  selectedFolderIcon = icon;
+
+  iconChoices.forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.icon === icon);
+  });
+}
+
 /* -------------------- PDF VIEWER -------------------- */
 
 function closePdfViewer() {
@@ -353,16 +391,10 @@ async function openFile(file) {
 function configureDeadlinesForFolder(folder) {
   ensureFolderStructure(folder);
 
-  const ruleName = prompt(
-    "Nome scadenza (es. Bollo auto, Sport, Acqua, Telepass)",
-    folder.name
-  );
+  const ruleName = prompt("Nome scadenza", folder.name);
   if (!ruleName || !ruleName.trim()) return;
 
-  let type = prompt(
-    "Tipo scadenza: mensile / annuale / personalizzata",
-    "mensile"
-  );
+  let type = prompt("Tipo scadenza: mensile / annuale / personalizzata", "mensile");
   if (!type || !type.trim()) return;
 
   type = type.trim().toLowerCase();
@@ -374,11 +406,7 @@ function configureDeadlinesForFolder(folder) {
   } else if (type === "annuale") {
     intervalMonths = 12;
   } else if (type === "personalizzata") {
-    let customMonths = prompt(
-      "Ogni quanti mesi? Esempi: 3 per Telepass, 6 per Acqua",
-      "3"
-    );
-
+    let customMonths = prompt("Ogni quanti mesi?", "3");
     if (!customMonths || !customMonths.trim()) return;
 
     intervalMonths = parseInt(customMonths, 10);
@@ -388,7 +416,7 @@ function configureDeadlinesForFolder(folder) {
       return;
     }
   } else {
-    alert("Tipo non valido. Usa: mensile, annuale o personalizzata.");
+    alert("Tipo non valido.");
     return;
   }
 
@@ -401,7 +429,7 @@ function configureDeadlinesForFolder(folder) {
     return;
   }
 
-  let startYear = prompt("Anno iniziale (es. 2026)", String(new Date().getFullYear()));
+  let startYear = prompt("Anno iniziale", String(new Date().getFullYear()));
   if (!startYear || !startYear.trim()) return;
   startYear = parseInt(startYear, 10);
 
@@ -419,10 +447,7 @@ function configureDeadlinesForFolder(folder) {
     return;
   }
 
-  let requiredPrefix = prompt(
-    "Testo iniziale da cercare nel nome PDF (facoltativo). Esempio: acqua- oppure telepass-",
-    ""
-  );
+  let requiredPrefix = prompt("Prefisso da cercare nel nome PDF", "");
   if (requiredPrefix === null) return;
 
   folder.deadlines.push({
@@ -437,7 +462,6 @@ function configureDeadlinesForFolder(folder) {
 
   save();
   render();
-
   alert("Scadenza salvata.");
 }
 
@@ -448,37 +472,28 @@ function attachSwipe(contentEl, onSwipeLeft) {
   let currentX = 0;
   let isDragging = false;
 
-  contentEl.addEventListener(
-    "touchstart",
-    function (e) {
-      startX = e.touches[0].clientX;
-      currentX = startX;
-      isDragging = true;
-    },
-    { passive: true }
-  );
+  contentEl.addEventListener("touchstart", function (e) {
+    startX = e.touches[0].clientX;
+    currentX = startX;
+    isDragging = true;
+  }, { passive: true });
 
-  contentEl.addEventListener(
-    "touchmove",
-    function (e) {
-      if (!isDragging) return;
+  contentEl.addEventListener("touchmove", function (e) {
+    if (!isDragging) return;
 
-      currentX = e.touches[0].clientX;
-      let diff = currentX - startX;
+    currentX = e.touches[0].clientX;
+    let diff = currentX - startX;
 
-      if (diff < 0) {
-        diff = Math.max(diff, -80);
-        contentEl.style.transform = `translateX(${diff}px)`;
-      }
-    },
-    { passive: true }
-  );
+    if (diff < 0) {
+      diff = Math.max(diff, -80);
+      contentEl.style.transform = `translateX(${diff}px)`;
+    }
+  }, { passive: true });
 
   contentEl.addEventListener("touchend", function () {
     if (!isDragging) return;
 
     isDragging = false;
-
     let diff = currentX - startX;
     contentEl.style.transform = "translateX(0)";
 
@@ -488,15 +503,7 @@ function attachSwipe(contentEl, onSwipeLeft) {
   });
 }
 
-function createSwipeRow(
-  mainClass,
-  labelClass,
-  labelText,
-  openAction,
-  renameAction,
-  deleteAction,
-  deadlineAction
-) {
+function createSwipeRow(mainClass, labelClass, labelHTML, openAction, renameAction, deleteAction, deadlineAction) {
   const row = document.createElement("li");
   row.className = "swipeRow";
 
@@ -505,7 +512,7 @@ function createSwipeRow(
 
   const nameSpan = document.createElement("span");
   nameSpan.className = labelClass;
-  nameSpan.textContent = labelText;
+  nameSpan.innerHTML = labelHTML;
   nameSpan.onclick = function () {
     openAction();
   };
@@ -532,19 +539,29 @@ function renderFolders(items, searchText) {
 
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
-    const icon = isYearName(item.name) ? "🗓️ " : "📁 ";
     const missingCount = getMissingDeadlinesCount(item);
 
-    let labelText = icon + item.name;
+    let labelHTML = "";
+
+    if (isYearName(item.name)) {
+      labelHTML = `🗓️ ${item.name}`;
+    } else {
+      labelHTML = `
+        <span class="folderLabel">
+          <span class="folderEmoji">${item.icon || "📁"}</span>
+          <span>${item.name}</span>
+        </span>
+      `;
+    }
 
     if (missingCount > 0) {
-      labelText += " (" + missingCount + " mancanti)";
+      labelHTML += ` (${missingCount} mancanti)`;
     }
 
     const row = createSwipeRow(
       "folder",
       "folderName",
-      labelText,
+      labelHTML,
       function () {
         currentPath.push(i);
         render();
@@ -634,11 +651,29 @@ function render() {
 /* -------------------- EVENTI -------------------- */
 
 addBtn.onclick = function () {
-  let name = prompt("Nome cartella");
-  if (!name || !name.trim()) return;
-
-  createFolder(name);
+  openIconPicker();
 };
+
+createFolderConfirmBtn.onclick = function () {
+  const name = newFolderName.value.trim();
+
+  if (!name) {
+    alert("Inserisci il nome della cartella.");
+    return;
+  }
+
+  createFolder(name, selectedFolderIcon);
+  closeIconPicker();
+};
+
+iconChoices.forEach(btn => {
+  btn.onclick = function () {
+    selectFolderIcon(btn.dataset.icon);
+  };
+});
+
+closeIconPickerBtn.onclick = closeIconPicker;
+iconPickerBackdrop.onclick = closeIconPicker;
 
 addYearBtn.onclick = function () {
   if (currentPath.length === 0) {
@@ -663,7 +698,7 @@ addYearBtn.onclick = function () {
     return;
   }
 
-  createFolder(year);
+  createFolder(year, "🗓️");
 };
 
 addFileBtn.onclick = function () {
@@ -751,4 +786,5 @@ closePdfBtn.onclick = closePdfViewer;
 
 /* -------------------- AVVIO -------------------- */
 
+selectFolderIcon("📁");
 render();
