@@ -215,7 +215,10 @@ function createFolder(name, icon = "📁") {
 /* -------------------- DATE / SCADENZE -------------------- */
 
 function normalizeText(text) {
-  return (text || "").toLowerCase().trim();
+  return (text || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\s_\-]+/g, "");
 }
 
 function pad2(value) {
