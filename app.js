@@ -6,6 +6,7 @@ let currentPath = [];
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
+const addYearBtn = document.getElementById("addYear");
 const backBtn = document.getElementById("backBtn");
 const pathBox = document.getElementById("path");
 const searchInput = document.getElementById("search");
@@ -18,6 +19,26 @@ function save() {
 function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
+}
+
+function isYearName(name) {
+  return /^\d{4}$/.test(name);
+}
+
+function sortFolders(items) {
+  items.sort((a, b) => {
+    const aIsYear = isYearName(a.name);
+    const bIsYear = isYearName(b.name);
+
+    if (aIsYear && bIsYear) {
+      return Number(b.name) - Number(a.name);
+    }
+
+    if (aIsYear && !bIsYear) return -1;
+    if (!aIsYear && bIsYear) return 1;
+
+    return a.name.localeCompare(b.name, "it", { sensitivity: "base" });
+  });
 }
 
 function getCurrentFolder() {
@@ -73,6 +94,20 @@ function openFile(file) {
   window.open(file.data, "_blank");
 }
 
+function createFolder(name) {
+  const items = getCurrentLevel();
+
+  items.push({
+    name: name.trim(),
+    sub: [],
+    files: []
+  });
+
+  sortFolders(items);
+  save();
+  render();
+}
+
 function renderFolders(items, searchText) {
   items.forEach((item, i) => {
     ensureFolderStructure(item);
@@ -86,7 +121,12 @@ function renderFolders(items, searchText) {
 
     let nameSpan = document.createElement("span");
     nameSpan.className = "folderName";
-    nameSpan.textContent = "📁 " + item.name;
+
+    if (isYearName(item.name)) {
+      nameSpan.textContent = "🗓️ " + item.name;
+    } else {
+      nameSpan.textContent = "📁 " + item.name;
+    }
 
     nameSpan.onclick = function () {
       currentPath.push(i);
@@ -105,6 +145,7 @@ function renderFolders(items, searchText) {
       if (!newName || !newName.trim()) return;
 
       item.name = newName.trim();
+      sortFolders(items);
       save();
       render();
     };
@@ -197,6 +238,11 @@ function render() {
   let files = getCurrentFiles();
   let searchText = searchInput.value.toLowerCase().trim();
 
+  sortFolders(items);
+
+  addYearBtn.style.display = currentPath.length === 0 ? "none" : "block";
+  addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
+
   renderFolders(items, searchText);
   renderFiles(files, searchText);
 }
@@ -205,16 +251,34 @@ addBtn.onclick = function () {
   let name = prompt("Nome cartella");
   if (!name || !name.trim()) return;
 
+  createFolder(name);
+};
+
+addYearBtn.onclick = function () {
+  if (currentPath.length === 0) {
+    alert("Entra prima in una cartella principale per aggiungere un anno.");
+    return;
+  }
+
+  let year = prompt("Inserisci anno (es. 2026)");
+  if (!year || !year.trim()) return;
+
+  year = year.trim();
+
+  if (!isYearName(year)) {
+    alert("Inserisci un anno valido di 4 cifre.");
+    return;
+  }
+
   let items = getCurrentLevel();
+  let alreadyExists = items.some(item => item.name === year);
 
-  items.push({
-    name: name.trim(),
-    sub: [],
-    files: []
-  });
+  if (alreadyExists) {
+    alert("Questo anno esiste già in questa cartella.");
+    return;
+  }
 
-  save();
-  render();
+  createFolder(year);
 };
 
 addFileBtn.onclick = function () {
