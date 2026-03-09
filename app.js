@@ -1,74 +1,38 @@
-alert("app caricata");
+PAOLO
+<!DOCTYPE html>
+<html lang="it">
+<head>
 
-let data = JSON.parse(localStorage.getItem("archivio")) || [];
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-let currentFolder = null;
+<title>Archivio Bollette</title>
 
-const list = document.getElementById("folders");
-const addBtn = document.getElementById("addFolder");
-const backBtn = document.getElementById("backBtn");
+<link rel="manifest" href="manifest.json">
 
-function save(){
-localStorage.setItem("archivio", JSON.stringify(data));
-}
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bollette">
 
-function render(){
+<link rel="stylesheet" href="style.css">
 
-  backBtn.style.display = currentFolder === null ? "none" : "block";
+</head>
 
-  list.innerHTML="";
+<body>
 
-let items;
+<header>
+<h1>Archivio</h1>
+<input type="text" id="search" placeholder="🔍 Cerca documento">
+</header>
 
-if(currentFolder === null){
-items = data;
-}else{
-items = data[currentFolder].sub;
-}
+<main>
+<button id="backBtn">⬅️ Indietro</button>
+<ul id="folders"></ul>
+</main>
 
-items.forEach((item,i)=>{
+<button id="addFolder">＋</button>
 
-let li=document.createElement("li");
-li.className="folder";
+<script src="app.js"></script>
 
-li.innerHTML="📁 "+item.name;
-
-li.onclick=function(){
-currentFolder=i;
-render();
-}
-list.appendChild(li);
-});
-
-}
-
-addBtn.onclick=function(){
-
-let name=prompt("Nome cartella");
-
-if(!name) return;
-
-if(currentFolder === null){
-
-data.push({
-name:name,
-sub:[]
-});
-
-}else{
-
-data[currentFolder].sub.push({
-name:name
-});
-
-}
-
-save();
-render();
-
-}
-backBtn.onclick = function(){
-  currentFolder = null;
-  render();
-}
-render()
+</body>
+</
