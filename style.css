@@ -1,50 +1,124 @@
-29461"}
-body{
-font-family:-apple-system;
-background:#f2f2f7;
-margin:0;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f2f2f7;
+  margin: 0;
+  color: #111;
 }
 
-header{
-background:white;
-padding:15px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
+header {
+  background: white;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-h1{
-margin:0;
+h1 {
+  margin: 0;
+  font-size: 28px;
 }
 
-#search{
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:10px;
-border:none;
-background:#eee;
+#search {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #eee;
+  font-size: 16px;
+  box-sizing: border-box;
 }
 
-#folders{
-list-style:none;
-padding:0;
-margin:0;
+main {
+  padding: 10px 0 90px 0;
 }
 
-.folder{
-background:white;
-padding:15px;
-border-bottom:1px solid #ddd;
-font-size:18px;
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 15px 10px 15px;
 }
 
-#addFolder{
-position:fixed;
-bottom:30px;
-right:30px;
-width:60px;
-height:60px;
-border-radius:50%;
-border:none;
-background:#007aff;
-color:white;
-font-size:
+#backBtn {
+  border: none;
+  background: #007aff;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#path {
+  font-size: 14px;
+  color: #666;
+  word-break: break-word;
+}
+
+#folders {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.folder {
+  background: white;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.folderName {
+  flex: 1;
+  cursor: pointer;
+  word-break: break-word;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.actions button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  background: #e9e9ee;
+}
+
+.actions button:hover {
+  opacity: 0.9;
+}
+
+#addFolder {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: #007aff;
+  color: white;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
+}
+
+#addFolder:hover {
+  transform: scale(1.05);
+}
+
+#addFolder:active {
+  transform: scale(0.98);
+}
