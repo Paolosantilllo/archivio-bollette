@@ -44,10 +44,8 @@
     <div id="actionSheetBackdrop"></div>
 
     <div id="actionSheetPanel">
-  <button id="deadlineActionBtn" class="actionBtn">Scadenze</button>
-  <button id="renameActionBtn" class="actionBtn">Rinomina</button>
-  <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
-
+  <button id="editActionBtn" class="actionBtn">Modifica</button>
+<button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
   <div class="cancelWrap">
     <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
   </div>
@@ -100,9 +98,11 @@
     </div>
 
     <div class="deadlineForm">
-      <label>Nome scadenza</label>
-      <input type="text" id="deadlineLabelInput" placeholder="Es. Internet">
+  <label>Nome cartella</label>
+  <input type="text" id="deadlineFolderNameInput" placeholder="Es. Internet">
 
+  <label>Nome scadenza</label>
+  <input type="text" id="deadlineLabelInput" placeholder="Es. Internet">
       <label>Prima scadenza</label>
       <input type="date" id="deadlineFirstDateInput">
 
