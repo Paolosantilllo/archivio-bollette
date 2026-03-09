@@ -34,9 +34,16 @@ const saveDeadlineBtn = document.getElementById("saveDeadlineBtn");
 const replaceDeadlinesBtn = document.getElementById("replaceDeadlinesBtn");
 const clearDeadlinesBtn = document.getElementById("clearDeadlinesBtn");
 
+const renameModal = document.getElementById("renameModal");
+const renameBackdrop = document.getElementById("renameBackdrop");
+const renameInput = document.getElementById("renameInput");
+const renameConfirm = document.getElementById("renameConfirm");
+const renameCancel = document.getElementById("renameCancel");
+
 let currentActionTarget = null;
 let currentPdfUrl = null;
 let currentDeadlineFolder = null;
+let currentRenameFile = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -595,6 +602,20 @@ function clearDeadlinesFromCurrentFolder() {
   renderDeadlineList(currentDeadlineFolder);
 }
 
+/* -------------------- RINOMINA PDF -------------------- */
+
+function openRenameModal(file) {
+  currentRenameFile = file;
+  renameInput.value = file.name;
+  renameModal.classList.remove("hidden");
+  renameInput.focus();
+}
+
+function closeRenameModal() {
+  currentRenameFile = null;
+  renameModal.classList.add("hidden");
+}
+
 /* -------------------- SWIPE -------------------- */
 
 function attachSwipe(contentEl, onSwipeLeft) {
@@ -675,14 +696,8 @@ function renderFolders(items, searchText) {
 
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
+    let labelHTML = item.name;
     const missingCount = getMissingDeadlinesCount(item);
-    let labelHTML = "";
-
-    if (isYearName(item.name)) {
-      labelHTML = item.name;
-    } else {
-      labelHTML = item.name;
-    }
 
     if (missingCount > 0) {
       labelHTML += ` (${missingCount} mancanti)`;
@@ -700,7 +715,7 @@ function renderFolders(items, searchText) {
         openDeadlineEditor(item);
       },
       function () {
-        let ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
+        const ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
         if (!ok) return;
 
         items.splice(i, 1);
@@ -725,15 +740,10 @@ function renderFiles(files, searchText) {
         openFile(file);
       },
       function () {
-        let newName = prompt("Nuovo nome PDF", file.name);
-        if (!newName || !newName.trim()) return;
-
-        file.name = newName.trim();
-        save();
-        render();
+        openRenameModal(file);
       },
       async function () {
-        let ok = confirm("Vuoi eliminare il PDF '" + file.name + "'?");
+        const ok = confirm("Vuoi eliminare il PDF '" + file.name + "'?");
         if (!ok) return;
 
         if (file.pdfId) {
@@ -771,7 +781,7 @@ function render() {
 /* -------------------- EVENTI -------------------- */
 
 addBtn.onclick = function () {
-  let name = prompt("Nome cartella");
+  const name = prompt("Nome cartella");
   if (!name || !name.trim()) return;
 
   createFolder(name);
@@ -897,6 +907,21 @@ replaceDeadlinesBtn.onclick = function () {
 clearDeadlinesBtn.onclick = function () {
   clearDeadlinesFromCurrentFolder();
 };
+
+renameConfirm.onclick = function () {
+  if (!currentRenameFile) return;
+
+  const newName = renameInput.value.trim();
+  if (!newName) return;
+
+  currentRenameFile.name = newName;
+  save();
+  render();
+  closeRenameModal();
+};
+
+renameCancel.onclick = closeRenameModal;
+renameBackdrop.onclick = closeRenameModal;
 
 /* -------------------- AVVIO -------------------- */
 
