@@ -12,6 +12,7 @@ const fileInput = document.getElementById("fileInput");
 
 const actionSheet = document.getElementById("actionSheet");
 const actionSheetBackdrop = document.getElementById("actionSheetBackdrop");
+const moveActionBtn = document.getElementById("moveActionBtn");
 const editActionBtn = document.getElementById("editActionBtn");
 const deleteActionBtn = document.getElementById("deleteActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
@@ -40,10 +41,18 @@ const renameInput = document.getElementById("renameInput");
 const renameConfirm = document.getElementById("renameConfirm");
 const renameCancel = document.getElementById("renameCancel");
 
+const moveModal = document.getElementById("moveModal");
+const moveBackdrop = document.getElementById("moveBackdrop");
+const closeMoveBtn = document.getElementById("closeMoveBtn");
+const moveCurrentFile = document.getElementById("moveCurrentFile");
+const moveFolderList = document.getElementById("moveFolderList");
+
 let currentActionTarget = null;
 let currentPdfUrl = null;
 let currentDeadlineFolder = null;
 let currentRenameFile = null;
+let currentMoveFile = null;
+let currentMoveSourceFiles = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -232,6 +241,21 @@ function createFolder(name) {
   render();
 }
 
+function getFolderByPath(path) {
+  if (!path || path.length === 0) return null;
+
+  let level = data;
+  let folder = null;
+
+  for (let i = 0; i < path.length; i++) {
+    folder = level[path[i]];
+    ensureFolderStructure(folder);
+    level = folder.sub;
+  }
+
+  return folder;
+}
+
 /* -------------------- UTILITA TESTO E DATE -------------------- */
 
 function normalizeText(text) {
@@ -408,6 +432,7 @@ function getMissingDeadlinesCount(folder) {
 
 function openActionSheet(target) {
   currentActionTarget = target;
+  moveActionBtn.style.display = target.moveAction ? "block" : "none";
   actionSheet.classList.add("show");
 }
 
@@ -616,6 +641,87 @@ function closeRenameModal() {
   renameModal.classList.add("hidden");
 }
 
+/* -------------------- SPOSTA PDF -------------------- */
+
+function collectFolderTargets(level = data, path = [], results = []) {
+  level.forEach((folder, index) => {
+    ensureFolderStructure(folder);
+
+    const newPath = [...path, index];
+    results.push({
+      path: newPath,
+      label: ["Home", ...newPath.map((_, i) => {
+        const partial = newPath.slice(0, i + 1);
+        return getFolderByPath(partial).name;
+      })].join(" / ")
+    });
+
+    collectFolderTargets(folder.sub, newPath, results);
+  });
+
+  return results;
+}
+
+function openMoveModal(file, sourceFiles) {
+  currentMoveFile = file;
+  currentMoveSourceFiles = sourceFiles;
+
+  moveCurrentFile.textContent = "PDF selezionato: " + file.name;
+
+  const targets = collectFolderTargets();
+
+  if (targets.length === 0) {
+    moveFolderList.innerHTML = `<div class="deadlineEmpty">Nessuna cartella disponibile</div>`;
+  } else {
+    moveFolderList.innerHTML = targets
+      .map((target, index) => {
+        return `<button class="moveFolderItem" data-move-index="${index}">${target.label}</button>`;
+      })
+      .join("");
+
+    const buttons = moveFolderList.querySelectorAll(".moveFolderItem");
+    buttons.forEach((btn, index) => {
+      btn.onclick = function () {
+        movePdfToTarget(targets[index].path);
+      };
+    });
+  }
+
+  moveModal.classList.remove("hidden");
+}
+
+function closeMoveModal() {
+  currentMoveFile = null;
+  currentMoveSourceFiles = null;
+  moveModal.classList.add("hidden");
+}
+
+function movePdfToTarget(targetPath) {
+  if (!currentMoveFile || !currentMoveSourceFiles) return;
+
+  const targetFolder = getFolderByPath(targetPath);
+  if (!targetFolder) return;
+
+  ensureFolderStructure(targetFolder);
+
+  const alreadyExists = targetFolder.files.some(file => file.pdfId === currentMoveFile.pdfId);
+  if (alreadyExists) {
+    alert("Questo PDF è già presente nella cartella scelta.");
+    return;
+  }
+
+  const index = currentMoveSourceFiles.findIndex(file => file.pdfId === currentMoveFile.pdfId);
+  if (index === -1) return;
+
+  const fileToMove = currentMoveSourceFiles[index];
+  currentMoveSourceFiles.splice(index, 1);
+  targetFolder.files.push(fileToMove);
+
+  save();
+  render();
+  closeMoveModal();
+}
+
 /* -------------------- SWIPE -------------------- */
 
 function attachSwipe(contentEl, onSwipeLeft) {
@@ -660,7 +766,8 @@ function createSwipeRow(
   labelHTML,
   openAction,
   editAction,
-  deleteAction
+  deleteAction,
+  moveAction = null
 ) {
   const row = document.createElement("li");
   row.className = "swipeRow";
@@ -681,7 +788,8 @@ function createSwipeRow(
   attachSwipe(content, function () {
     openActionSheet({
       editAction,
-      deleteAction
+      deleteAction,
+      moveAction
     });
   });
 
@@ -753,6 +861,9 @@ function renderFiles(files, searchText) {
         files.splice(i, 1);
         save();
         render();
+      },
+      function () {
+        openMoveModal(file, files);
       }
     );
 
@@ -868,6 +979,14 @@ backBtn.onclick = function () {
 
 searchInput.addEventListener("input", render);
 
+moveActionBtn.onclick = function () {
+  if (!currentActionTarget || !currentActionTarget.moveAction) return;
+
+  const action = currentActionTarget.moveAction;
+  closeActionSheet();
+  action();
+};
+
 editActionBtn.onclick = function () {
   if (!currentActionTarget || !currentActionTarget.editAction) return;
 
@@ -922,6 +1041,9 @@ renameConfirm.onclick = function () {
 
 renameCancel.onclick = closeRenameModal;
 renameBackdrop.onclick = closeRenameModal;
+
+closeMoveBtn.onclick = closeMoveModal;
+moveBackdrop.onclick = closeMoveModal;
 
 /* -------------------- AVVIO -------------------- */
 
