@@ -367,64 +367,70 @@ main {
   background: #ff3b30;
   color: white;
 }
-#renameModal{
-position:fixed;
-inset:0;
-z-index:1500;
+
+/* rinomina pdf */
+
+#renameModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
 }
 
-#renameBackdrop{
-position:absolute;
-inset:0;
-background:rgba(0,0,0,0.3);
+#renameBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
 }
 
-#renamePanel{
-position:absolute;
-left:20px;
-right:20px;
-top:50%;
-transform:translateY(-50%);
-background:white;
-border-radius:16px;
-padding:20px;
+#renamePanel {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
 }
 
-#renamePanel h3{
-margin-top:0;
+#renamePanel h3 {
+  margin-top: 0;
 }
 
-#renameInput{
-width:100%;
-padding:12px;
-font-size:16px;
-border:none;
-background:#eee;
-border-radius:10px;
-margin-top:10px;
-margin-bottom:15px;
+#renameInput {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: none;
+  background: #eee;
+  border-radius: 10px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
 }
 
-.renameButtons{
-display:flex;
-gap:10px;
+.renameButtons {
+  display: flex;
+  gap: 10px;
 }
 
-#renameConfirm{
-flex:1;
-background:#007aff;
-color:white;
-border:none;
-padding:12px;
-border-radius:10px;
-font-size:16px;
+#renameConfirm {
+  flex: 1;
+  background: #007aff;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-#renameCancel{
-flex:1;
-background:#ddd;
-border:none;
-padding:12px;
-border-radius:10px;
-font-size:16px;
+#renameCancel {
+  flex: 1;
+  background: #ddd;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
