@@ -31,7 +31,7 @@ h1 {
 }
 
 main {
-  padding: 10px 0 90px 0;
+  padding: 10px 0 100px 0;
 }
 
 .topbar {
@@ -63,7 +63,8 @@ main {
   margin: 0;
 }
 
-.folder {
+.folder,
+.fileItem {
   background: white;
   padding: 15px;
   border-bottom: 1px solid #ddd;
@@ -74,7 +75,8 @@ main {
   gap: 10px;
 }
 
-.folderName {
+.folderName,
+.fileName {
   flex: 1;
   cursor: pointer;
   word-break: break-word;
@@ -95,30 +97,31 @@ main {
   background: #e9e9ee;
 }
 
-.actions button:hover {
-  opacity: 0.9;
+.floatingButtons {
+  position: fixed;
+  right: 20px;
+  bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-#addFolder {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
+#addFolder,
+#addFile {
   width: 60px;
   height: 60px;
   border-radius: 50%;
   border: none;
-  background: #007aff;
   color: white;
-  font-size: 32px;
-  line-height: 1;
+  font-size: 28px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
-#addFolder:hover {
-  transform: scale(1.05);
+#addFolder {
+  background: #007aff;
 }
 
-#addFolder:active {
-  transform: scale(0.98);
+#addFile {
+  background: #34c759;
 }
