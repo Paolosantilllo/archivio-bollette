@@ -120,6 +120,7 @@ function save() {
 function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
+  if (!folder.deadlines) folder.deadlines = [];
 }
 
 function isYearName(name) {
@@ -196,12 +197,50 @@ function createFolder(name) {
   items.push({
     name: name.trim(),
     sub: [],
-    files: []
+    files: [],
+    deadlines: []
   });
 
   sortFolders(items);
   save();
   render();
+}
+
+/* -------------------- SCADENZE -------------------- */
+
+function normalizeText(text) {
+  return (text || "").toLowerCase().trim();
+}
+
+function hasRequiredPdf(folder, requiredText) {
+  ensureFolderStructure(folder);
+
+  if (!requiredText) return false;
+
+  const check = normalizeText(requiredText);
+
+  return folder.files.some(file => {
+    return normalizeText(file.name).includes(check);
+  });
+}
+
+function getMissingDeadlinesCount(folder) {
+  ensureFolderStructure(folder);
+
+  const today = new Date();
+  let missing = 0;
+
+  folder.deadlines.forEach(deadline => {
+    if (!deadline.dueDate || !deadline.requiredText) return;
+
+    const due = new Date(deadline.dueDate + "T23:59:59");
+
+    if (today > due && !hasRequiredPdf(folder, deadline.requiredText)) {
+      missing++;
+    }
+  });
+
+  return missing;
 }
 
 /* -------------------- ACTION SHEET -------------------- */
@@ -234,6 +273,7 @@ async function openFile(file) {
 
   try {
     const pdfRecord = await getPdfFromDB(file.pdfId);
+
     if (!pdfRecord || !pdfRecord.data) {
       alert("PDF non trovato.");
       return;
@@ -262,26 +302,35 @@ function attachSwipe(contentEl, onSwipeLeft) {
   let currentX = 0;
   let isDragging = false;
 
-  contentEl.addEventListener("touchstart", function (e) {
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-  }, { passive: true });
+  contentEl.addEventListener(
+    "touchstart",
+    function (e) {
+      startX = e.touches[0].clientX;
+      currentX = startX;
+      isDragging = true;
+    },
+    { passive: true }
+  );
 
-  contentEl.addEventListener("touchmove", function (e) {
-    if (!isDragging) return;
+  contentEl.addEventListener(
+    "touchmove",
+    function (e) {
+      if (!isDragging) return;
 
-    currentX = e.touches[0].clientX;
-    let diff = currentX - startX;
+      currentX = e.touches[0].clientX;
+      let diff = currentX - startX;
 
-    if (diff < 0) {
-      diff = Math.max(diff, -80);
-      contentEl.style.transform = `translateX(${diff}px)`;
-    }
-  }, { passive: true });
+      if (diff < 0) {
+        diff = Math.max(diff, -80);
+        contentEl.style.transform = `translateX(${diff}px)`;
+      }
+    },
+    { passive: true }
+  );
 
   contentEl.addEventListener("touchend", function () {
     if (!isDragging) return;
+
     isDragging = false;
 
     let diff = currentX - startX;
@@ -293,7 +342,14 @@ function attachSwipe(contentEl, onSwipeLeft) {
   });
 }
 
-function createSwipeRow(mainClass, labelClass, labelText, openAction, renameAction, deleteAction) {
+function createSwipeRow(
+  mainClass,
+  labelClass,
+  labelText,
+  openAction,
+  renameAction,
+  deleteAction
+) {
   const row = document.createElement("li");
   row.className = "swipeRow";
 
@@ -329,11 +385,18 @@ function renderFolders(items, searchText) {
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
     const icon = isYearName(item.name) ? "🗓️ " : "📁 ";
+    const missingCount = getMissingDeadlinesCount(item);
+
+    let labelText = icon + item.name;
+
+    if (missingCount > 0) {
+      labelText += " (" + missingCount + " mancanti)";
+    }
 
     const row = createSwipeRow(
       "folder",
       "folderName",
-      icon + item.name,
+      labelText,
       function () {
         currentPath.push(i);
         render();
@@ -508,6 +571,7 @@ searchInput.addEventListener("input", render);
 
 renameActionBtn.onclick = function () {
   if (!currentActionTarget) return;
+
   const action = currentActionTarget.renameAction;
   closeActionSheet();
   action();
@@ -515,6 +579,7 @@ renameActionBtn.onclick = function () {
 
 deleteActionBtn.onclick = function () {
   if (!currentActionTarget) return;
+
   const action = currentActionTarget.deleteAction;
   closeActionSheet();
   action();
