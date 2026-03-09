@@ -21,13 +21,6 @@ const pdfFrame = document.getElementById("pdfFrame");
 const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
 
-const iconPicker = document.getElementById("iconPicker");
-const iconPickerBackdrop = document.getElementById("iconPickerBackdrop");
-const closeIconPickerBtn = document.getElementById("closeIconPickerBtn");
-const newFolderName = document.getElementById("newFolderName");
-const createFolderConfirmBtn = document.getElementById("createFolderConfirmBtn");
-const iconChoices = document.querySelectorAll(".iconChoice");
-
 const deadlineEditor = document.getElementById("deadlineEditor");
 const deadlineEditorBackdrop = document.getElementById("deadlineEditorBackdrop");
 const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
@@ -43,7 +36,6 @@ const clearDeadlinesBtn = document.getElementById("clearDeadlinesBtn");
 
 let currentActionTarget = null;
 let currentPdfUrl = null;
-let selectedFolderIcon = "📁";
 let currentDeadlineFolder = null;
 
 /* -------------------- INDEXED DB -------------------- */
@@ -141,7 +133,6 @@ function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
   if (!folder.deadlines) folder.deadlines = [];
-  if (!folder.icon) folder.icon = "📁";
 }
 
 function isYearName(name) {
@@ -219,12 +210,11 @@ function getPathNames() {
   return names.join(" / ");
 }
 
-function createFolder(name, icon = "📁") {
+function createFolder(name) {
   const items = getCurrentLevel();
 
   items.push({
     name: name.trim(),
-    icon: icon,
     sub: [],
     files: [],
     deadlines: []
@@ -417,34 +407,6 @@ function openActionSheet(target) {
 function closeActionSheet() {
   currentActionTarget = null;
   actionSheet.classList.remove("show");
-}
-
-/* -------------------- ICON PICKER -------------------- */
-
-function openIconPicker() {
-  newFolderName.value = "";
-  selectedFolderIcon = "📁";
-
-  iconChoices.forEach(btn => {
-    btn.classList.remove("selected");
-    if (btn.dataset.icon === selectedFolderIcon) {
-      btn.classList.add("selected");
-    }
-  });
-
-  iconPicker.classList.remove("hidden");
-}
-
-function closeIconPicker() {
-  iconPicker.classList.add("hidden");
-}
-
-function selectFolderIcon(icon) {
-  selectedFolderIcon = icon;
-
-  iconChoices.forEach(btn => {
-    btn.classList.toggle("selected", btn.dataset.icon === icon);
-  });
 }
 
 /* -------------------- PDF VIEWER -------------------- */
@@ -717,14 +679,9 @@ function renderFolders(items, searchText) {
     let labelHTML = "";
 
     if (isYearName(item.name)) {
-      labelHTML = `🗓️ ${item.name}`;
+      labelHTML = item.name;
     } else {
-      labelHTML = `
-        <span class="folderLabel">
-          <span class="folderEmoji">${item.icon || "📁"}</span>
-          <span>${item.name}</span>
-        </span>
-      `;
+      labelHTML = item.name;
     }
 
     if (missingCount > 0) {
@@ -763,7 +720,7 @@ function renderFiles(files, searchText) {
     const row = createSwipeRow(
       "fileItem",
       "fileName",
-      "📄 PDF - " + file.name,
+      "PDF - " + file.name,
       function () {
         openFile(file);
       },
@@ -814,29 +771,11 @@ function render() {
 /* -------------------- EVENTI -------------------- */
 
 addBtn.onclick = function () {
-  openIconPicker();
+  let name = prompt("Nome cartella");
+  if (!name || !name.trim()) return;
+
+  createFolder(name);
 };
-
-createFolderConfirmBtn.onclick = function () {
-  const name = newFolderName.value.trim();
-
-  if (!name) {
-    alert("Inserisci il nome della cartella.");
-    return;
-  }
-
-  createFolder(name, selectedFolderIcon);
-  closeIconPicker();
-};
-
-iconChoices.forEach(btn => {
-  btn.onclick = function () {
-    selectFolderIcon(btn.dataset.icon);
-  };
-});
-
-closeIconPickerBtn.onclick = closeIconPicker;
-iconPickerBackdrop.onclick = closeIconPicker;
 
 addYearBtn.onclick = function () {
   if (currentPath.length === 0) {
@@ -861,7 +800,7 @@ addYearBtn.onclick = function () {
     return;
   }
 
-  createFolder(year, "🗓️");
+  createFolder(year);
 };
 
 addFileBtn.onclick = function () {
@@ -961,5 +900,4 @@ clearDeadlinesBtn.onclick = function () {
 
 /* -------------------- AVVIO -------------------- */
 
-selectFolderIcon("📁");
 render();
