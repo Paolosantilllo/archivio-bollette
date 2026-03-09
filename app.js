@@ -29,9 +29,22 @@ const newFolderName = document.getElementById("newFolderName");
 const createFolderConfirmBtn = document.getElementById("createFolderConfirmBtn");
 const iconChoices = document.querySelectorAll(".iconChoice");
 
+const deadlineEditor = document.getElementById("deadlineEditor");
+const deadlineEditorBackdrop = document.getElementById("deadlineEditorBackdrop");
+const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
+const deadlineLabelInput = document.getElementById("deadlineLabelInput");
+const deadlineFirstDateInput = document.getElementById("deadlineFirstDateInput");
+const deadlineIntervalSelect = document.getElementById("deadlineIntervalSelect");
+const deadlinePrefixInput = document.getElementById("deadlinePrefixInput");
+const deadlineListBox = document.getElementById("deadlineListBox");
+const saveDeadlineBtn = document.getElementById("saveDeadlineBtn");
+const replaceDeadlinesBtn = document.getElementById("replaceDeadlinesBtn");
+const clearDeadlinesBtn = document.getElementById("clearDeadlinesBtn");
+
 let currentActionTarget = null;
 let currentPdfUrl = null;
 let selectedFolderIcon = "📁";
+let currentDeadlineFolder = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -260,6 +273,19 @@ function parseItalianDate(dateString) {
   return date;
 }
 
+function formatDateForInput(itDate) {
+  const date = parseItalianDate(itDate);
+  if (!date) return "";
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function formatInputDateToIT(value) {
+  if (!value) return "";
+  const parts = value.split("-");
+  if (parts.length !== 3) return "";
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 function addMonths(date, months) {
   const d = new Date(date);
   const originalDay = d.getDate();
@@ -286,9 +312,7 @@ function hasRequiredPdf(folder, requiredText) {
     normalizeText(file.name).includes(check)
   );
 
-  if (foundInCurrentFolder) {
-    return true;
-  }
+  if (foundInCurrentFolder) return true;
 
   for (const subFolder of folder.sub) {
     if (hasRequiredPdf(subFolder, requiredText)) {
@@ -432,142 +456,124 @@ async function openFile(file) {
   }
 }
 
-/* -------------------- GESTIONE SCADENZE -------------------- */
+/* -------------------- EDITOR SCADENZE -------------------- */
 
-function addDeadlineRuleToFolder(folder) {
+function renderDeadlineList(folder) {
   ensureFolderStructure(folder);
 
-  const ruleName = prompt(
-    "Nome scadenza (es. Internet, Bollo, Acqua, Telepass)",
-    folder.name
-  );
-  if (!ruleName || !ruleName.trim()) return;
-
-  let firstDueDate = prompt(
-    "Inserisci la prima scadenza nel formato GG/MM/AAAA",
-    "05/01/2026"
-  );
-  if (!firstDueDate || !firstDueDate.trim()) return;
-
-  firstDueDate = firstDueDate.trim();
-
-  if (!parseItalianDate(firstDueDate)) {
-    alert("Data non valida. Usa il formato GG/MM/AAAA, ad esempio 05/01/2026");
+  if (folder.deadlines.length === 0) {
+    deadlineListBox.innerHTML = `<div class="deadlineEmpty">Nessuna scadenza salvata</div>`;
     return;
   }
 
-  let intervalMonths = prompt(
-    "Ogni quanti mesi si ripete?\n1 = mensile\n2 = bimestrale\n3 = trimestrale\n6 = semestrale\n12 = annuale",
-    "1"
-  );
-  if (!intervalMonths || !intervalMonths.trim()) return;
+  deadlineListBox.innerHTML = folder.deadlines
+    .map((d, index) => {
+      return `
+        <div class="deadlineItem">
+          <strong>${index + 1}. ${d.label}</strong><br>
+          Prima scadenza: ${d.firstDueDate}<br>
+          Ripetizione: ogni ${d.intervalMonths} mese/i<br>
+          Prefisso PDF: ${d.requiredPrefix || "-"}
+        </div>
+      `;
+    })
+    .join("");
+}
 
-  intervalMonths = parseInt(intervalMonths, 10);
+function clearDeadlineForm() {
+  deadlineLabelInput.value = "";
+  deadlineFirstDateInput.value = "";
+  deadlineIntervalSelect.value = "1";
+  deadlinePrefixInput.value = "";
+}
+
+function openDeadlineEditor(folder) {
+  currentDeadlineFolder = folder;
+  ensureFolderStructure(folder);
+
+  deadlineLabelInput.value = folder.name || "";
+  deadlineFirstDateInput.value = "";
+  deadlineIntervalSelect.value = "1";
+  deadlinePrefixInput.value = "";
+
+  renderDeadlineList(folder);
+  deadlineEditor.classList.remove("hidden");
+}
+
+function closeDeadlineEditor() {
+  currentDeadlineFolder = null;
+  deadlineEditor.classList.add("hidden");
+}
+
+function saveDeadlineToCurrentFolder(replaceAll = false) {
+  if (!currentDeadlineFolder) return;
+
+  const label = deadlineLabelInput.value.trim();
+  const inputDate = deadlineFirstDateInput.value;
+  const intervalMonths = parseInt(deadlineIntervalSelect.value, 10);
+  const prefix = deadlinePrefixInput.value.trim();
+
+  if (!label) {
+    alert("Inserisci il nome della scadenza.");
+    return;
+  }
+
+  if (!inputDate) {
+    alert("Inserisci la prima scadenza.");
+    return;
+  }
 
   if (!intervalMonths || intervalMonths < 1) {
-    alert("Numero mesi non valido.");
+    alert("Intervallo mesi non valido.");
     return;
   }
 
-  let requiredPrefix = prompt(
-    "Prefisso da cercare nel nome PDF, es. internet oppure acqua oppure bollo",
-    ""
-  );
-  if (requiredPrefix === null) return;
+  const firstDueDate = formatInputDateToIT(inputDate);
 
-  folder.deadlines.push({
-    label: ruleName.trim(),
+  if (!parseItalianDate(firstDueDate)) {
+    alert("Data non valida.");
+    return;
+  }
+
+  ensureFolderStructure(currentDeadlineFolder);
+
+  if (replaceAll) {
+    currentDeadlineFolder.deadlines = [];
+  }
+
+  currentDeadlineFolder.deadlines.push({
+    label: label,
     firstDueDate: firstDueDate,
     intervalMonths: intervalMonths,
-    requiredPrefix: requiredPrefix.trim()
+    requiredPrefix: prefix
   });
 
   save();
   render();
-  alert("Scadenza salvata.");
+  renderDeadlineList(currentDeadlineFolder);
+  clearDeadlineForm();
 }
 
-function configureDeadlinesForFolder(folder) {
-  ensureFolderStructure(folder);
+function clearDeadlinesFromCurrentFolder() {
+  if (!currentDeadlineFolder) return;
 
-  if (folder.deadlines.length === 0) {
-    addDeadlineRuleToFolder(folder);
+  ensureFolderStructure(currentDeadlineFolder);
+
+  if (currentDeadlineFolder.deadlines.length === 0) {
+    alert("Non ci sono scadenze da eliminare.");
     return;
   }
 
-  let summary = folder.deadlines
-    .map((d, index) => {
-      return (
-        (index + 1) +
-        ") " +
-        d.label +
-        " - ogni " +
-        d.intervalMonths +
-        " mese/i - prima scadenza " +
-        d.firstDueDate
-      );
-    })
-    .join("\n");
-
-  let choice = prompt(
-    "Scadenze già presenti in '" +
-      folder.name +
-      "':\n\n" +
-      summary +
-      "\n\n" +
-      "Scegli:\n" +
-      "1 = sostituisci tutte le scadenze\n" +
-      "2 = aggiungi una nuova scadenza\n" +
-      "3 = elimina tutte le scadenze\n" +
-      "4 = annulla",
-    "1"
+  const ok = confirm(
+    "Vuoi eliminare tutte le scadenze di questa cartella?\nI PDF NON verranno eliminati."
   );
 
-  if (!choice) return;
+  if (!ok) return;
 
-  choice = choice.trim();
-
-  if (choice === "1") {
-    let ok = confirm(
-      "Vuoi sostituire tutte le scadenze di '" +
-        folder.name +
-        "'?\nI PDF NON verranno eliminati."
-    );
-    if (!ok) return;
-
-    folder.deadlines = [];
-    save();
-    render();
-
-    addDeadlineRuleToFolder(folder);
-    return;
-  }
-
-  if (choice === "2") {
-    addDeadlineRuleToFolder(folder);
-    return;
-  }
-
-  if (choice === "3") {
-    let ok = confirm(
-      "Vuoi eliminare tutte le scadenze di '" +
-        folder.name +
-        "'?\nI PDF NON verranno eliminati."
-    );
-    if (!ok) return;
-
-    folder.deadlines = [];
-    save();
-    render();
-    alert("Scadenze eliminate.");
-    return;
-  }
-
-  if (choice === "4") {
-    return;
-  }
-
-  alert("Scelta non valida.");
+  currentDeadlineFolder.deadlines = [];
+  save();
+  render();
+  renderDeadlineList(currentDeadlineFolder);
 }
 
 /* -------------------- SWIPE -------------------- */
@@ -653,7 +659,6 @@ function renderFolders(items, searchText) {
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
     const missingCount = getMissingDeadlinesCount(item);
-
     let labelHTML = "";
 
     if (isYearName(item.name)) {
@@ -697,7 +702,7 @@ function renderFolders(items, searchText) {
         render();
       },
       function () {
-        configureDeadlinesForFolder(item);
+        openDeadlineEditor(item);
       }
     );
 
@@ -748,9 +753,9 @@ function render() {
   pathBox.textContent = getPathNames();
   list.innerHTML = "";
 
-  let items = getCurrentLevel();
-  let files = getCurrentFiles();
-  let searchText = searchInput.value.toLowerCase().trim();
+  const items = getCurrentLevel();
+  const files = getCurrentFiles();
+  const searchText = searchInput.value.toLowerCase().trim();
 
   sortFolders(items);
 
@@ -804,7 +809,7 @@ addYearBtn.onclick = function () {
     return;
   }
 
-  let items = getCurrentLevel();
+  const items = getCurrentLevel();
 
   if (items.some(item => item.name === year)) {
     alert("Questo anno esiste già.");
@@ -896,6 +901,26 @@ deleteActionBtn.onclick = function () {
 cancelActionBtn.onclick = closeActionSheet;
 actionSheetBackdrop.onclick = closeActionSheet;
 closePdfBtn.onclick = closePdfViewer;
+
+closeDeadlineEditorBtn.onclick = closeDeadlineEditor;
+deadlineEditorBackdrop.onclick = closeDeadlineEditor;
+
+saveDeadlineBtn.onclick = function () {
+  saveDeadlineToCurrentFolder(false);
+};
+
+replaceDeadlinesBtn.onclick = function () {
+  const ok = confirm(
+    "Vuoi sostituire tutte le scadenze con quella che stai inserendo?\nI PDF NON verranno eliminati."
+  );
+  if (!ok) return;
+
+  saveDeadlineToCurrentFolder(true);
+};
+
+clearDeadlinesBtn.onclick = function () {
+  clearDeadlinesFromCurrentFolder();
+};
 
 /* -------------------- AVVIO -------------------- */
 
