@@ -1,436 +1,488 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f2f2f7;
-  margin: 0;
-  color: #111;
-  overflow-x: hidden;
+body{
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+background:#f2f2f7;
+margin:0;
+color:#111;
+overflow-x:hidden;
 }
 
-header {
-  background: white;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+header{
+background:white;
+padding:15px;
+box-shadow:0 2px 5px rgba(0,0,0,0.08);
+position:sticky;
+top:0;
+z-index:10;
 }
 
-h1 {
-  margin: 0;
-  font-size: 28px;
+h1{
+margin:0;
+font-size:28px;
 }
 
-#search {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #eee;
-  font-size: 16px;
-  box-sizing: border-box;
+#search{
+width:100%;
+padding:10px 12px;
+margin-top:10px;
+border-radius:10px;
+border:none;
+background:#eee;
+font-size:16px;
+box-sizing:border-box;
 }
 
-main {
-  padding: 10px 0 110px 0;
+main{
+padding:10px 0 110px 0;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 15px 10px 15px;
+.topbar{
+display:flex;
+align-items:center;
+gap:10px;
+padding:0 15px 10px 15px;
 }
 
-#backBtn {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
+#backBtn{
+border:none;
+background:#007aff;
+color:white;
+padding:10px 14px;
+border-radius:10px;
+font-size:15px;
+cursor:pointer;
 }
 
-#path {
-  font-size: 14px;
-  color: #666;
-  word-break: break-word;
+#path{
+font-size:14px;
+color:#666;
+word-break:break-word;
 }
 
-#folders {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+#folders{
+list-style:none;
+padding:0;
+margin:0;
 }
 
-.swipeRow {
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid #ddd;
-  background: #f2f2f7;
+.swipeRow{
+position:relative;
+overflow:hidden;
+border-bottom:1px solid #ddd;
+background:#f2f2f7;
 }
 
 .folder,
-.fileItem {
-  background: white;
-  padding: 15px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  position: relative;
-  z-index: 1;
-  transform: translateX(0);
-  transition: transform 0.18s ease;
-  touch-action: pan-y;
+.fileItem{
+background:white;
+padding:15px;
+font-size:18px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+position:relative;
+z-index:1;
+transform:translateX(0);
+transition:transform .18s ease;
+touch-action:pan-y;
 }
 
 .folderName,
-.fileName {
-  flex: 1;
-  cursor: pointer;
-  word-break: break-word;
+.fileName{
+flex:1;
+cursor:pointer;
+word-break:break-word;
 }
 
-.floatingButtons {
-  position: fixed;
-  right: 20px;
-  bottom: 25px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.floatingButtons{
+position:fixed;
+right:20px;
+bottom:25px;
+display:flex;
+flex-direction:column;
+gap:12px;
 }
 
 #addFolder,
 #addFile,
-#addYear {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: none;
-  color: white;
-  font-size: 26px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+#addYear{
+width:60px;
+height:60px;
+border-radius:50%;
+border:none;
+color:white;
+font-size:26px;
+cursor:pointer;
+box-shadow:0 6px 16px rgba(0,0,0,0.2);
 }
 
-#addFolder {
-  background: #007aff;
+#addFolder{
+background:#007aff;
 }
 
-#addFile {
-  background: #34c759;
+#addFile{
+background:#34c759;
 }
 
-#addYear {
-  background: #ff9500;
+#addYear{
+background:#ff9500;
 }
 
-.hidden {
-  display: none !important;
+/* ACTION SHEET */
+
+#actionSheet{
+position:fixed;
+inset:0;
+display:none;
+z-index:999;
 }
 
-/* action sheet */
-
-#actionSheet {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 999;
+#actionSheet.show{
+display:block;
 }
 
-#actionSheet.show {
-  display: block;
+#actionSheetBackdrop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.28);
 }
 
-#actionSheetBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#actionSheetPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  background: #f2f2f7;
-  border-radius: 18px;
-  overflow: hidden;
+#actionSheetPanel{
+position:absolute;
+left:12px;
+right:12px;
+bottom:12px;
+background:#f2f2f7;
+border-radius:18px;
+overflow:hidden;
 }
 
 .actionBtn,
-.cancelBtn {
-  width: 100%;
-  border: none;
-  background: white;
-  padding: 18px;
-  font-size: 18px;
-  cursor: pointer;
-  border-bottom: 1px solid #e5e5ea;
+.cancelBtn{
+width:100%;
+border:none;
+background:white;
+padding:18px;
+font-size:18px;
+cursor:pointer;
+border-bottom:1px solid #e5e5ea;
 }
 
-.actionBtn:last-child {
-  border-bottom: none;
+.deleteAction{
+color:#ff3b30;
 }
 
-.deleteAction {
-  color: #ff3b30;
+.cancelWrap{
+margin-top:8px;
 }
 
-.cancelWrap {
-  margin-top: 8px;
+.cancelBtn{
+border-radius:18px;
+font-weight:600;
 }
 
-.cancelBtn {
-  border-radius: 18px;
-  font-weight: 600;
+/* PDF VIEWER */
+
+.hidden{
+display:none!important;
 }
 
-/* pdf viewer */
-
-#pdfViewer {
-  position: fixed;
-  inset: 0;
-  background: white;
-  z-index: 1200;
-  display: flex;
-  flex-direction: column;
+#pdfViewer{
+position:fixed;
+inset:0;
+background:white;
+z-index:1200;
+display:flex;
+flex-direction:column;
 }
 
-#pdfViewerHeader {
-  height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 12px;
-  background: white;
-  border-bottom: 1px solid #ddd;
-  flex-shrink: 0;
+#pdfViewerHeader{
+height:56px;
+display:flex;
+align-items:center;
+gap:12px;
+padding:0 12px;
+background:white;
+border-bottom:1px solid #ddd;
+flex-shrink:0;
 }
 
-#closePdfBtn {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
+#closePdfBtn{
+border:none;
+background:#007aff;
+color:white;
+padding:8px 12px;
+border-radius:10px;
+font-size:15px;
+cursor:pointer;
 }
 
-#pdfTitle {
-  font-size: 16px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+#pdfTitle{
+font-size:16px;
+font-weight:600;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
 }
 
-#pdfFrame {
-  width: 100%;
-  height: calc(100vh - 56px);
-  border: none;
-  background: #f2f2f7;
+#pdfFrame{
+width:100%;
+height:calc(100vh - 56px);
+border:none;
+background:#f2f2f7;
 }
 
-/* editor scadenze */
+/* DEADLINE EDITOR */
 
-#deadlineEditor {
-  position: fixed;
-  inset: 0;
-  z-index: 1400;
+#deadlineEditor{
+position:fixed;
+inset:0;
+z-index:1400;
 }
 
-#deadlineEditor.hidden {
-  display: none;
+#deadlineEditor.hidden{
+display:none;
 }
 
-#deadlineEditorBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
+#deadlineEditorBackdrop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.28);
 }
 
-#deadlineEditorPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 18px;
-  padding: 16px;
-  max-height: 85vh;
-  overflow-y: auto;
+#deadlineEditorPanel{
+position:absolute;
+left:12px;
+right:12px;
+top:50%;
+transform:translateY(-50%);
+background:#f2f2f7;
+border-radius:18px;
+padding:16px;
+max-height:85vh;
+overflow-y:auto;
 }
 
-.deadlineHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+.deadlineHeader{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:14px;
 }
 
-.deadlineHeader h3 {
-  margin: 0;
-  font-size: 20px;
+.deadlineHeader h3{
+margin:0;
+font-size:20px;
 }
 
-#closeDeadlineEditorBtn {
-  border: none;
-  background: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  font-size: 18px;
-  cursor: pointer;
+#closeDeadlineEditorBtn{
+border:none;
+background:white;
+width:36px;
+height:36px;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
 }
 
-.deadlineForm {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.deadlineForm{
+display:flex;
+flex-direction:column;
+gap:8px;
 }
 
-.deadlineForm label {
-  font-size: 14px;
-  color: #555;
-  margin-top: 6px;
+.deadlineForm label{
+font-size:14px;
+color:#555;
+margin-top:6px;
 }
 
 .deadlineForm input,
-.deadlineForm select {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  background: white;
+.deadlineForm select{
+width:100%;
+box-sizing:border-box;
+padding:12px;
+border:none;
+border-radius:12px;
+font-size:16px;
+background:white;
 }
 
-#deadlineListBox {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  background: white;
-  border-radius: 14px;
-  overflow: hidden;
+#deadlineListBox{
+margin-top:16px;
+margin-bottom:16px;
+background:white;
+border-radius:14px;
+overflow:hidden;
 }
 
-.deadlineItem {
-  padding: 12px 14px;
-  border-bottom: 1px solid #ececec;
-  font-size: 14px;
+.deadlineItem{
+padding:12px 14px;
+border-bottom:1px solid #ececec;
+font-size:14px;
 }
 
-.deadlineItem:last-child {
-  border-bottom: none;
+.deadlineEmpty{
+padding:14px;
+color:#777;
+font-size:14px;
 }
 
-.deadlineEmpty {
-  padding: 14px;
-  color: #777;
-  font-size: 14px;
-}
-
-.deadlineButtons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.deadlineButtons{
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
 .primaryBtn,
 .secondaryBtn,
-.dangerBtn {
-  width: 100%;
-  border: none;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 17px;
-  cursor: pointer;
+.dangerBtn{
+width:100%;
+border:none;
+padding:14px;
+border-radius:14px;
+font-size:17px;
+cursor:pointer;
 }
 
-.primaryBtn {
-  background: #007aff;
-  color: white;
+.primaryBtn{
+background:#007aff;
+color:white;
 }
 
-.secondaryBtn {
-  background: white;
-  color: #111;
+.secondaryBtn{
+background:white;
 }
 
-.dangerBtn {
-  background: #ff3b30;
-  color: white;
+.dangerBtn{
+background:#ff3b30;
+color:white;
 }
 
-/* rinomina pdf */
+/* RENAME MODAL */
 
-#renameModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
+#renameModal{
+position:fixed;
+inset:0;
+z-index:1500;
 }
 
-#renameBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
+#renameModal.hidden{
+display:none;
 }
 
-#renamePanel {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
+#renameBackdrop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.28);
 }
 
-#renamePanel h3 {
-  margin-top: 0;
+#renamePanel{
+position:absolute;
+left:12px;
+right:12px;
+top:50%;
+transform:translateY(-50%);
+background:white;
+border-radius:16px;
+padding:20px;
 }
 
-#renameInput {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  border: none;
-  background: #eee;
-  border-radius: 10px;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
+#renameInput{
+width:100%;
+padding:12px;
+border:none;
+background:#eee;
+border-radius:10px;
+font-size:16px;
+margin-top:10px;
 }
 
-.renameButtons {
-  display: flex;
-  gap: 10px;
+.renameButtons{
+margin-top:15px;
+display:flex;
+gap:10px;
 }
 
-#renameConfirm {
-  flex: 1;
-  background: #007aff;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
+.renameButtons button{
+flex:1;
+border:none;
+padding:12px;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
 }
 
-#renameCancel {
-  flex: 1;
-  background: #ddd;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
+#renameConfirm{
+background:#007aff;
+color:white;
+}
+
+#renameCancel{
+background:#ddd;
+}
+
+/* MOVE PDF */
+
+#moveModal{
+position:fixed;
+inset:0;
+z-index:1500;
+}
+
+#moveModal.hidden{
+display:none;
+}
+
+#moveBackdrop{
+position:absolute;
+inset:0;
+background:rgba(0,0,0,.28);
+}
+
+#movePanel{
+position:absolute;
+left:12px;
+right:12px;
+top:50%;
+transform:translateY(-50%);
+background:white;
+border-radius:18px;
+padding:16px;
+max-height:80vh;
+overflow-y:auto;
+}
+
+.moveHeader{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+#closeMoveBtn{
+border:none;
+background:#eee;
+border-radius:8px;
+width:36px;
+height:36px;
+cursor:pointer;
+}
+
+#moveCurrentFile{
+margin-bottom:10px;
+font-size:14px;
+color:#444;
+}
+
+.moveFolderItem{
+width:100%;
+border:none;
+background:#f2f2f7;
+padding:14px;
+margin-bottom:6px;
+border-radius:10px;
+text-align:left;
+font-size:15px;
+cursor:pointer;
 }
