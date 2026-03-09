@@ -148,6 +148,16 @@ function isYearName(name) {
   return /^\d{4}$/.test(name);
 }
 
+function getFolderYear(folder) {
+  if (!folder || !folder.name) return null;
+
+  if (/^\d{4}$/.test(folder.name)) {
+    return parseInt(folder.name, 10);
+  }
+
+  return null;
+}
+
 function sortFolders(items) {
   items.sort((a, b) => {
     const aIsYear = isYearName(a.name);
@@ -301,21 +311,24 @@ function addMonths(date, months) {
 
 /* -------------------- CONTROLLO PDF / SCADENZE -------------------- */
 
-function hasRequiredPdf(folder, requiredText) {
+function hasRequiredPdf(folder, requiredText, extraRequiredTexts = []) {
   ensureFolderStructure(folder);
 
-  if (!requiredText) return false;
+  const checks = [requiredText, ...extraRequiredTexts]
+    .filter(Boolean)
+    .map(text => normalizeText(text));
 
-  const check = normalizeText(requiredText);
+  if (checks.length === 0) return false;
 
-  const foundInCurrentFolder = folder.files.some(file =>
-    normalizeText(file.name).includes(check)
-  );
+  const foundInCurrentFolder = folder.files.some(file => {
+    const fileName = normalizeText(file.name);
+    return checks.some(check => fileName.includes(check));
+  });
 
   if (foundInCurrentFolder) return true;
 
   for (const subFolder of folder.sub) {
-    if (hasRequiredPdf(subFolder, requiredText)) {
+    if (hasRequiredPdf(subFolder, requiredText, extraRequiredTexts)) {
       return true;
     }
   }
@@ -323,7 +336,7 @@ function hasRequiredPdf(folder, requiredText) {
   return false;
 }
 
-function getDeadlineOccurrences(deadline) {
+function getDeadlineOccurrences(deadline, folder = null) {
   const result = [];
 
   if (!deadline) return result;
@@ -335,14 +348,29 @@ function getDeadlineOccurrences(deadline) {
 
   if (!firstDate) return result;
 
+  const folderYear = getFolderYear(folder);
   let current = new Date(firstDate);
 
   while (current <= today) {
-    result.push({
-      dueDate: new Date(current),
-      requiredText: `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`,
-      label: `${deadline.label || "Scadenza"} ${formatDateIT(current)}`
-    });
+    if (!folderYear || current.getFullYear() === folderYear) {
+      const primaryRequiredText =
+        `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`;
+
+      const extraRequiredTexts = [];
+
+      if (deadline.intervalMonths === 12) {
+        extraRequiredTexts.push(
+          `${deadline.requiredPrefix || ""}${current.getFullYear()}`
+        );
+      }
+
+      result.push({
+        dueDate: new Date(current),
+        requiredText: primaryRequiredText,
+        extraRequiredTexts: extraRequiredTexts,
+        label: `${deadline.label || "Scadenza"} ${formatDateIT(current)}`
+      });
+    }
 
     current = addMonths(current, deadline.intervalMonths);
   }
@@ -357,13 +385,16 @@ function getMissingDeadlinesCount(folder) {
   let missing = 0;
 
   folder.deadlines.forEach(deadline => {
-    const occurrences = getDeadlineOccurrences(deadline);
+    const occurrences = getDeadlineOccurrences(deadline, folder);
 
     occurrences.forEach(item => {
       const due = new Date(item.dueDate);
       due.setHours(23, 59, 59, 999);
 
-      if (today > due && !hasRequiredPdf(folder, item.requiredText)) {
+      if (
+        today > due &&
+        !hasRequiredPdf(folder, item.requiredText, item.extraRequiredTexts || [])
+      ) {
         missing++;
       }
     });
@@ -478,14 +509,6 @@ function renderDeadlineList(folder) {
       `;
     })
     .join("");
-}
-
-function clearDeadlineForm() {
-  deadlineFolderNameInput.value = "";
-  deadlineLabelInput.value = "";
-  deadlineFirstDateInput.value = "";
-  deadlineIntervalSelect.value = "1";
-  deadlinePrefixInput.value = "";
 }
 
 function openDeadlineEditor(folder) {
