@@ -289,6 +289,10 @@ function getMissingDeadlinesCount(folder) {
     });
   });
 
+  folder.sub.forEach(subFolder => {
+    missing += getMissingDeadlinesCount(subFolder);
+  });
+
   return missing;
 }
 
