@@ -12,6 +12,7 @@ const fileInput = document.getElementById("fileInput");
 
 const actionSheet = document.getElementById("actionSheet");
 const actionSheetBackdrop = document.getElementById("actionSheetBackdrop");
+const deadlineActionBtn = document.getElementById("deadlineActionBtn");
 const renameActionBtn = document.getElementById("renameActionBtn");
 const deleteActionBtn = document.getElementById("deleteActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
@@ -57,7 +58,6 @@ async function savePdfToDB(pdfRecord) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-
     store.put(pdfRecord);
 
     tx.oncomplete = function () {
@@ -94,7 +94,6 @@ async function deletePdfFromDB(id) {
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
     const store = tx.objectStore(STORE_NAME);
-
     store.delete(id);
 
     tx.oncomplete = function () {
@@ -132,10 +131,7 @@ function sortFolders(items) {
     const aIsYear = isYearName(a.name);
     const bIsYear = isYearName(b.name);
 
-    if (aIsYear && bIsYear) {
-      return Number(b.name) - Number(a.name);
-    }
-
+    if (aIsYear && bIsYear) return Number(b.name) - Number(a.name);
     if (aIsYear && !bIsYear) return -1;
     if (!aIsYear && bIsYear) return 1;
 
@@ -206,10 +202,37 @@ function createFolder(name) {
   render();
 }
 
-/* -------------------- SCADENZE -------------------- */
+/* -------------------- DATE / SCADENZE -------------------- */
 
 function normalizeText(text) {
   return (text || "").toLowerCase().trim();
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function formatYearMonth(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`;
+}
+
+function addMonths(date, months) {
+  const d = new Date(date);
+  const day = d.getDate();
+
+  d.setMonth(d.getMonth() + months);
+
+  if (d.getDate() < day) {
+    d.setDate(0);
+  }
+
+  return d;
+}
+
+function buildDueDate(year, month, day) {
+  const lastDay = new Date(year, month, 0).getDate();
+  const safeDay = Math.min(day, lastDay);
+  return new Date(year, month - 1, safeDay);
 }
 
 function hasRequiredPdf(folder, requiredText) {
@@ -219,9 +242,32 @@ function hasRequiredPdf(folder, requiredText) {
 
   const check = normalizeText(requiredText);
 
-  return folder.files.some(file => {
-    return normalizeText(file.name).includes(check);
-  });
+  return folder.files.some(file => normalizeText(file.name).includes(check));
+}
+
+function getDeadlineOccurrences(deadline) {
+  const result = [];
+
+  if (!deadline) return result;
+  if (!deadline.startYear || !deadline.startMonth || !deadline.dueDay) return result;
+  if (!deadline.intervalMonths || deadline.intervalMonths < 1) return result;
+
+  const today = new Date();
+  const startDate = buildDueDate(deadline.startYear, deadline.startMonth, deadline.dueDay);
+
+  let current = new Date(startDate);
+
+  while (current <= today) {
+    result.push({
+      dueDate: new Date(current),
+      requiredText: `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`,
+      label: `${deadline.label || "Scadenza"} ${formatYearMonth(current)}`
+    });
+
+    current = addMonths(current, deadline.intervalMonths);
+  }
+
+  return result;
 }
 
 function getMissingDeadlinesCount(folder) {
@@ -231,13 +277,16 @@ function getMissingDeadlinesCount(folder) {
   let missing = 0;
 
   folder.deadlines.forEach(deadline => {
-    if (!deadline.dueDate || !deadline.requiredText) return;
+    const occurrences = getDeadlineOccurrences(deadline);
 
-    const due = new Date(deadline.dueDate + "T23:59:59");
+    occurrences.forEach(item => {
+      const due = new Date(item.dueDate);
+      due.setHours(23, 59, 59, 999);
 
-    if (today > due && !hasRequiredPdf(folder, deadline.requiredText)) {
-      missing++;
-    }
+      if (today > due && !hasRequiredPdf(folder, item.requiredText)) {
+        missing++;
+      }
+    });
   });
 
   return missing;
@@ -295,6 +344,99 @@ async function openFile(file) {
   }
 }
 
+/* -------------------- GESTIONE SCADENZE -------------------- */
+
+function configureDeadlinesForFolder(folder) {
+  ensureFolderStructure(folder);
+
+  const ruleName = prompt(
+    "Nome scadenza (es. Bollo auto, Sport, Acqua, Telepass)",
+    folder.name
+  );
+  if (!ruleName || !ruleName.trim()) return;
+
+  let type = prompt(
+    "Tipo scadenza: mensile / annuale / personalizzata",
+    "mensile"
+  );
+  if (!type || !type.trim()) return;
+
+  type = type.trim().toLowerCase();
+
+  let intervalMonths = 1;
+
+  if (type === "mensile") {
+    intervalMonths = 1;
+  } else if (type === "annuale") {
+    intervalMonths = 12;
+  } else if (type === "personalizzata") {
+    let customMonths = prompt(
+      "Ogni quanti mesi? Esempi: 3 per Telepass, 6 per Acqua",
+      "3"
+    );
+
+    if (!customMonths || !customMonths.trim()) return;
+
+    intervalMonths = parseInt(customMonths, 10);
+
+    if (!intervalMonths || intervalMonths < 1) {
+      alert("Numero mesi non valido.");
+      return;
+    }
+  } else {
+    alert("Tipo non valido. Usa: mensile, annuale o personalizzata.");
+    return;
+  }
+
+  let dueDay = prompt("Giorno del mese di scadenza (1-31)", "5");
+  if (!dueDay || !dueDay.trim()) return;
+  dueDay = parseInt(dueDay, 10);
+
+  if (!dueDay || dueDay < 1 || dueDay > 31) {
+    alert("Giorno non valido.");
+    return;
+  }
+
+  let startYear = prompt("Anno iniziale (es. 2026)", String(new Date().getFullYear()));
+  if (!startYear || !startYear.trim()) return;
+  startYear = parseInt(startYear, 10);
+
+  if (!startYear || startYear < 2000 || startYear > 3000) {
+    alert("Anno iniziale non valido.");
+    return;
+  }
+
+  let startMonth = prompt("Mese iniziale (1-12)", String(new Date().getMonth() + 1));
+  if (!startMonth || !startMonth.trim()) return;
+  startMonth = parseInt(startMonth, 10);
+
+  if (!startMonth || startMonth < 1 || startMonth > 12) {
+    alert("Mese iniziale non valido.");
+    return;
+  }
+
+  let requiredPrefix = prompt(
+    "Testo iniziale da cercare nel nome PDF (facoltativo). Esempio: acqua- oppure telepass-",
+    ""
+  );
+  if (requiredPrefix === null) return;
+
+  folder.deadlines.push({
+    label: ruleName.trim(),
+    type: type,
+    intervalMonths: intervalMonths,
+    dueDay: dueDay,
+    startYear: startYear,
+    startMonth: startMonth,
+    requiredPrefix: requiredPrefix.trim()
+  });
+
+  save();
+  render();
+
+  alert("Scadenza salvata.");
+}
+
 /* -------------------- SWIPE -------------------- */
 
 function attachSwipe(contentEl, onSwipeLeft) {
@@ -348,7 +490,8 @@ function createSwipeRow(
   labelText,
   openAction,
   renameAction,
-  deleteAction
+  deleteAction,
+  deadlineAction
 ) {
   const row = document.createElement("li");
   row.className = "swipeRow";
@@ -369,7 +512,8 @@ function createSwipeRow(
   attachSwipe(content, function () {
     openActionSheet({
       renameAction,
-      deleteAction
+      deleteAction,
+      deadlineAction
     });
   });
 
@@ -417,6 +561,9 @@ function renderFolders(items, searchText) {
         items.splice(i, 1);
         save();
         render();
+      },
+      function () {
+        configureDeadlinesForFolder(item);
       }
     );
 
@@ -454,7 +601,8 @@ function renderFiles(files, searchText) {
         files.splice(i, 1);
         save();
         render();
-      }
+      },
+      null
     );
 
     list.appendChild(row);
@@ -568,6 +716,14 @@ backBtn.onclick = function () {
 };
 
 searchInput.addEventListener("input", render);
+
+deadlineActionBtn.onclick = function () {
+  if (!currentActionTarget || !currentActionTarget.deadlineAction) return;
+
+  const action = currentActionTarget.deadlineAction;
+  closeActionSheet();
+  action();
+};
 
 renameActionBtn.onclick = function () {
   if (!currentActionTarget) return;
