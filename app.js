@@ -352,6 +352,7 @@ async function convertImageFileToPdfArrayBuffer(file) {
 
 function save() {
   localStorage.setItem("archivio", JSON.stringify(data));
+  updateAppBadge();
 }
 
 function ensureFolderStructure(folder) {
@@ -1388,4 +1389,36 @@ moveBackdrop.onclick = closeMoveModal;
 
 /* -------------------- AVVIO -------------------- */
 
+function updateAppBadge(){
+
+let totalMissing = 0;
+
+function count(folder){
+
+ensureFolderStructure(folder);
+
+totalMissing += getMissingDeadlinesCount(folder);
+
+folder.sub.forEach(sub=>{
+count(sub);
+});
+
+}
+
+data.forEach(folder=>{
+count(folder);
+});
+
+if("setAppBadge" in navigator){
+
+if(totalMissing > 0){
+navigator.setAppBadge(totalMissing);
+}else{
+navigator.clearAppBadge();
+}
+
+}
+
+}
 render();
+updateAppBadge();
