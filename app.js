@@ -1,6 +1,9 @@
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
 let currentPath = [];
 
+let pendingImportedPdf = null;
+let pendingImportedPdfName = "";
+
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
@@ -141,12 +144,16 @@ async function deletePdfFromDB(id) {
 function createPdfId() {
   return "pdf_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
 }
+
+/* -------------------- CONVERSIONE IMMAGINE -> PDF -------------------- */
+
 function stringToUint8(str) {
   return new TextEncoder().encode(str);
 }
 
 function concatUint8Arrays(arrays) {
   let totalLength = 0;
+
   arrays.forEach(arr => {
     totalLength += arr.length;
   });
@@ -175,7 +182,7 @@ function dataUrlToUint8Array(dataUrl) {
 }
 
 function buildPdfFromJpeg(jpegBytes, imgWidth, imgHeight) {
-  const pageWidth = 595.28;   // A4 in punti
+  const pageWidth = 595.28;
   const pageHeight = 841.89;
 
   let drawWidth = pageWidth;
@@ -190,13 +197,12 @@ function buildPdfFromJpeg(jpegBytes, imgWidth, imgHeight) {
   const y = (pageHeight - drawHeight) / 2;
 
   const contentStream =
-    `q
+`q
 ${drawWidth.toFixed(2)} 0 0 ${drawHeight.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm
 /Im0 Do
 Q`;
 
   const contentBytes = stringToUint8(contentStream);
-
   const objects = [];
 
   objects.push(stringToUint8(`1 0 obj
@@ -341,6 +347,7 @@ async function convertImageFileToPdfArrayBuffer(file) {
 
   return pdfBytes.buffer;
 }
+
 /* -------------------- DATI LEGGERI -------------------- */
 
 function save() {
@@ -687,6 +694,7 @@ async function shareCurrentPdf() {
 
   try {
     const pdfRecord = await getPdfFromDB(currentOpenedFile.pdfId);
+
     if (!pdfRecord || !pdfRecord.data) {
       alert("PDF non trovato.");
       return;
@@ -887,8 +895,20 @@ function openRenameModal(file) {
   renameInput.focus();
 }
 
+function openRenameModalForImportedPdf(defaultName, arrayBuffer) {
+  pendingImportedPdf = arrayBuffer;
+  pendingImportedPdfName = defaultName;
+
+  currentRenameFile = null;
+  renameInput.value = defaultName;
+  renameModal.classList.remove("hidden");
+  renameInput.focus();
+}
+
 function closeRenameModal() {
   currentRenameFile = null;
+  pendingImportedPdf = null;
+  pendingImportedPdfName = "";
   renameModal.classList.add("hidden");
 }
 
@@ -958,6 +978,7 @@ function movePdfToTarget(targetPath) {
   const alreadyExists = targetFolder.files.some(
     file => file.pdfId === currentMoveFile.pdfId
   );
+
   if (alreadyExists) {
     alert("Questo PDF è già presente nella cartella scelta.");
     return;
@@ -966,6 +987,7 @@ function movePdfToTarget(targetPath) {
   const index = currentMoveSourceFiles.findIndex(
     file => file.pdfId === currentMoveFile.pdfId
   );
+
   if (index === -1) return;
 
   const fileToMove = currentMoveSourceFiles[index];
@@ -1214,34 +1236,31 @@ fileInput.onchange = async function (event) {
   }
 
   try {
-    let arrayBuffer;
-    let savedName;
-
     if (isPdf) {
-      arrayBuffer = await file.arrayBuffer();
-      savedName = file.name;
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfId = createPdfId();
+
+      await savePdfToDB({
+        id: pdfId,
+        data: arrayBuffer
+      });
+
+      const files = getCurrentFiles();
+
+      files.push({
+        name: file.name,
+        type: "application/pdf",
+        pdfId: pdfId
+      });
+
+      save();
+      render();
     } else {
-      arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
-      savedName = changeExtensionToPdf(file.name);
+      const arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
+      const savedName = changeExtensionToPdf(file.name);
+
+      openRenameModalForImportedPdf(savedName, arrayBuffer);
     }
-
-    const pdfId = createPdfId();
-
-    await savePdfToDB({
-      id: pdfId,
-      data: arrayBuffer
-    });
-
-    const files = getCurrentFiles();
-
-    files.push({
-      name: savedName,
-      type: "application/pdf",
-      pdfId: pdfId
-    });
-
-    save();
-    render();
   } catch (error) {
     alert("Errore nel salvataggio del file.");
   } finally {
@@ -1307,11 +1326,45 @@ clearDeadlinesBtn.onclick = function () {
   clearDeadlinesFromCurrentFolder();
 };
 
-renameConfirm.onclick = function () {
-  if (!currentRenameFile) return;
-
+renameConfirm.onclick = async function () {
   const newName = renameInput.value.trim();
   if (!newName) return;
+
+  if (pendingImportedPdf) {
+    try {
+      const finalName = newName.toLowerCase().endsWith(".pdf")
+        ? newName
+        : newName + ".pdf";
+
+      const pdfId = createPdfId();
+
+      await savePdfToDB({
+        id: pdfId,
+        data: pendingImportedPdf
+      });
+
+      const files = getCurrentFiles();
+
+      files.push({
+        name: finalName,
+        type: "application/pdf",
+        pdfId: pdfId
+      });
+
+      pendingImportedPdf = null;
+      pendingImportedPdfName = "";
+
+      save();
+      render();
+      closeRenameModal();
+      return;
+    } catch (error) {
+      alert("Errore nel salvataggio del PDF.");
+      return;
+    }
+  }
+
+  if (!currentRenameFile) return;
 
   currentRenameFile.name = newName;
   save();
