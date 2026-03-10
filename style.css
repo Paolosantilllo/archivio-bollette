@@ -531,3 +531,11 @@ main {
     font-size: 12px;
   }
 }
+.folderAlert {
+  background: #ffe5e5;
+}
+
+.folderAlertText {
+  color: #c62828;
+  font-weight: 600;
+}
