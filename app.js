@@ -21,6 +21,8 @@ const pdfViewer = document.getElementById("pdfViewer");
 const pdfFrame = document.getElementById("pdfFrame");
 const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
+const sharePdfBtn = document.getElementById("sharePdfBtn");
+const printPdfBtn = document.getElementById("printPdfBtn");
 
 const deadlineEditor = document.getElementById("deadlineEditor");
 const deadlineEditorBackdrop = document.getElementById("deadlineEditorBackdrop");
@@ -53,6 +55,7 @@ let currentDeadlineFolder = null;
 let currentRenameFile = null;
 let currentMoveFile = null;
 let currentMoveSourceFiles = null;
+let currentOpenedFile = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -447,6 +450,7 @@ function closePdfViewer() {
   pdfViewer.classList.add("hidden");
   pdfFrame.src = "";
   pdfTitle.textContent = "PDF";
+  currentOpenedFile = null;
 
   if (currentPdfUrl) {
     URL.revokeObjectURL(currentPdfUrl);
@@ -472,6 +476,7 @@ async function openFile(file) {
 
     const blob = new Blob([pdfRecord.data], { type: "application/pdf" });
     currentPdfUrl = URL.createObjectURL(blob);
+    currentOpenedFile = file;
 
     pdfTitle.textContent = file.name || "PDF";
     pdfFrame.src = currentPdfUrl;
@@ -479,6 +484,52 @@ async function openFile(file) {
   } catch (error) {
     alert("Errore nell'apertura del PDF.");
   }
+}
+
+async function shareCurrentPdf() {
+  if (!currentOpenedFile || !currentOpenedFile.pdfId) return;
+
+  try {
+    const pdfRecord = await getPdfFromDB(currentOpenedFile.pdfId);
+    if (!pdfRecord || !pdfRecord.data) {
+      alert("PDF non trovato.");
+      return;
+    }
+
+    const blob = new Blob([pdfRecord.data], { type: "application/pdf" });
+    const fileName = currentOpenedFile.name || "documento.pdf";
+    const shareFile = new File([blob], fileName, { type: "application/pdf" });
+
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+      await navigator.share({
+        files: [shareFile],
+        title: fileName
+      });
+    } else if (navigator.share) {
+      await navigator.share({
+        title: fileName,
+        text: fileName
+      });
+    } else {
+      alert("Condivisione non supportata su questo dispositivo.");
+    }
+  } catch (error) {
+    alert("Errore nella condivisione del PDF.");
+  }
+}
+
+function printCurrentPdf() {
+  if (!currentPdfUrl) return;
+
+  const win = window.open(currentPdfUrl, "_blank");
+  if (!win) {
+    alert("Impossibile aprire la finestra di stampa.");
+    return;
+  }
+
+  win.onload = function () {
+    win.print();
+  };
 }
 
 /* -------------------- EDITOR MODIFICA CARTELLA -------------------- */
@@ -1005,7 +1056,10 @@ deleteActionBtn.onclick = function () {
 
 cancelActionBtn.onclick = closeActionSheet;
 actionSheetBackdrop.onclick = closeActionSheet;
+
 closePdfBtn.onclick = closePdfViewer;
+if (sharePdfBtn) sharePdfBtn.onclick = shareCurrentPdf;
+if (printPdfBtn) printPdfBtn.onclick = printCurrentPdf;
 
 closeDeadlineEditorBtn.onclick = closeDeadlineEditor;
 deadlineEditorBackdrop.onclick = closeDeadlineEditor;
