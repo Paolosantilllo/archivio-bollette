@@ -1092,32 +1092,40 @@ function renderFolders(items, searchText) {
     let labelHTML = item.name;
     const missingCount = getMissingDeadlinesCount(item);
 
-    if (missingCount > 0) {
-      labelHTML += ` (${missingCount} mancanti)`;
-    }
+if (missingCount > 0) {
+  labelHTML += ` (${missingCount})`;
+}
 
-    const row = createSwipeRow(
-      "folder",
-      "folderName",
-      labelHTML,
-      function () {
-        currentPath.push(i);
-        render();
-      },
-      function () {
-        openDeadlineEditor(item);
-      },
-      function () {
-        const ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
-        if (!ok) return;
+   const row = createSwipeRow(
+  "folder",
+  "folderName",
+  labelHTML,
+  function () {
+    currentPath.push(i);
+    render();
+  },
+  function () {
+    openDeadlineEditor(item);
+  },
+  function () {
+    const ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
+    if (!ok) return;
 
-        items.splice(i, 1);
-        save();
-        render();
-      }
-    );
+    items.splice(i, 1);
+    save();
+    render();
+  }
+);
 
-    list.appendChild(row);
+if (missingCount > 0) {
+  const content = row.querySelector(".folder");
+  const name = row.querySelector(".folderName");
+
+  if (content) content.classList.add("folderAlert");
+  if (name) name.classList.add("folderAlertText");
+}
+
+list.appendChild(row);
   });
 }
 
