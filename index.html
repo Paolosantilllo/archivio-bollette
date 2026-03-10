@@ -1,604 +1,158 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f2f2f7;
-  margin: 0;
-  color: #111;
-  overflow-x: hidden;
-}
-
-header {
-  background: #f2f2f7;
-  padding: 15px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-h1 {
-  margin: 0;
-  font-size: 28px;
-}
-
-#search {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 12px;
-  border: none;
-  background: #e5e5ea;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-main {
-  padding: 10px 0 110px 0;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 15px 10px 15px;
-  background: #f2f2f7;
-}
-
-#backBtn {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-#path {
-  font-size: 14px;
-  color: #666;
-  word-break: break-word;
-}
-
-#folders {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.swipeRow {
-  position: relative;
-  overflow: visible;
-  background: #f2f2f7;
-}
-
-.folder,
-.fileItem {
-  background: #e9e9ef;
-  padding: 15px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  position: relative;
-  z-index: 1;
-  transform: translateX(0);
-  transition: transform 0.18s ease;
-  touch-action: pan-y;
-  margin: 6px 10px;
-  border-radius: 14px;
-}
-
-.folderName,
-.fileName {
-  flex: 1;
-  cursor: pointer;
-  word-break: break-word;
-}
-
-.floatingButtons {
-  position: fixed;
-  right: 20px;
-  bottom: 25px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-#addFolder,
-#addFile {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  border: none;
-  color: white;
-  font-size: 26px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-
-#addFolder {
-  background: #007aff;
-}
-
-#addFile {
-  background: #34c759;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ACTION SHEET */
-
-#actionSheet {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 999;
-}
-
-#actionSheet.show {
-  display: block;
-}
-
-#actionSheetBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#actionSheetPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  background: #f2f2f7;
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-.actionBtn,
-.cancelBtn {
-  width: 100%;
-  border: none;
-  background: #e9e9ef;
-  padding: 18px;
-  font-size: 18px;
-  cursor: pointer;
-  border-bottom: 1px solid #d7d7dd;
-}
-
-.deleteAction {
-  color: #ff3b30;
-}
-
-.cancelWrap {
-  margin-top: 8px;
-}
-
-.cancelBtn {
-  border-radius: 18px;
-  font-weight: 600;
-}
-
-/* PDF VIEWER */
-
-#pdfViewer {
-  position: fixed;
-  inset: 0;
-  background: #f2f2f7;
-  z-index: 1200;
-  display: flex;
-  flex-direction: column;
-}
-
-#pdfViewerHeader {
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #f2f2f7;
-  border-bottom: 1px solid #d7d7dd;
-  flex-shrink: 0;
-}
-
-#closePdfBtn {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-#pdfTitle {
-  font-size: 16px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.pdfActions {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.pdfActions button {
-  border: none;
-  background: #007aff;
-  color: white;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-#pdfFrame {
-  width: 100%;
-  height: calc(100vh - 56px);
-  background: #f2f2f7;
-  border: none;
-}
-
-/* DEADLINE EDITOR */
-
-#deadlineEditor {
-  position: fixed;
-  inset: 0;
-  z-index: 1400;
-}
-
-#deadlineEditor.hidden {
-  display: none;
-}
-
-#deadlineEditorBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#deadlineEditorPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 18px;
-  padding: 16px;
-  max-height: 85vh;
-  overflow-y: auto;
-}
-
-.deadlineHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.deadlineHeader h3 {
-  margin: 0;
-  font-size: 20px;
-}
-
-#closeDeadlineEditorBtn {
-  border: none;
-  background: #e9e9ef;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  font-size: 18px;
-  cursor: pointer;
-}
-
-.deadlineForm {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.deadlineForm label {
-  font-size: 14px;
-  color: #555;
-  margin-top: 6px;
-}
-
-.deadlineForm input,
-.deadlineForm select {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  background: #e9e9ef;
-}
-
-#deadlineListBox {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  background: #e9e9ef;
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.deadlineItem {
-  padding: 12px 14px;
-  border-bottom: 1px solid #d7d7dd;
-  font-size: 14px;
-}
-
-.deadlineEmpty {
-  padding: 14px;
-  color: #777;
-  font-size: 14px;
-}
-
-.deadlineButtons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.primaryBtn,
-.secondaryBtn,
-.dangerBtn {
-  width: 100%;
-  border: none;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 17px;
-  cursor: pointer;
-}
-
-.primaryBtn {
-  background: #007aff;
-  color: white;
-}
-
-.secondaryBtn {
-  background: #e9e9ef;
-}
-
-.dangerBtn {
-  background: #ff3b30;
-  color: white;
-}
-
-/* RENAME MODAL */
-
-#renameModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-}
-
-#renameModal.hidden {
-  display: none;
-}
-
-#renameBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#renamePanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-#renameInput {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: #e9e9ef;
-  border-radius: 10px;
-  font-size: 16px;
-  margin-top: 10px;
-  box-sizing: border-box;
-}
-
-.renameButtons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.renameButtons button {
-  flex: 1;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#renameConfirm {
-  background: #007aff;
-  color: white;
-}
-
-#renameCancel {
-  background: #d7d7dd;
-}
-
-/* MOVE PDF */
-
-#moveModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-}
-
-#moveModal.hidden {
-  display: none;
-}
-
-#moveBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#movePanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 18px;
-  padding: 16px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.moveHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-#closeMoveBtn {
-  border: none;
-  background: #e9e9ef;
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
-}
-
-#moveCurrentFile {
-  margin-bottom: 10px;
-  font-size: 14px;
-  color: #444;
-}
-
-.moveFolderItem {
-  width: 100%;
-  border: none;
-  background: #e9e9ef;
-  padding: 14px;
-  margin-bottom: 6px;
-  border-radius: 10px;
-  text-align: left;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-/* NUOVA CARTELLA */
-
-#folderModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1600;
-}
-
-#folderModal.hidden {
-  display: none;
-}
-
-#folderBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#folderPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-#folderNameInput {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: #e9e9ef;
-  border-radius: 10px;
-  font-size: 16px;
-  margin-top: 10px;
-  box-sizing: border-box;
-}
-
-.folderButtons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.folderButtons button {
-  flex: 1;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#folderConfirmBtn {
-  background: #007aff;
-  color: white;
-}
-
-#folderCancelBtn {
-  background: #d7d7dd;
-}
-
-/* CONTATORE MANCANTI */
-
-.missingCount {
-  color: #ff3b30;
-  font-weight: 600;
-  margin-left: 4px;
-}
-
-/* RESPONSIVE */
-
-@media (orientation: landscape) {
-  #pdfFrame {
-    height: calc(100vh - 56px);
-  }
-}
-
-@media (max-width: 600px) {
-  #pdfViewerHeader {
-    gap: 8px;
-    padding: 8px;
-  }
-
-  #pdfTitle {
-    font-size: 14px;
-  }
-
-  .pdfActions {
-    gap: 6px;
-  }
-
-  .pdfActions button {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Archivio Bollette</title>
+
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Bollette">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>Archivio</h1>
+    <input type="text" id="search" placeholder="🔍 Cerca documento">
+  </header>
+
+  <main>
+    <div class="topbar">
+      <button id="backBtn">⬅️</button>
+      <div id="path"></div>
+    </div>
+
+    <ul id="folders"></ul>
+  </main>
+
+  <div class="floatingButtons">
+    <button id="addFolder">＋</button>
+    <button id="addFile">📄</button>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/pdf,image/*" hidden>
+
+  <div id="actionSheet">
+    <div id="actionSheetBackdrop"></div>
+
+    <div id="actionSheetPanel">
+      <button id="moveActionBtn" class="actionBtn">Sposta</button>
+      <button id="editActionBtn" class="actionBtn">Modifica</button>
+      <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
+
+      <div class="cancelWrap">
+        <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfViewer" class="hidden">
+    <div id="pdfViewerHeader">
+      <button id="closePdfBtn">Chiudi</button>
+      <div id="pdfTitle">PDF</div>
+
+      <div class="pdfActions">
+        <button id="sharePdfBtn">Condividi</button>
+        <button id="printPdfBtn">Stampa</button>
+      </div>
+    </div>
+
+    <embed id="pdfFrame" type="application/pdf">
+  </div>
+
+  <div id="deadlineEditor" class="hidden">
+    <div id="deadlineEditorBackdrop"></div>
+
+    <div id="deadlineEditorPanel">
+      <div class="deadlineHeader">
+        <h3>Modifica cartella</h3>
+        <button id="closeDeadlineEditorBtn">✕</button>
+      </div>
+
+      <div class="deadlineForm">
+        <label for="deadlineFolderNameInput">Nome cartella</label>
+        <input type="text" id="deadlineFolderNameInput">
+
+        <label for="deadlineLabelInput">Nome scadenza</label>
+        <input type="text" id="deadlineLabelInput">
+
+        <label for="deadlineFirstDateInput">Prima scadenza</label>
+        <input type="date" id="deadlineFirstDateInput">
+
+        <label for="deadlineIntervalSelect">Ripetizione</label>
+        <select id="deadlineIntervalSelect">
+          <option value="1">Ogni 1 mese</option>
+          <option value="2">Ogni 2 mesi</option>
+          <option value="3">Ogni 3 mesi</option>
+          <option value="4">Ogni 4 mesi</option>
+          <option value="6">Ogni 6 mesi</option>
+          <option value="12">Ogni 12 mesi</option>
+        </select>
+
+        <label for="deadlinePrefixInput">Prefisso PDF</label>
+        <input type="text" id="deadlinePrefixInput">
+      </div>
+
+      <div id="deadlineListBox"></div>
+
+      <div class="deadlineButtons">
+        <button id="saveDeadlineBtn" class="primaryBtn">Salva</button>
+        <button id="replaceDeadlinesBtn" class="secondaryBtn">Sostituisci scadenza</button>
+        <button id="clearDeadlinesBtn" class="dangerBtn">Elimina scadenze</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="renameModal" class="hidden">
+    <div id="renameBackdrop"></div>
+
+    <div id="renamePanel">
+      <h3>Rinomina PDF</h3>
+      <input type="text" id="renameInput">
+
+      <div class="renameButtons">
+        <button id="renameConfirm">Salva</button>
+        <button id="renameCancel">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="moveModal" class="hidden">
+    <div id="moveBackdrop"></div>
+
+    <div id="movePanel">
+      <div class="moveHeader">
+        <h3>Sposta PDF</h3>
+        <button id="closeMoveBtn">✕</button>
+      </div>
+
+      <div id="moveCurrentFile"></div>
+      <div id="moveFolderList"></div>
+    </div>
+  </div>
+
+  <div id="folderModal" class="hidden">
+    <div id="folderBackdrop"></div>
+
+    <div id="folderPanel">
+      <h3>Nuova cartella</h3>
+      <input type="text" id="folderNameInput" placeholder="Nome cartella">
+
+      <div class="folderButtons">
+        <button id="folderConfirmBtn">Salva</button>
+        <button id="folderCancelBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
