@@ -4,6 +4,9 @@ let currentPath = [];
 let pendingImportedPdf = null;
 let pendingImportedPdfName = "";
 
+const restoreBtn = document.getElementById("restoreBtn");
+const restoreInput = document.getElementById("restoreInput");
+
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
@@ -150,6 +153,23 @@ async function getAllPdfsFromDB() {
 }
 
 async function deletePdfFromDB(id) {
+  async function clearAllPdfsFromDB() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.clear();
+
+    request.onsuccess = function () {
+      resolve();
+    };
+
+    request.onerror = function () {
+      reject(request.error);
+    };
+  });
+}
   const db = await openDB();
 
   return new Promise((resolve, reject) => {
@@ -174,6 +194,69 @@ function createPdfId() {
 /* -------------------- BACKUP -------------------- */
 
 function arrayBufferToBase64(buffer) {
+  function base64ToArrayBuffer(base64) {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes.buffer;
+}
+  function openRestorePicker() {
+  if (!restoreInput) return;
+  restoreInput.value = "";
+  restoreInput.click();
+}
+
+async function importBackupFile(file) {
+  if (!file) return;
+
+  const ok = confirm(
+    "Vuoi ripristinare questo backup?\nL'archivio attuale verrà sostituito completamente."
+  );
+  if (!ok) return;
+
+  try {
+    if (restoreBtn) {
+      restoreBtn.textContent = "Ripristino...";
+      restoreBtn.disabled = true;
+    }
+
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    if (!backup || !backup.archivio || !Array.isArray(backup.pdfs)) {
+      alert("File backup non valido.");
+      return;
+    }
+
+    await clearAllPdfsFromDB();
+
+    for (const pdf of backup.pdfs) {
+      await savePdfToDB({
+        id: pdf.id,
+        data: base64ToArrayBuffer(pdf.data)
+      });
+    }
+
+    data = backup.archivio;
+    currentPath = [];
+    save();
+    render();
+
+    alert("Backup ripristinato con successo.");
+  } catch (error) {
+    alert("Errore durante il ripristino del backup.");
+  } finally {
+    if (restoreBtn) {
+      restoreBtn.textContent = "Ripristina";
+      restoreBtn.disabled = false;
+    }
+  }
+}
   let binary = "";
   const bytes = new Uint8Array(buffer);
   const chunkSize = 8192;
@@ -1561,7 +1644,58 @@ function updateAppBadge() {
     }
   }
 }
+function openRestorePicker() {
+  if (!restoreInput) return;
+  restoreInput.value = "";
+  restoreInput.click();
+}
 
+async function importBackupFile(file) {
+  if (!file) return;
+
+  const ok = confirm(
+    "Vuoi ripristinare questo backup?\nL'archivio attuale verrà sostituito completamente."
+  );
+  if (!ok) return;
+
+  try {
+    if (restoreBtn) {
+      restoreBtn.textContent = "Ripristino...";
+      restoreBtn.disabled = true;
+    }
+
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    if (!backup || !backup.archivio || !Array.isArray(backup.pdfs)) {
+      alert("File backup non valido.");
+      return;
+    }
+
+    await clearAllPdfsFromDB();
+
+    for (const pdf of backup.pdfs) {
+      await savePdfToDB({
+        id: pdf.id,
+        data: base64ToArrayBuffer(pdf.data)
+      });
+    }
+
+    data = backup.archivio;
+    currentPath = [];
+    save();
+    render();
+
+    alert("Backup ripristinato con successo.");
+  } catch (error) {
+    alert("Errore durante il ripristino del backup.");
+  } finally {
+    if (restoreBtn) {
+      restoreBtn.textContent = "Ripristina";
+      restoreBtn.disabled = false;
+    }
+  }
+}
 /* -------------------- AVVIO -------------------- */
 
 computeMissingCounts();
