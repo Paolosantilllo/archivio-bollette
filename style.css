@@ -486,3 +486,18 @@ text-align:left;
 font-size:15px;
 cursor:pointer;
 }
+.pdfActions{
+margin-left:auto;
+display:flex;
+gap:8px;
+}
+
+.pdfActions button{
+border:none;
+background:#007aff;
+color:white;
+padding:6px 10px;
+border-radius:8px;
+font-size:13px;
+cursor:pointer;
+}
