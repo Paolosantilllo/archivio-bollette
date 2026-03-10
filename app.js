@@ -1119,8 +1119,8 @@ if (missingCount > 0) {
 );
 
 if (missingCount > 0) {
-  const content = row.querySelector(".folder");
-  const name = row.querySelector(".folderName");
+  labelHTML += ` <span class="missingCount">(${missingCount})</span>`;
+}
 
   if (content) content.classList.add("folderAlert");
   if (name) name.classList.add("folderAlertText");
