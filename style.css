@@ -105,7 +105,6 @@ main {
 
 #addFolder,
 #addFile,
-#addYear {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -122,10 +121,6 @@ main {
 
 #addFile {
   background: #34c759;
-}
-
-#addYear {
-  background: #ff9500;
 }
 
 .hidden {
