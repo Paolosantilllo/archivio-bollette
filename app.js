@@ -160,11 +160,9 @@ function isYearName(name) {
 
 function getFolderYear(folder) {
   if (!folder || !folder.name) return null;
-
   if (/^\d{4}$/.test(folder.name)) {
     return parseInt(folder.name, 10);
   }
-
   return null;
 }
 
@@ -200,7 +198,7 @@ function getCurrentLevel() {
   let level = data;
 
   for (let i = 0; i < currentPath.length; i++) {
-    let folder = level[currentPath[i]];
+    const folder = level[currentPath[i]];
     ensureFolderStructure(folder);
     level = folder.sub;
   }
@@ -216,11 +214,11 @@ function getCurrentFiles() {
 }
 
 function getPathNames() {
-  let names = ["Home"];
+  const names = ["Home"];
   let level = data;
 
   for (let i = 0; i < currentPath.length; i++) {
-    let folder = level[currentPath[i]];
+    const folder = level[currentPath[i]];
     ensureFolderStructure(folder);
     names.push(folder.name);
     level = folder.sub;
@@ -369,7 +367,6 @@ function getDeadlineOccurrences(deadline, folder = null) {
 
   const today = new Date();
   const firstDate = parseItalianDate(deadline.firstDueDate);
-
   if (!firstDate) return result;
 
   const folderYear = getFolderYear(folder);
@@ -500,7 +497,11 @@ async function shareCurrentPdf() {
     const fileName = currentOpenedFile.name || "documento.pdf";
     const shareFile = new File([blob], fileName, { type: "application/pdf" });
 
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [shareFile] })
+    ) {
       await navigator.share({
         files: [shareFile],
         title: fileName
@@ -755,13 +756,17 @@ function movePdfToTarget(targetPath) {
 
   ensureFolderStructure(targetFolder);
 
-  const alreadyExists = targetFolder.files.some(file => file.pdfId === currentMoveFile.pdfId);
+  const alreadyExists = targetFolder.files.some(
+    file => file.pdfId === currentMoveFile.pdfId
+  );
   if (alreadyExists) {
     alert("Questo PDF è già presente nella cartella scelta.");
     return;
   }
 
-  const index = currentMoveSourceFiles.findIndex(file => file.pdfId === currentMoveFile.pdfId);
+  const index = currentMoveSourceFiles.findIndex(
+    file => file.pdfId === currentMoveFile.pdfId
+  );
   if (index === -1) return;
 
   const fileToMove = currentMoveSourceFiles[index];
@@ -780,29 +785,37 @@ function attachSwipe(contentEl, onSwipeLeft) {
   let currentX = 0;
   let isDragging = false;
 
-  contentEl.addEventListener("touchstart", function (e) {
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-  }, { passive: true });
+  contentEl.addEventListener(
+    "touchstart",
+    function (e) {
+      startX = e.touches[0].clientX;
+      currentX = startX;
+      isDragging = true;
+    },
+    { passive: true }
+  );
 
-  contentEl.addEventListener("touchmove", function (e) {
-    if (!isDragging) return;
+  contentEl.addEventListener(
+    "touchmove",
+    function (e) {
+      if (!isDragging) return;
 
-    currentX = e.touches[0].clientX;
-    let diff = currentX - startX;
+      currentX = e.touches[0].clientX;
+      let diff = currentX - startX;
 
-    if (diff < 0) {
-      diff = Math.max(diff, -80);
-      contentEl.style.transform = `translateX(${diff}px)`;
-    }
-  }, { passive: true });
+      if (diff < 0) {
+        diff = Math.max(diff, -80);
+        contentEl.style.transform = `translateX(${diff}px)`;
+      }
+    },
+    { passive: true }
+  );
 
   contentEl.addEventListener("touchend", function () {
     if (!isDragging) return;
 
     isDragging = false;
-    let diff = currentX - startX;
+    const diff = currentX - startX;
     contentEl.style.transform = "translateX(0)";
 
     if (diff < -60) {
