@@ -531,14 +531,7 @@ main {
     font-size: 12px;
   }
 }
-.folderAlert {
-  background: #ffe5e5;
-}
 
-.folderAlertText {
-  color: #c62828;
-  font-weight: 600;
-}
 .missingCount{
 color:#ff3b30;
 font-weight:600;
