@@ -7,7 +7,6 @@ let pendingImportedPdfName = "";
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
-const addYearBtn = document.getElementById("addYear");
 const backBtn = document.getElementById("backBtn");
 const pathBox = document.getElementById("path");
 const searchInput = document.getElementById("search");
@@ -1236,8 +1235,6 @@ function render() {
 
   sortFolders(items);
 
-  addYearBtn.style.display = currentPath.length === 0 ? "none" : "block";
-  addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
 
   computeMissingCounts();
 
@@ -1251,31 +1248,7 @@ addBtn.onclick = function () {
   openFolderModal();
 };
 
-addYearBtn.onclick = function () {
-  if (currentPath.length === 0) {
-    alert("Entra prima in una cartella principale.");
-    return;
-  }
 
-  let year = prompt("Inserisci anno (es. 2026)");
-  if (!year || !year.trim()) return;
-
-  year = year.trim();
-
-  if (!isYearName(year)) {
-    alert("Inserisci un anno valido.");
-    return;
-  }
-
-  const items = getCurrentLevel();
-
-  if (items.some(item => item.name === year)) {
-    alert("Questo anno esiste già.");
-    return;
-  }
-
-  createFolder(year);
-};
 
 addFileBtn.onclick = function () {
   if (currentPath.length === 0) {
