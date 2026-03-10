@@ -141,7 +141,206 @@ async function deletePdfFromDB(id) {
 function createPdfId() {
   return "pdf_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
 }
+function stringToUint8(str) {
+  return new TextEncoder().encode(str);
+}
 
+function concatUint8Arrays(arrays) {
+  let totalLength = 0;
+  arrays.forEach(arr => {
+    totalLength += arr.length;
+  });
+
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+
+  arrays.forEach(arr => {
+    result.set(arr, offset);
+    offset += arr.length;
+  });
+
+  return result;
+}
+
+function dataUrlToUint8Array(dataUrl) {
+  const base64 = dataUrl.split(",")[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+function buildPdfFromJpeg(jpegBytes, imgWidth, imgHeight) {
+  const pageWidth = 595.28;   // A4 in punti
+  const pageHeight = 841.89;
+
+  let drawWidth = pageWidth;
+  let drawHeight = (imgHeight / imgWidth) * drawWidth;
+
+  if (drawHeight > pageHeight) {
+    drawHeight = pageHeight;
+    drawWidth = (imgWidth / imgHeight) * drawHeight;
+  }
+
+  const x = (pageWidth - drawWidth) / 2;
+  const y = (pageHeight - drawHeight) / 2;
+
+  const contentStream =
+    `q
+${drawWidth.toFixed(2)} 0 0 ${drawHeight.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm
+/Im0 Do
+Q`;
+
+  const contentBytes = stringToUint8(contentStream);
+
+  const objects = [];
+
+  objects.push(stringToUint8(`1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+`));
+
+  objects.push(stringToUint8(`2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+`));
+
+  objects.push(stringToUint8(`3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>
+endobj
+`));
+
+  objects.push(
+    concatUint8Arrays([
+      stringToUint8(`4 0 obj
+<< /Type /XObject /Subtype /Image /Width ${imgWidth} /Height ${imgHeight} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBytes.length} >>
+stream
+`),
+      jpegBytes,
+      stringToUint8(`
+endstream
+endobj
+`)
+    ])
+  );
+
+  objects.push(
+    concatUint8Arrays([
+      stringToUint8(`5 0 obj
+<< /Length ${contentBytes.length} >>
+stream
+`),
+      contentBytes,
+      stringToUint8(`
+endstream
+endobj
+`)
+    ])
+  );
+
+  const header = concatUint8Arrays([
+    stringToUint8("%PDF-1.4\n"),
+    new Uint8Array([0x25, 0xe2, 0xe3, 0xcf, 0xd3, 0x0a])
+  ]);
+
+  const parts = [header];
+  const offsets = [0];
+  let currentOffset = header.length;
+
+  objects.forEach(obj => {
+    offsets.push(currentOffset);
+    parts.push(obj);
+    currentOffset += obj.length;
+  });
+
+  let xref = `xref
+0 ${objects.length + 1}
+0000000000 65535 f 
+`;
+
+  for (let i = 1; i <= objects.length; i++) {
+    xref += `${String(offsets[i]).padStart(10, "0")} 00000 n 
+`;
+  }
+
+  const xrefBytes = stringToUint8(xref);
+  const startxref = currentOffset;
+
+  const trailerBytes = stringToUint8(`trailer
+<< /Size ${objects.length + 1} /Root 1 0 R >>
+startxref
+${startxref}
+%%EOF`);
+
+  parts.push(xrefBytes);
+  parts.push(trailerBytes);
+
+  return concatUint8Arrays(parts);
+}
+
+function changeExtensionToPdf(fileName) {
+  if (!fileName) return "documento.pdf";
+  return fileName.replace(/\.[^/.]+$/, "") + ".pdf";
+}
+
+function loadImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      const img = new Image();
+
+      img.onload = function () {
+        resolve(img);
+      };
+
+      img.onerror = function () {
+        reject(new Error("Immagine non valida"));
+      };
+
+      img.src = reader.result;
+    };
+
+    reader.onerror = function () {
+      reject(new Error("Errore lettura immagine"));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function convertImageFileToPdfArrayBuffer(file) {
+  const img = await loadImageFile(file);
+
+  const maxDimension = 2000;
+  let width = img.width;
+  let height = img.height;
+
+  if (width > maxDimension || height > maxDimension) {
+    const scale = Math.min(maxDimension / width, maxDimension / height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(img, 0, 0, width, height);
+
+  const jpegDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+  const jpegBytes = dataUrlToUint8Array(jpegDataUrl);
+  const pdfBytes = buildPdfFromJpeg(jpegBytes, width, height);
+
+  return pdfBytes.buffer;
+}
 /* -------------------- DATI LEGGERI -------------------- */
 
 function save() {
@@ -1006,14 +1205,26 @@ fileInput.onchange = async function (event) {
     file.type === "application/pdf" ||
     file.name.toLowerCase().endsWith(".pdf");
 
-  if (!isPdf) {
-    alert("Puoi caricare solo file PDF.");
+  const isImage = file.type.startsWith("image/");
+
+  if (!isPdf && !isImage) {
+    alert("Puoi caricare solo PDF, foto o screenshot.");
     fileInput.value = "";
     return;
   }
 
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    let arrayBuffer;
+    let savedName;
+
+    if (isPdf) {
+      arrayBuffer = await file.arrayBuffer();
+      savedName = file.name;
+    } else {
+      arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
+      savedName = changeExtensionToPdf(file.name);
+    }
+
     const pdfId = createPdfId();
 
     await savePdfToDB({
@@ -1024,7 +1235,7 @@ fileInput.onchange = async function (event) {
     const files = getCurrentFiles();
 
     files.push({
-      name: file.name,
+      name: savedName,
       type: "application/pdf",
       pdfId: pdfId
     });
@@ -1032,7 +1243,9 @@ fileInput.onchange = async function (event) {
     save();
     render();
   } catch (error) {
-    alert("Errore nel salvataggio del PDF.");
+    alert("Errore nel salvataggio del file.");
+  } finally {
+    fileInput.value = "";
   }
 };
 
