@@ -65,6 +65,7 @@ let currentMoveFile = null;
 let currentMoveSourceFiles = null;
 let currentOpenedFile = null;
 let missingCountMap = new Map();
+let searchTimer = null;
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -299,6 +300,40 @@ function changeExtensionToPdf(fileName) {
   return fileName.replace(/\.[^/.]+$/, "") + ".pdf";
 }
 
+function suggestPdfNameFromPath(originalName = "") {
+  const cleanOriginal = originalName.replace(/\.[^/.]+$/, "");
+  const pathNames = getPathNames().split(" / ").filter(Boolean);
+
+  let folderName = "";
+  let yearName = "";
+
+  if (pathNames.length >= 2) {
+    folderName = pathNames[pathNames.length - 1];
+  }
+
+  if (pathNames.length >= 3) {
+    const last = pathNames[pathNames.length - 1];
+    const prev = pathNames[pathNames.length - 2];
+
+    if (/^\d{4}$/.test(last)) {
+      yearName = last;
+      folderName = prev;
+    }
+  }
+
+  folderName = (folderName || "documento").toLowerCase().trim();
+
+  if (yearName) {
+    return `${folderName} ${yearName}.pdf`;
+  }
+
+  if (cleanOriginal) {
+    return `${folderName} ${cleanOriginal}.pdf`;
+  }
+
+  return `${folderName}.pdf`;
+}
+
 function loadImageFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -358,6 +393,7 @@ async function convertImageFileToPdfArrayBuffer(file) {
 
 function save() {
   localStorage.setItem("archivio", JSON.stringify(data));
+  computeMissingCounts();
   updateAppBadge();
 }
 
@@ -388,6 +424,12 @@ function sortFolders(items) {
     if (aIsYear && !bIsYear) return -1;
     if (!aIsYear && bIsYear) return 1;
 
+    return a.name.localeCompare(b.name, "it", { sensitivity: "base" });
+  });
+}
+
+function sortFiles(files) {
+  files.sort((a, b) => {
     return a.name.localeCompare(b.name, "it", { sensitivity: "base" });
   });
 }
@@ -610,35 +652,6 @@ function getDeadlineOccurrences(deadline, folder = null) {
   }
 
   return result;
-}
-
-function getMissingDeadlinesCount(folder) {
-  ensureFolderStructure(folder);
-
-  const today = new Date();
-  let missing = 0;
-
-  folder.deadlines.forEach(deadline => {
-    const occurrences = getDeadlineOccurrences(deadline, folder);
-
-    occurrences.forEach(item => {
-      const due = new Date(item.dueDate);
-      due.setHours(23, 59, 59, 999);
-
-      if (
-        today > due &&
-        !hasRequiredPdf(folder, item.requiredText, item.extraRequiredTexts || [])
-      ) {
-        missing++;
-      }
-    });
-  });
-
-  folder.sub.forEach(subFolder => {
-    missing += getMissingDeadlinesCount(subFolder);
-  });
-
-  return missing;
 }
 
 /* -------------------- OTTIMIZZAZIONE CONTATORI -------------------- */
@@ -1234,7 +1247,9 @@ function render() {
   const searchText = searchInput.value.toLowerCase().trim();
 
   sortFolders(items);
+  sortFiles(files);
 
+  addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
 
   computeMissingCounts();
 
@@ -1247,8 +1262,6 @@ function render() {
 addBtn.onclick = function () {
   openFolderModal();
 };
-
-
 
 addFileBtn.onclick = function () {
   if (currentPath.length === 0) {
@@ -1298,7 +1311,7 @@ fileInput.onchange = async function (event) {
       render();
     } else {
       const arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
-      const savedName = changeExtensionToPdf(file.name);
+      const savedName = suggestPdfNameFromPath(file.name);
 
       openRenameModalForImportedPdf(savedName, arrayBuffer);
     }
@@ -1314,7 +1327,10 @@ backBtn.onclick = function () {
   render();
 };
 
-searchInput.addEventListener("input", render);
+searchInput.addEventListener("input", function () {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(render, 120);
+});
 
 moveActionBtn.onclick = function () {
   if (!currentActionTarget || !currentActionTarget.moveAction) return;
@@ -1457,5 +1473,6 @@ function updateAppBadge() {
 
 /* -------------------- AVVIO -------------------- */
 
+computeMissingCounts();
 render();
 updateAppBadge();
