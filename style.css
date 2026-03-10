@@ -552,3 +552,64 @@ border-radius:50%;
 margin-left:6px;
 vertical-align:middle;
 }
+#folderModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+}
+
+#folderModal.hidden {
+  display: none;
+}
+
+#folderBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#folderPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+#folderNameInput {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #eee;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.folderButtons {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.folderButtons button {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#folderConfirmBtn {
+  background: #007aff;
+  color: white;
+}
+
+#folderCancelBtn {
+  background: #ddd;
+}
