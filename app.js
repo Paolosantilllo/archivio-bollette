@@ -11,6 +11,7 @@ const backBtn = document.getElementById("backBtn");
 const pathBox = document.getElementById("path");
 const searchInput = document.getElementById("search");
 const fileInput = document.getElementById("fileInput");
+const backupBtn = document.getElementById("backupBtn");
 
 const actionSheet = document.getElementById("actionSheet");
 const actionSheetBackdrop = document.getElementById("actionSheetBackdrop");
@@ -130,6 +131,24 @@ async function getPdfFromDB(id) {
   });
 }
 
+async function getAllPdfsFromDB() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = function () {
+      resolve(request.result || []);
+    };
+
+    request.onerror = function () {
+      reject(request.error);
+    };
+  });
+}
+
 async function deletePdfFromDB(id) {
   const db = await openDB();
 
@@ -150,6 +169,74 @@ async function deletePdfFromDB(id) {
 
 function createPdfId() {
   return "pdf_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+}
+
+/* -------------------- BACKUP -------------------- */
+
+function arrayBufferToBase64(buffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 8192;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+}
+
+async function exportBackup() {
+  try {
+    if (backupBtn) {
+      backupBtn.textContent = "Backup...";
+      backupBtn.disabled = true;
+    }
+
+    const pdfs = await getAllPdfsFromDB();
+
+    const backup = {
+      version: 1,
+      createdAt: new Date().toISOString(),
+      archivio: data,
+      pdfs: pdfs.map(item => ({
+        id: item.id,
+        data: arrayBufferToBase64(item.data)
+      }))
+    };
+
+    const json = JSON.stringify(backup);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const now = new Date();
+    const fileName =
+      "backup-bollette-" +
+      now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0") +
+      ".json";
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+
+    alert("Backup creato. Salvalo nell'app File del tuo iPhone.");
+  } catch (e) {
+    alert("Errore durante il backup.");
+  } finally {
+    if (backupBtn) {
+      backupBtn.textContent = "Backup";
+      backupBtn.disabled = false;
+    }
+  }
 }
 
 /* -------------------- CONVERSIONE IMMAGINE -> PDF -------------------- */
@@ -1451,6 +1538,10 @@ if (folderCancelBtn) {
 
 if (folderBackdrop) {
   folderBackdrop.onclick = closeFolderModal;
+}
+
+if (backupBtn) {
+  backupBtn.onclick = exportBackup;
 }
 
 /* -------------------- BADGE APP -------------------- */
