@@ -946,6 +946,13 @@ function renderFiles(files, searchText) {
 }
 
 function render() {
+  if (currentPath.length === 0) {
+  backupBtn.style.display = "flex";
+  restoreBtn.style.display = "flex";
+} else {
+  backupBtn.style.display = "none";
+  restoreBtn.style.display = "none";
+}
   backBtn.style.display = currentPath.length === 0 ? "none" : "inline-block";
   pathBox.textContent = getPathNames();
   list.innerHTML = "";
