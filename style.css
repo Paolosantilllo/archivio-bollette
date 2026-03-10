@@ -104,7 +104,7 @@ main {
 }
 
 #addFolder,
-#addFile,
+#addFile {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -243,6 +243,7 @@ main {
   width: 100%;
   height: calc(100vh - 56px);
   background: #f2f2f7;
+  border: none;
 }
 
 /* DEADLINE EDITOR */
@@ -501,6 +502,80 @@ main {
   cursor: pointer;
 }
 
+/* NUOVA CARTELLA */
+
+#folderModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+}
+
+#folderModal.hidden {
+  display: none;
+}
+
+#folderBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+#folderPanel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+#folderNameInput {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: #eee;
+  border-radius: 10px;
+  font-size: 16px;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.folderButtons {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.folderButtons button {
+  flex: 1;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#folderConfirmBtn {
+  background: #007aff;
+  color: white;
+}
+
+#folderCancelBtn {
+  background: #ddd;
+}
+
+/* CONTATORE MANCANTI */
+
+.missingCount {
+  color: #ff3b30;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* RESPONSIVE */
+
 @media (orientation: landscape) {
   #pdfFrame {
     height: calc(100vh - 56px);
@@ -525,147 +600,4 @@ main {
     padding: 6px 8px;
     font-size: 12px;
   }
-}
-
-.missingCount{
-color:#ff3b30;
-font-weight:600;
-margin-left:4px;
-}
-.missingCount{
-color:#ff3b30;
-font-weight:600;
-margin-left:4px;
-}
-
-.missingDot{
-display:inline-block;
-width:8px;
-height:8px;
-background:#ff3b30;
-border-radius:50%;
-margin-left:6px;
-vertical-align:middle;
-}
-#folderModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1600;
-}
-
-#folderModal.hidden {
-  display: none;
-}
-
-#folderBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#folderPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-#folderNameInput {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: #eee;
-  border-radius: 10px;
-  font-size: 16px;
-  margin-top: 10px;
-  box-sizing: border-box;
-}
-
-.folderButtons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.folderButtons button {
-  flex: 1;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#folderConfirmBtn {
-  background: #007aff;
-  color: white;
-}
-
-#folderCancelBtn {
-  background: #ddd;
-}
-#folderModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1600;
-}
-
-#folderModal.hidden {
-  display: none;
-}
-
-#folderBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#folderPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-}
-
-#folderNameInput {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: #eee;
-  border-radius: 10px;
-  font-size: 16px;
-  margin-top: 10px;
-  box-sizing: border-box;
-}
-
-.folderButtons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.folderButtons button {
-  flex: 1;
-  border: none;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#folderConfirmBtn {
-  background: #007aff;
-  color: white;
-}
-
-#folderCancelBtn {
-  background: #ddd;
 }
