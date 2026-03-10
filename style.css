@@ -707,3 +707,24 @@ main {
   <script src="app.js"></script>
 </body>
 </html>
+.headerActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#backupBtn,
+#restoreBtn {
+  border: none;
+  background: #007aff;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#restoreBtn {
+  background: #5856d6;
+}
