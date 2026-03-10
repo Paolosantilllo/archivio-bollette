@@ -52,6 +52,12 @@ const closeMoveBtn = document.getElementById("closeMoveBtn");
 const moveCurrentFile = document.getElementById("moveCurrentFile");
 const moveFolderList = document.getElementById("moveFolderList");
 
+const folderModal = document.getElementById("folderModal");
+const folderBackdrop = document.getElementById("folderBackdrop");
+const folderNameInput = document.getElementById("folderNameInput");
+const folderConfirmBtn = document.getElementById("folderConfirmBtn");
+const folderCancelBtn = document.getElementById("folderCancelBtn");
+
 let currentActionTarget = null;
 let currentPdfUrl = null;
 let currentDeadlineFolder = null;
@@ -961,6 +967,20 @@ function closeRenameModal() {
   renameModal.classList.add("hidden");
 }
 
+/* -------------------- MODAL NUOVA CARTELLA -------------------- */
+
+function openFolderModal() {
+  if (!folderModal || !folderNameInput) return;
+  folderNameInput.value = "";
+  folderModal.classList.remove("hidden");
+  folderNameInput.focus();
+}
+
+function closeFolderModal() {
+  if (!folderModal) return;
+  folderModal.classList.add("hidden");
+}
+
 /* -------------------- SPOSTA PDF -------------------- */
 
 function collectFolderTargets(level = data, path = [], results = []) {
@@ -1228,10 +1248,7 @@ function render() {
 /* -------------------- EVENTI -------------------- */
 
 addBtn.onclick = function () {
-  const name = prompt("Nome cartella");
-  if (!name || !name.trim()) return;
-
-  createFolder(name);
+  openFolderModal();
 };
 
 addYearBtn.onclick = function () {
@@ -1428,6 +1445,24 @@ renameBackdrop.onclick = closeRenameModal;
 
 closeMoveBtn.onclick = closeMoveModal;
 moveBackdrop.onclick = closeMoveModal;
+
+if (folderConfirmBtn) {
+  folderConfirmBtn.onclick = function () {
+    const name = folderNameInput.value.trim();
+    if (!name) return;
+
+    createFolder(name);
+    closeFolderModal();
+  };
+}
+
+if (folderCancelBtn) {
+  folderCancelBtn.onclick = closeFolderModal;
+}
+
+if (folderBackdrop) {
+  folderBackdrop.onclick = closeFolderModal;
+}
 
 /* -------------------- BADGE APP -------------------- */
 
