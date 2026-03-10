@@ -197,11 +197,11 @@ main {
 }
 
 #pdfViewerHeader {
-  height: 56px;
+  min-height: 56px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 12px;
+  padding: 8px 12px;
   background: white;
   border-bottom: 1px solid #ddd;
   flex-shrink: 0;
@@ -215,6 +215,7 @@ main {
   border-radius: 10px;
   font-size: 15px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 #pdfTitle {
@@ -223,12 +224,14 @@ main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .pdfActions {
   margin-left: auto;
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .pdfActions button {
@@ -241,12 +244,10 @@ main {
   cursor: pointer;
 }
 
-#pdfFrame{
-width:100%;
-height:calc(100vh - 56px);
-border:none;
-background:#f2f2f7;
-object-fit:contain;
+#pdfFrame {
+  width: 100%;
+  height: calc(100vh - 56px);
+  background: #f2f2f7;
 }
 
 /* DEADLINE EDITOR */
@@ -504,10 +505,29 @@ object-fit:contain;
   font-size: 15px;
   cursor: pointer;
 }
-@media (orientation: landscape){
 
-#pdfFrame{
-height:100vh;
+@media (orientation: landscape) {
+  #pdfFrame {
+    height: calc(100vh - 56px);
+  }
 }
 
+@media (max-width: 600px) {
+  #pdfViewerHeader {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  #pdfTitle {
+    font-size: 14px;
+  }
+
+  .pdfActions {
+    gap: 6px;
+  }
+
+  .pdfActions button {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
 }
