@@ -7,9 +7,8 @@ body {
 }
 
 header {
-  background: white;
+  background: #f2f2f7;
   padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -24,9 +23,9 @@ h1 {
   width: 100%;
   padding: 10px 12px;
   margin-top: 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
-  background: #eee;
+  background: #e5e5ea;
   font-size: 16px;
   box-sizing: border-box;
 }
@@ -40,6 +39,7 @@ main {
   align-items: center;
   gap: 10px;
   padding: 0 15px 10px 15px;
+  background: #f2f2f7;
 }
 
 #backBtn {
@@ -66,14 +66,13 @@ main {
 
 .swipeRow {
   position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid #ddd;
+  overflow: visible;
   background: #f2f2f7;
 }
 
 .folder,
 .fileItem {
-  background: white;
+  background: #e9e9ef;
   padding: 15px;
   font-size: 18px;
   display: flex;
@@ -85,6 +84,8 @@ main {
   transform: translateX(0);
   transition: transform 0.18s ease;
   touch-action: pan-y;
+  margin: 6px 10px;
+  border-radius: 14px;
 }
 
 .folderName,
@@ -112,7 +113,7 @@ main {
   color: white;
   font-size: 26px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 #addFolder {
@@ -160,11 +161,11 @@ main {
 .cancelBtn {
   width: 100%;
   border: none;
-  background: white;
+  background: #e9e9ef;
   padding: 18px;
   font-size: 18px;
   cursor: pointer;
-  border-bottom: 1px solid #e5e5ea;
+  border-bottom: 1px solid #d7d7dd;
 }
 
 .deleteAction {
@@ -185,7 +186,7 @@ main {
 #pdfViewer {
   position: fixed;
   inset: 0;
-  background: white;
+  background: #f2f2f7;
   z-index: 1200;
   display: flex;
   flex-direction: column;
@@ -197,8 +198,8 @@ main {
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  background: white;
-  border-bottom: 1px solid #ddd;
+  background: #f2f2f7;
+  border-bottom: 1px solid #d7d7dd;
   flex-shrink: 0;
 }
 
@@ -291,7 +292,7 @@ main {
 
 #closeDeadlineEditorBtn {
   border: none;
-  background: white;
+  background: #e9e9ef;
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -319,20 +320,20 @@ main {
   border: none;
   border-radius: 12px;
   font-size: 16px;
-  background: white;
+  background: #e9e9ef;
 }
 
 #deadlineListBox {
   margin-top: 16px;
   margin-bottom: 16px;
-  background: white;
+  background: #e9e9ef;
   border-radius: 14px;
   overflow: hidden;
 }
 
 .deadlineItem {
   padding: 12px 14px;
-  border-bottom: 1px solid #ececec;
+  border-bottom: 1px solid #d7d7dd;
   font-size: 14px;
 }
 
@@ -365,7 +366,8 @@ main {
 }
 
 .secondaryBtn {
-  background: white;
+  background: #e9e9ef;
+  color: #111;
 }
 
 .dangerBtn {
@@ -397,7 +399,7 @@ main {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  background: white;
+  background: #f2f2f7;
   border-radius: 16px;
   padding: 20px;
 }
@@ -406,7 +408,7 @@ main {
   width: 100%;
   padding: 12px;
   border: none;
-  background: #eee;
+  background: #e9e9ef;
   border-radius: 10px;
   font-size: 16px;
   margin-top: 10px;
@@ -434,7 +436,8 @@ main {
 }
 
 #renameCancel {
-  background: #ddd;
+  background: #d7d7dd;
+  color: #111;
 }
 
 /* MOVE PDF */
@@ -461,7 +464,7 @@ main {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  background: white;
+  background: #f2f2f7;
   border-radius: 18px;
   padding: 16px;
   max-height: 80vh;
@@ -477,7 +480,7 @@ main {
 
 #closeMoveBtn {
   border: none;
-  background: #eee;
+  background: #e9e9ef;
   border-radius: 8px;
   width: 36px;
   height: 36px;
@@ -493,7 +496,7 @@ main {
 .moveFolderItem {
   width: 100%;
   border: none;
-  background: #f2f2f7;
+  background: #e9e9ef;
   padding: 14px;
   margin-bottom: 6px;
   border-radius: 10px;
@@ -526,7 +529,7 @@ main {
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  background: white;
+  background: #f2f2f7;
   border-radius: 16px;
   padding: 20px;
 }
@@ -535,7 +538,7 @@ main {
   width: 100%;
   padding: 12px;
   border: none;
-  background: #eee;
+  background: #e9e9ef;
   border-radius: 10px;
   font-size: 16px;
   margin-top: 10px;
@@ -563,7 +566,8 @@ main {
 }
 
 #folderCancelBtn {
-  background: #ddd;
+  background: #d7d7dd;
+  color: #111;
 }
 
 /* CONTATORE MANCANTI */
