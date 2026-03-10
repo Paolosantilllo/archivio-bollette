@@ -59,6 +59,7 @@ let currentRenameFile = null;
 let currentMoveFile = null;
 let currentMoveSourceFiles = null;
 let currentOpenedFile = null;
+let missingCountMap = new Map();
 
 /* -------------------- INDEXED DB -------------------- */
 
@@ -635,6 +636,53 @@ function getMissingDeadlinesCount(folder) {
   return missing;
 }
 
+/* -------------------- OTTIMIZZAZIONE CONTATORI -------------------- */
+
+function computeMissingCounts() {
+  missingCountMap = new Map();
+
+  function walk(folder, pathKey) {
+    ensureFolderStructure(folder);
+
+    let total = 0;
+    const today = new Date();
+
+    folder.deadlines.forEach(deadline => {
+      const occurrences = getDeadlineOccurrences(deadline, folder);
+
+      occurrences.forEach(item => {
+        const due = new Date(item.dueDate);
+        due.setHours(23, 59, 59, 999);
+
+        if (
+          today > due &&
+          !hasRequiredPdf(folder, item.requiredText, item.extraRequiredTexts || [])
+        ) {
+          total++;
+        }
+      });
+    });
+
+    folder.sub.forEach((subFolder, index) => {
+      const subPathKey = pathKey + "-" + index;
+      total += walk(subFolder, subPathKey);
+    });
+
+    missingCountMap.set(pathKey, total);
+    return total;
+  }
+
+  data.forEach((folder, index) => {
+    walk(folder, String(index));
+  });
+}
+
+function getMissingCountFromMap(pathArray, localIndex) {
+  const fullPath = [...pathArray, localIndex];
+  const key = fullPath.join("-");
+  return missingCountMap.get(key) || 0;
+}
+
 /* -------------------- ACTION SHEET -------------------- */
 
 function openActionSheet(target) {
@@ -1091,42 +1139,34 @@ function renderFolders(items, searchText) {
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
     let labelHTML = item.name;
-    const missingCount = getMissingDeadlinesCount(item);
+    const missingCount = getMissingCountFromMap(currentPath, i);
 
-if (missingCount > 0) {
-  labelHTML += ` <span class="missingCount">(${missingCount})</span><span class="missingDot"></span>`;
-}
+    if (missingCount > 0) {
+      labelHTML += ` <span class="missingCount">(${missingCount})</span>`;
+    }
 
-   const row = createSwipeRow(
-  "folder",
-  "folderName",
-  labelHTML,
-  function () {
-    currentPath.push(i);
-    render();
-  },
-  function () {
-    openDeadlineEditor(item);
-  },
-  function () {
-    const ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
-    if (!ok) return;
+    const row = createSwipeRow(
+      "folder",
+      "folderName",
+      labelHTML,
+      function () {
+        currentPath.push(i);
+        render();
+      },
+      function () {
+        openDeadlineEditor(item);
+      },
+      function () {
+        const ok = confirm("Vuoi eliminare la cartella '" + item.name + "'?");
+        if (!ok) return;
 
-    items.splice(i, 1);
-    save();
-    render();
-  }
-);
+        items.splice(i, 1);
+        save();
+        render();
+      }
+    );
 
-if (missingCount > 0) {
-  labelHTML += ` <span class="missingCount">(${missingCount})</span>`;
-}
-
-  if (content) content.classList.add("folderAlert");
-  if (name) name.classList.add("folderAlertText");
-}
-
-list.appendChild(row);
+    list.appendChild(row);
   });
 }
 
@@ -1137,7 +1177,7 @@ function renderFiles(files, searchText) {
     const row = createSwipeRow(
       "fileItem",
       "fileName",
-     file.name.replace(/\.pdf$/i, ""),
+      file.name.replace(/\.pdf$/i, ""),
       function () {
         openFile(file);
       },
@@ -1178,6 +1218,8 @@ function render() {
 
   addYearBtn.style.display = currentPath.length === 0 ? "none" : "block";
   addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
+
+  computeMissingCounts();
 
   renderFolders(items, searchText);
   renderFiles(files, searchText);
@@ -1387,38 +1429,25 @@ renameBackdrop.onclick = closeRenameModal;
 closeMoveBtn.onclick = closeMoveModal;
 moveBackdrop.onclick = closeMoveModal;
 
+/* -------------------- BADGE APP -------------------- */
+
+function updateAppBadge() {
+  let totalMissing = 0;
+
+  data.forEach((folder, index) => {
+    totalMissing += missingCountMap.get(String(index)) || 0;
+  });
+
+  if ("setAppBadge" in navigator) {
+    if (totalMissing > 0) {
+      navigator.setAppBadge(totalMissing);
+    } else if ("clearAppBadge" in navigator) {
+      navigator.clearAppBadge();
+    }
+  }
+}
+
 /* -------------------- AVVIO -------------------- */
 
-function updateAppBadge(){
-
-let totalMissing = 0;
-
-function count(folder){
-
-ensureFolderStructure(folder);
-
-totalMissing += getMissingDeadlinesCount(folder);
-
-folder.sub.forEach(sub=>{
-count(sub);
-});
-
-}
-
-data.forEach(folder=>{
-count(folder);
-});
-
-if("setAppBadge" in navigator){
-
-if(totalMissing > 0){
-navigator.setAppBadge(totalMissing);
-}else{
-navigator.clearAppBadge();
-}
-
-}
-
-}
 render();
 updateAppBadge();
