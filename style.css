@@ -728,35 +728,43 @@ main {
 #restoreBtn {
   background: #5856d6;
 }
-.headerTop{
-display:flex;
-align-items:center;
-justify-content:space-between;
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.headerActions{
-display:flex;
-gap:8px;
+.headerActions {
+  display: flex;
+  gap: 8px;
 }
 
 #backupBtn,
-#restoreBtn{
-width:36px;
-height:36px;
-border:none;
-border-radius:10px;
-font-size:18px;
-cursor:pointer;
-display:flex;
-align-items:center;
-justify-content:center;
-color:white;
+#restoreBtn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  padding: 0;
+  line-height: 1;
 }
 
-#backupBtn{
-background:#007aff;
+#backupBtn {
+  background: #007aff;
 }
 
-#restoreBtn{
-background:#5856d6;
+#restoreBtn {
+  background: #5856d6;
+}
+
+#backupBtn:disabled,
+#restoreBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
