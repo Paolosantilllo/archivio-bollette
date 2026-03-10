@@ -728,3 +728,35 @@ main {
 #restoreBtn {
   background: #5856d6;
 }
+.headerTop{
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.headerActions{
+display:flex;
+gap:8px;
+}
+
+#backupBtn,
+#restoreBtn{
+width:36px;
+height:36px;
+border:none;
+border-radius:10px;
+font-size:18px;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+}
+
+#backupBtn{
+background:#007aff;
+}
+
+#restoreBtn{
+background:#5856d6;
+}
