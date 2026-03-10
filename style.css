@@ -241,11 +241,12 @@ main {
   cursor: pointer;
 }
 
-#pdfFrame {
-  width: 100%;
-  height: calc(100vh - 56px);
-  border: none;
-  background: #f2f2f7;
+#pdfFrame{
+width:100%;
+height:calc(100vh - 56px);
+border:none;
+background:#f2f2f7;
+object-fit:contain;
 }
 
 /* DEADLINE EDITOR */
@@ -502,4 +503,11 @@ main {
   text-align: left;
   font-size: 15px;
   cursor: pointer;
+}
+@media (orientation: landscape){
+
+#pdfFrame{
+height:100vh;
+}
+
 }
