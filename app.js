@@ -1137,7 +1137,7 @@ function renderFiles(files, searchText) {
     const row = createSwipeRow(
       "fileItem",
       "fileName",
-      "PDF - " + file.name,
+     file.name.replace(/\.pdf$/i, ""),
       function () {
         openFile(file);
       },
