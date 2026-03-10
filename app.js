@@ -1093,7 +1093,7 @@ function renderFolders(items, searchText) {
     const missingCount = getMissingDeadlinesCount(item);
 
 if (missingCount > 0) {
-  labelHTML += ` (${missingCount})`;
+  labelHTML += ` <span class="missingCount">(${missingCount})</span>`;
 }
 
    const row = createSwipeRow(
