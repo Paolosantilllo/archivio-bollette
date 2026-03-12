@@ -3,6 +3,8 @@ let currentPath = [];
 
 let pendingImportedPdf = null;
 
+const AUTO_BACKUP_DAYS = 7;
+
 const list = document.getElementById("folders");
 const addBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
@@ -214,7 +216,46 @@ function base64ToArrayBuffer(base64) {
   return bytes.buffer;
 }
 
-async function exportBackup() {
+function getLastBackupDate() {
+  return localStorage.getItem("lastBackupDate");
+}
+
+function setLastBackupDateNow() {
+  localStorage.setItem("lastBackupDate", new Date().toISOString());
+}
+
+function shouldAskAutoBackup() {
+  const lastBackup = getLastBackupDate();
+
+  if (!lastBackup) return true;
+
+  const lastDate = new Date(lastBackup);
+  const now = new Date();
+  const diffMs = now - lastDate;
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  return diffDays >= AUTO_BACKUP_DAYS;
+}
+
+function askAutoBackupIfNeeded() {
+  if (!shouldAskAutoBackup()) return;
+
+  setTimeout(() => {
+    const ok = confirm(
+      "Sono passati alcuni giorni dall'ultimo backup.\nVuoi creare un nuovo backup?"
+    );
+    if (ok) {
+      exportBackup(true);
+    }
+  }, 500);
+}
+
+async function exportBackup(skipConfirm = false) {
+  if (!skipConfirm) {
+    const ok = confirm("Vuoi creare un backup dell'archivio?");
+    if (!ok) return;
+  }
+
   try {
     if (backupBtn) backupBtn.disabled = true;
 
@@ -253,7 +294,8 @@ async function exportBackup() {
       URL.revokeObjectURL(url);
     }, 1000);
 
-    alert("Backup creato. Salvalo nell'app File del tuo iPhone.");
+    setLastBackupDateNow();
+    alert("Backup salvato con successo");
   } catch (error) {
     alert("Errore durante il backup.");
   } finally {
@@ -271,7 +313,7 @@ async function importBackupFile(file) {
   if (!file) return;
 
   const ok = confirm(
-    "Vuoi ripristinare questo backup?\nL'archivio attuale verrà sostituito completamente."
+    "Vuoi ripristinare il backup?\nI dati attuali verranno sostituiti."
   );
   if (!ok) return;
 
@@ -300,7 +342,7 @@ async function importBackupFile(file) {
     save();
     render();
 
-    alert("Backup ripristinato con successo.");
+    alert("Backup ripristinato con successo");
   } catch (error) {
     alert("Errore durante il ripristino del backup.");
   } finally {
@@ -767,11 +809,15 @@ function getDeadlineOccurrences(deadline, folder = null) {
 
   while (current <= today) {
     if (!folderYear || current.getFullYear() === folderYear) {
-      const primaryRequiredText = `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`;
+      const primaryRequiredText =
+        `${deadline.requiredPrefix || ""}${formatYearMonth(current)}`;
+
       const extraRequiredTexts = [];
 
       if (deadline.intervalMonths === 12) {
-        extraRequiredTexts.push(`${deadline.requiredPrefix || ""}${current.getFullYear()}`);
+        extraRequiredTexts.push(
+          `${deadline.requiredPrefix || ""}${current.getFullYear()}`
+        );
       }
 
       result.push({
@@ -1571,7 +1617,7 @@ if (folderConfirmBtn) {
 if (folderCancelBtn) folderCancelBtn.onclick = closeFolderModal;
 if (folderBackdrop) folderBackdrop.onclick = closeFolderModal;
 
-if (backupBtn) backupBtn.onclick = exportBackup;
+if (backupBtn) backupBtn.onclick = function () { exportBackup(false); };
 if (restoreBtn) restoreBtn.onclick = openRestorePicker;
 
 if (restoreInput) {
@@ -1604,3 +1650,4 @@ function updateAppBadge() {
 computeMissingCounts();
 render();
 updateAppBadge();
+askAutoBackupIfNeeded();
