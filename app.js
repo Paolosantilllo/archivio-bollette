@@ -569,6 +569,71 @@ function suggestPdfNameFromPath(originalName = "") {
     }
   }
 
+  function parseSmartBillFileName(fileName) {
+  if (!fileName) return null;
+
+  const cleanName = fileName.replace(/\.pdf$/i, "").trim();
+
+  // formato atteso:
+  // 30-03-2026 Luce 2026-01
+  const match = cleanName.match(/^(\d{2})-(\d{2})-(\d{4})\s+(.+?)\s+(\d{4})-(\d{2})$/i);
+
+  if (!match) return null;
+
+  const [, day, month, year, rawUtilityName, billYear, billMonth] = match;
+
+  return {
+    addebitoDate: `${day}-${month}-${year}`,
+    utilityName: rawUtilityName.trim(),
+    billYear: billYear,
+    billMonth: billMonth,
+    shortLabel: `${rawUtilityName.trim()} ${billMonth}`,
+    originalFileName: fileName
+  };
+}
+
+function findBillItem(folder, utilityName, billYear, billMonth) {
+  ensureFolderStructure(folder);
+
+  return folder.billItems.find(item =>
+    item.utilityName === utilityName &&
+    item.billYear === billYear &&
+    item.billMonth === billMonth
+  );
+}
+
+function createBillItemFromParsed(folder, parsed, pdfId) {
+  ensureFolderStructure(folder);
+
+  const existing = findBillItem(
+    folder,
+    parsed.utilityName,
+    parsed.billYear,
+    parsed.billMonth
+  );
+
+  if (existing) {
+    existing.billPdfId = pdfId;
+    existing.billFileName = parsed.originalFileName;
+    existing.addebitoDate = parsed.addebitoDate;
+    return existing;
+  }
+
+  const newItem = {
+    utilityName: parsed.utilityName,
+    billYear: parsed.billYear,
+    billMonth: parsed.billMonth,
+    shortLabel: `${parsed.utilityName} ${parsed.billMonth}`,
+    addebitoDate: parsed.addebitoDate,
+    billPdfId: pdfId,
+    billFileName: parsed.originalFileName,
+    addebitoPdfId: null,
+    addebitoFileName: ""
+  };
+
+  folder.billItems.push(newItem);
+  return newItem;
+}
   folderName = (folderName || "documento").toLowerCase().trim();
 
   if (yearName) return `${folderName} ${yearName}.pdf`;
@@ -1459,16 +1524,23 @@ if (fileInput) {
           data: arrayBuffer
         });
 
-        const files = getCurrentFiles();
+        const folder = getCurrentFolder();
+const parsed = parseSmartBillFileName(file.name);
 
-        files.push({
-          name: file.name,
-          type: "application/pdf",
-          pdfId: pdfId
-        });
+if (folder && parsed) {
+  createBillItemFromParsed(folder, parsed, pdfId);
+} else {
+  const files = getCurrentFiles();
 
-        save();
-        render();
+  files.push({
+    name: file.name,
+    type: "application/pdf",
+    pdfId: pdfId
+  });
+}
+
+save();
+render();
       } else {
         const arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
         const savedName = suggestPdfNameFromPath(file.name);
