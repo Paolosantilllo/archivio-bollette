@@ -1127,7 +1127,10 @@ function clearDeadlinesFromCurrentFolder() {
 
 function openRenameModal(file) {
   currentRenameFile = file;
-  renameInput.value = file.name;
+
+  const cleanName = file.name.replace(/\.pdf$/i, "");
+
+  renameInput.value = cleanName;
   renameModal.classList.remove("hidden");
   renameInput.focus();
 }
