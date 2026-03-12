@@ -1556,12 +1556,12 @@ if (renameConfirm) {
     const newName = renameInput.value.trim();
     if (!newName) return;
 
+    const finalName = newName.toLowerCase().endsWith(".pdf")
+      ? newName
+      : newName + ".pdf";
+
     if (pendingImportedPdf) {
       try {
-        const finalName = newName.toLowerCase().endsWith(".pdf")
-          ? newName
-          : newName + ".pdf";
-
         const pdfId = createPdfId();
 
         await savePdfToDB({
@@ -1591,7 +1591,7 @@ if (renameConfirm) {
 
     if (!currentRenameFile) return;
 
-    currentRenameFile.name = newName;
+    currentRenameFile.name = finalName;
     save();
     render();
     closeRenameModal();
