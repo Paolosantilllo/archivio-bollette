@@ -589,6 +589,7 @@ function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
   if (!folder.deadlines) folder.deadlines = [];
+  if (!folder.billItems) folder.billItems = [];
 }
 
 function isYearName(name) {
