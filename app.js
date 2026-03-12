@@ -614,7 +614,7 @@ function createBillItemFromParsed(folder, parsed, pdfId) {
 
   if (existing) {
     existing.billPdfId = pdfId;
-    existing.billFileName = parsed.originalFileName;
+    existing.billFileName = `${parsed.utilityName} ${parsed.billMonth}.pdf`;
     existing.addebitoDate = parsed.addebitoDate;
     return existing;
   }
@@ -623,10 +623,10 @@ function createBillItemFromParsed(folder, parsed, pdfId) {
     utilityName: parsed.utilityName,
     billYear: parsed.billYear,
     billMonth: parsed.billMonth,
-    shortLabel: `${parsed.utilityName} ${parsed.billMonth}`,
+    shortLabel: `${parsed.utilityName} ${parsed.billMonth}.pdf`,
     addebitoDate: parsed.addebitoDate,
     billPdfId: pdfId,
-    billFileName: parsed.originalFileName,
+    billFileName: `${parsed.utilityName} ${parsed.billMonth}.pdf`,
     addebitoPdfId: null,
     addebitoFileName: ""
   };
