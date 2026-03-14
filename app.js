@@ -1,4 +1,3 @@
-app.js
 
 
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
