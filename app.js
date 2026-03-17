@@ -1,4 +1,5 @@
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
+alert("APP JS NUOVO");
 let currentPath = [];
 
 let pendingImportedPdf = null;
