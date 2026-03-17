@@ -1,4 +1,5 @@
 alert("APP JS NUOVO");
+
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
 
 let currentPath = [];
