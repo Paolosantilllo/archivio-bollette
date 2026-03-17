@@ -569,13 +569,22 @@ function suggestPdfNameFromPath(originalName = "") {
     }
   }
 
-  function parseBillName(fileName) {
+  folderName = (folderName || "documento").toLowerCase().trim();
+
+  if (yearName) return `${folderName} ${yearName}.pdf`;
+  if (cleanOriginal) return `${folderName} ${cleanOriginal}.pdf`;
+
+  return `${folderName}.pdf`;
+}
+
+/* -------------------- BOLLETTA / ADDEBITO -------------------- */
+
+function parseBillName(fileName) {
   if (!fileName) return null;
 
   const clean = fileName.replace(/\.pdf$/i, "").trim();
 
-  // formato atteso:
-  // 30-03-2026 luce 01
+  // formato atteso: 30-03-2026 luce 01
   const match = clean.match(/^(\d{2})-(\d{2})-(\d{4})\s+(.+?)\s+(\d{2})$/i);
 
   if (!match) return null;
@@ -636,8 +645,7 @@ function parseAddebitoName(fileName) {
 
   const clean = fileName.replace(/\.pdf$/i, "").trim();
 
-  // formato atteso:
-  // addebito 01
+  // formato atteso: addebito 01
   const match = clean.match(/^addebito\s+(\d{2})$/i);
   if (!match) return null;
 
@@ -683,6 +691,7 @@ function parseDDMMYYYY(dateString) {
   const year = parseInt(match[3], 10);
 
   const date = new Date(year, month - 1, day);
+
   if (
     date.getFullYear() !== year ||
     date.getMonth() !== month - 1 ||
@@ -693,12 +702,19 @@ function parseDDMMYYYY(dateString) {
 
   return date;
 }
-  folderName = (folderName || "documento").toLowerCase().trim();
 
-  if (yearName) return `${folderName} ${yearName}.pdf`;
-  if (cleanOriginal) return `${folderName} ${cleanOriginal}.pdf`;
+function isAddebitoMissing(entry) {
+  if (!entry || !entry.bollettaPdfId) return false;
+  if (entry.addebitoPdfId) return false;
+  if (!entry.addebitoDate) return false;
 
-  return `${folderName}.pdf`;
+  const dueDate = parseDDMMYYYY(entry.addebitoDate);
+  if (!dueDate) return false;
+
+  const today = new Date();
+  dueDate.setHours(23, 59, 59, 999);
+
+  return today > dueDate;
 }
 
 /* -------------------- DATI LEGGERI -------------------- */
@@ -798,7 +814,8 @@ function createFolder(name) {
     name: name.trim(),
     sub: [],
     files: [],
-    deadlines: []
+    deadlines: [],
+    billEntries: []
   });
 
   sortFolders(items);
@@ -1032,7 +1049,7 @@ function closePdfViewer() {
 }
 
 async function openFile(file) {
-  if (!file.pdfId) return;
+  if (!file || !file.pdfId) return;
 
   try {
     const pdfRecord = await getPdfFromDB(file.pdfId);
@@ -1254,7 +1271,6 @@ function openRenameModal(file) {
   currentRenameFile = file;
 
   const cleanName = file.name.replace(/\.pdf$/i, "");
-
   renameInput.value = cleanName;
   renameModal.classList.remove("hidden");
   renameInput.focus();
@@ -1263,7 +1279,7 @@ function openRenameModal(file) {
 function openRenameModalForImportedPdf(defaultName, arrayBuffer) {
   pendingImportedPdf = arrayBuffer;
   currentRenameFile = null;
-  renameInput.value = defaultName;
+  renameInput.value = defaultName.replace(/\.pdf$/i, "");
   renameModal.classList.remove("hidden");
   renameInput.focus();
 }
@@ -1477,20 +1493,6 @@ function renderFolders(items, searchText) {
   });
 }
 
-function isAddebitoMissing(entry) {
-  if (!entry || !entry.bollettaPdfId) return false;
-  if (entry.addebitoPdfId) return false;
-  if (!entry.addebitoDate) return false;
-
-  const dueDate = parseDDMMYYYY(entry.addebitoDate);
-  if (!dueDate) return false;
-
-  const today = new Date();
-  dueDate.setHours(23, 59, 59, 999);
-
-  return today > dueDate;
-}
-
 function renderBillEntries(folder, searchText) {
   ensureFolderStructure(folder);
 
@@ -1527,7 +1529,7 @@ function renderBillEntries(folder, searchText) {
       },
       function () {
         alert(
-          "Dentro questa voce ci saranno:\n- " +
+          "Voce collegata:\n- " +
           entry.bollettaName +
           "\n- " +
           entry.addebitoName +
@@ -1559,6 +1561,7 @@ function renderBillEntries(folder, searchText) {
     list.appendChild(row);
   });
 }
+
 function renderFiles(files, searchText) {
   files.forEach((file, i) => {
     if (searchText && !file.name.toLowerCase().includes(searchText)) return;
@@ -1595,18 +1598,28 @@ function renderFiles(files, searchText) {
 }
 
 function render() {
-  backBtn.style.display = currentPath.length === 0 ? "none" : "inline-block";
-  pathBox.textContent = getPathNames();
-  list.innerHTML = "";
+  if (backBtn) {
+    backBtn.style.display = currentPath.length === 0 ? "none" : "inline-block";
+  }
+
+  if (pathBox) {
+    pathBox.textContent = getPathNames();
+  }
+
+  if (list) {
+    list.innerHTML = "";
+  }
 
   const items = getCurrentLevel();
   const files = getCurrentFiles();
-  const searchText = searchInput.value.toLowerCase().trim();
+  const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
   sortFolders(items);
   sortFiles(files);
 
-  addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
+  if (addFileBtn) {
+    addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
+  }
 
   if (headerActions) {
     headerActions.style.display = currentPath.length === 0 ? "flex" : "none";
@@ -1616,12 +1629,12 @@ function render() {
 
   renderFolders(items, searchText);
 
-const currentFolder = getCurrentFolder();
-if (currentFolder) {
-  renderBillEntries(currentFolder, searchText);
-}
+  const currentFolder = getCurrentFolder();
+  if (currentFolder) {
+    renderBillEntries(currentFolder, searchText);
+  }
 
-renderFiles(files, searchText);
+  renderFiles(files, searchText);
 }
 
 /* -------------------- EVENTI -------------------- */
@@ -1673,35 +1686,35 @@ if (fileInput) {
 
         const folder = getCurrentFolder();
 
-if (folder) {
-  const parsedBill = parseBillName(file.name);
-  const parsedAddebito = parseAddebitoName(file.name);
+        if (folder) {
+          const parsedBill = parseBillName(file.name);
+          const parsedAddebito = parseAddebitoName(file.name);
 
-  if (parsedBill) {
-    createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
-  } else if (parsedAddebito) {
-    saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
-  } else {
-    const files = getCurrentFiles();
+          if (parsedBill) {
+            createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
+          } else if (parsedAddebito) {
+            saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
+          } else {
+            const files = getCurrentFiles();
 
-    files.push({
-      name: file.name,
-      type: "application/pdf",
-      pdfId: pdfId
-    });
-  }
-} else {
-  const files = getCurrentFiles();
+            files.push({
+              name: file.name,
+              type: "application/pdf",
+              pdfId: pdfId
+            });
+          }
+        } else {
+          const files = getCurrentFiles();
 
-  files.push({
-    name: file.name,
-    type: "application/pdf",
-    pdfId: pdfId
-  });
-}
+          files.push({
+            name: file.name,
+            type: "application/pdf",
+            pdfId: pdfId
+          });
+        }
 
-save();
-render();
+        save();
+        render();
       } else {
         const arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
         const savedName = suggestPdfNameFromPath(file.name);
