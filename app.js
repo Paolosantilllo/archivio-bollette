@@ -1564,6 +1564,8 @@ function renderBillEntries(folder, searchText) {
 
 function renderFiles(files, searchText) {
   files.forEach((file, i) => {
+    if (parseBillName(file.name) || parseAddebitoName(file.name)) return;
+
     if (searchText && !file.name.toLowerCase().includes(searchText)) return;
 
     const row = createSwipeRow(
