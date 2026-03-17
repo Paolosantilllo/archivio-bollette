@@ -1460,6 +1460,82 @@ function createSwipeRow(
 
   return row;
 }
+function renderFiles(files, searchText) {
+  files.forEach((file, i) => {
+    if (parseBillName(file.name) || parseAddebitoName(file.name)) return;
+
+    if (searchText && !file.name.toLowerCase().includes(searchText)) return;
+
+    const row = createSwipeRow(
+      "fileItem",
+      "fileName",
+      file.name.replace(/\.pdf$/i, ""),
+      function () {
+        openFile(file);
+      },
+      function () {
+        openRenameModal(file);
+      },
+      async function () {
+        const ok = confirm("Vuoi eliminare il PDF '" + file.name + "'?");
+        if (!ok) return;
+
+        if (file.pdfId) {
+          await deletePdfFromDB(file.pdfId);
+        }
+
+        files.splice(i, 1);
+        save();
+        render();
+      },
+      function () {
+        openMoveModal(file, files);
+      }
+    );
+
+    list.appendChild(row);
+  });
+}
+
+function render() {
+  if (backBtn) {
+    backBtn.style.display = currentPath.length === 0 ? "none" : "inline-block";
+  }
+
+  if (pathBox) {
+    pathBox.textContent = getPathNames();
+  }
+
+  if (list) {
+    list.innerHTML = "";
+  }
+
+  const items = getCurrentLevel();
+  const files = getCurrentFiles();
+  const searchText = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+  sortFolders(items);
+  sortFiles(files);
+
+  if (addFileBtn) {
+    addFileBtn.style.display = currentPath.length === 0 ? "none" : "block";
+  }
+
+  if (headerActions) {
+    headerActions.style.display = currentPath.length === 0 ? "flex" : "none";
+  }
+
+  computeMissingCounts();
+
+  renderFolders(items, searchText);
+
+  const currentFolder = getCurrentFolder();
+  if (currentFolder) {
+    renderBillEntries(currentFolder, searchText);
+  }
+
+  renderFiles(files, searchText);
+}
 
 /* -------------------- RENDER -------------------- */
 
