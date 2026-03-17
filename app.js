@@ -587,8 +587,8 @@ function parseBillName(fileName) {
 
   const clean = fileName.replace(/\.pdf$/i, "").trim();
 
-  // formato atteso: 30-03-2026 luce 01
-  const match = clean.match(/^(\d{2})-(\d{2})-(\d{4})\s+(.+?)\s+(\d{2})$/i);
+  // accetta: 16-03-2026 Luce 01
+  const match = clean.match(/^(\d{2})-(\d{2})-(\d{4})\s+(.+?)\s+(\d{1,2})$/i);
 
   if (!match) return null;
 
@@ -597,10 +597,9 @@ function parseBillName(fileName) {
     addebitoMonth: match[2],
     addebitoYear: match[3],
     utilityName: match[4].trim(),
-    billNumber: match[5]
+    billNumber: String(match[5]).padStart(2, "0")
   };
 }
-
 function buildBillDisplayName(parsed) {
   return `PROVA ${parsed.billNumber}.pdf`;
 }
@@ -1695,9 +1694,10 @@ if (fileInput) {
           const parsedBill = parseBillName(file.name);
           const parsedAddebito = parseAddebitoName(file.name);
 
-          if (parsedBill) {
-            createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
-          } else if (parsedAddebito) {
+if (parsedBill) {
+  createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
+  alert("Bolletta riconosciuta: " + parsedBill.billNumber);
+} else if (parsedAddebito) {
             saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
           } else {
             const files = getCurrentFiles();
