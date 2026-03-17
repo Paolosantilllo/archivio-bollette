@@ -1564,41 +1564,7 @@ function renderBillEntries(folder, searchText) {
 
 function renderFiles(files, searchText) {
   files.forEach((file, i) => {
-    // nasconde i file speciali gestiti come bolletta/addebito
-    if (parseBillName(file.name) || parseAddebitoName(file.name)) return;
-
     if (searchText && !file.name.toLowerCase().includes(searchText)) return;
-
-    const row = createSwipeRow(
-      "fileItem",
-      "fileName",
-      file.name.replace(/\.pdf$/i, ""),
-      function () {
-        openFile(file);
-      },
-      function () {
-        openRenameModal(file);
-      },
-      async function () {
-        const ok = confirm("Vuoi eliminare il PDF '" + file.name + "'?");
-        if (!ok) return;
-
-        if (file.pdfId) {
-          await deletePdfFromDB(file.pdfId);
-        }
-
-        files.splice(i, 1);
-        save();
-        render();
-      },
-      function () {
-        openMoveModal(file, files);
-      }
-    );
-
-    list.appendChild(row);
-  });
-}
 
     const row = createSwipeRow(
       "fileItem",
