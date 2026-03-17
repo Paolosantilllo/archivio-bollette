@@ -599,7 +599,7 @@ function parseBillName(fileName) {
 }
 
 function buildBillDisplayName(parsed) {
-  return `bolletta ${parsed.billNumber}.pdf`;
+  return `PROVA ${parsed.billNumber}.pdf`;
 }
 
 function buildAddebitoDisplayName(parsed) {
