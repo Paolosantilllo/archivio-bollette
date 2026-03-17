@@ -1690,25 +1690,31 @@ if (fileInput) {
 
         const folder = getCurrentFolder();
 
-        if (folder) {
-          const parsedBill = parseBillName(file.name);
-          const parsedAddebito = parseAddebitoName(file.name);
+      if (folder) {
+  const cleanName = file.name.replace(/\.pdf$/i, "").trim();
+  alert("Nome letto: " + cleanName);
 
-if (parsedBill) {
-  createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
-  alert("Bolletta riconosciuta: " + parsedBill.billNumber);
-} else if (parsedAddebito) {
-            saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
-          } else {
-            const files = getCurrentFiles();
+  const parsedBill = parseBillName(file.name);
+  const parsedAddebito = parseAddebitoName(file.name);
 
-            files.push({
-              name: file.name,
-              type: "application/pdf",
-              pdfId: pdfId
-            });
-          }
-        } else {
+  if (parsedBill) {
+    alert("Bolletta riconosciuta: " + parsedBill.billNumber);
+    createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
+  } else if (parsedAddebito) {
+    alert("Addebito riconosciuto: " + parsedAddebito.billNumber);
+    saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
+  } else {
+    alert("PDF normale");
+    const files = getCurrentFiles();
+
+    files.push({
+      name: file.name,
+      type: "application/pdf",
+      pdfId: pdfId
+    });
+  }
+}
+        else {
           const files = getCurrentFiles();
 
           files.push({
