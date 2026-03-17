@@ -569,6 +569,130 @@ function suggestPdfNameFromPath(originalName = "") {
     }
   }
 
+  function parseBillName(fileName) {
+  if (!fileName) return null;
+
+  const clean = fileName.replace(/\.pdf$/i, "").trim();
+
+  // formato atteso:
+  // 30-03-2026 luce 01
+  const match = clean.match(/^(\d{2})-(\d{2})-(\d{4})\s+(.+?)\s+(\d{2})$/i);
+
+  if (!match) return null;
+
+  return {
+    addebitoDay: match[1],
+    addebitoMonth: match[2],
+    addebitoYear: match[3],
+    utilityName: match[4].trim(),
+    billNumber: match[5]
+  };
+}
+
+function buildBillDisplayName(parsed) {
+  return `bolletta ${parsed.billNumber}.pdf`;
+}
+
+function buildAddebitoDisplayName(parsed) {
+  return `addebito ${parsed.billNumber}.pdf`;
+}
+
+function findBillEntry(folder, billNumber) {
+  ensureFolderStructure(folder);
+  return folder.billEntries.find(entry => entry.billNumber === billNumber) || null;
+}
+
+function createOrUpdateBillEntry(folder, parsed, pdfId, originalFileName) {
+  ensureFolderStructure(folder);
+
+  let entry = findBillEntry(folder, parsed.billNumber);
+
+  if (!entry) {
+    entry = {
+      billNumber: parsed.billNumber,
+      utilityName: parsed.utilityName,
+      bollettaName: buildBillDisplayName(parsed),
+      addebitoName: buildAddebitoDisplayName(parsed),
+      addebitoDate: `${parsed.addebitoDay}-${parsed.addebitoMonth}-${parsed.addebitoYear}`,
+      bollettaPdfId: null,
+      addebitoPdfId: null,
+      originalBillFileName: ""
+    };
+
+    folder.billEntries.push(entry);
+  }
+
+  entry.bollettaPdfId = pdfId;
+  entry.originalBillFileName = originalFileName;
+  entry.bollettaName = buildBillDisplayName(parsed);
+  entry.addebitoName = buildAddebitoDisplayName(parsed);
+  entry.addebitoDate = `${parsed.addebitoDay}-${parsed.addebitoMonth}-${parsed.addebitoYear}`;
+
+  return entry;
+}
+
+function parseAddebitoName(fileName) {
+  if (!fileName) return null;
+
+  const clean = fileName.replace(/\.pdf$/i, "").trim();
+
+  // formato atteso:
+  // addebito 01
+  const match = clean.match(/^addebito\s+(\d{2})$/i);
+  if (!match) return null;
+
+  return {
+    billNumber: match[1]
+  };
+}
+
+function saveAddebitoIntoEntry(folder, parsedAddebito, pdfId) {
+  ensureFolderStructure(folder);
+
+  let entry = findBillEntry(folder, parsedAddebito.billNumber);
+
+  if (!entry) {
+    entry = {
+      billNumber: parsedAddebito.billNumber,
+      utilityName: "",
+      bollettaName: `bolletta ${parsedAddebito.billNumber}.pdf`,
+      addebitoName: `addebito ${parsedAddebito.billNumber}.pdf`,
+      addebitoDate: "",
+      bollettaPdfId: null,
+      addebitoPdfId: null,
+      originalBillFileName: ""
+    };
+
+    folder.billEntries.push(entry);
+  }
+
+  entry.addebitoPdfId = pdfId;
+  entry.addebitoName = `addebito ${parsedAddebito.billNumber}.pdf`;
+
+  return entry;
+}
+
+function parseDDMMYYYY(dateString) {
+  if (!dateString) return null;
+
+  const match = dateString.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (!match) return null;
+
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
   folderName = (folderName || "documento").toLowerCase().trim();
 
   if (yearName) return `${folderName} ${yearName}.pdf`;
@@ -589,6 +713,7 @@ function ensureFolderStructure(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
   if (!folder.deadlines) folder.deadlines = [];
+  if (!folder.billEntries) folder.billEntries = [];
 }
 
 function isYearName(name) {
@@ -1352,6 +1477,88 @@ function renderFolders(items, searchText) {
   });
 }
 
+function isAddebitoMissing(entry) {
+  if (!entry || !entry.bollettaPdfId) return false;
+  if (entry.addebitoPdfId) return false;
+  if (!entry.addebitoDate) return false;
+
+  const dueDate = parseDDMMYYYY(entry.addebitoDate);
+  if (!dueDate) return false;
+
+  const today = new Date();
+  dueDate.setHours(23, 59, 59, 999);
+
+  return today > dueDate;
+}
+
+function renderBillEntries(folder, searchText) {
+  ensureFolderStructure(folder);
+
+  folder.billEntries.sort((a, b) => {
+    return a.billNumber.localeCompare(b.billNumber, "it", { sensitivity: "base" });
+  });
+
+  folder.billEntries.forEach((entry) => {
+    const labelBase = entry.bollettaName.replace(/\.pdf$/i, "");
+
+    if (searchText && !labelBase.toLowerCase().includes(searchText)) return;
+
+    let labelHTML = labelBase;
+
+    if (!entry.bollettaPdfId || isAddebitoMissing(entry)) {
+      labelHTML += ` <span class="missingCount">(1)</span>`;
+    }
+
+    const fakeFile = {
+      name: entry.bollettaName,
+      pdfId: entry.bollettaPdfId
+    };
+
+    const row = createSwipeRow(
+      "fileItem",
+      "fileName",
+      labelHTML,
+      function () {
+        if (entry.bollettaPdfId) {
+          openFile(fakeFile);
+        } else {
+          alert("La bolletta non è ancora stata caricata.");
+        }
+      },
+      function () {
+        alert(
+          "Dentro questa voce ci saranno:\n- " +
+          entry.bollettaName +
+          "\n- " +
+          entry.addebitoName +
+          (entry.addebitoDate ? "\nData addebito: " + entry.addebitoDate : "")
+        );
+      },
+      async function () {
+        const ok = confirm("Vuoi eliminare la voce '" + labelBase + "'?");
+        if (!ok) return;
+
+        if (entry.bollettaPdfId) {
+          await deletePdfFromDB(entry.bollettaPdfId);
+        }
+
+        if (entry.addebitoPdfId) {
+          await deletePdfFromDB(entry.addebitoPdfId);
+        }
+
+        const index = folder.billEntries.indexOf(entry);
+        if (index !== -1) {
+          folder.billEntries.splice(index, 1);
+        }
+
+        save();
+        render();
+      }
+    );
+
+    list.appendChild(row);
+  });
+}
 function renderFiles(files, searchText) {
   files.forEach((file, i) => {
     if (searchText && !file.name.toLowerCase().includes(searchText)) return;
@@ -1408,7 +1615,13 @@ function render() {
   computeMissingCounts();
 
   renderFolders(items, searchText);
-  renderFiles(files, searchText);
+
+const currentFolder = getCurrentFolder();
+if (currentFolder) {
+  renderBillEntries(currentFolder, searchText);
+}
+
+renderFiles(files, searchText);
 }
 
 /* -------------------- EVENTI -------------------- */
@@ -1458,16 +1671,37 @@ if (fileInput) {
           data: arrayBuffer
         });
 
-        const files = getCurrentFiles();
+        const folder = getCurrentFolder();
 
-        files.push({
-          name: file.name,
-          type: "application/pdf",
-          pdfId: pdfId
-        });
+if (folder) {
+  const parsedBill = parseBillName(file.name);
+  const parsedAddebito = parseAddebitoName(file.name);
 
-        save();
-        render();
+  if (parsedBill) {
+    createOrUpdateBillEntry(folder, parsedBill, pdfId, file.name);
+  } else if (parsedAddebito) {
+    saveAddebitoIntoEntry(folder, parsedAddebito, pdfId);
+  } else {
+    const files = getCurrentFiles();
+
+    files.push({
+      name: file.name,
+      type: "application/pdf",
+      pdfId: pdfId
+    });
+  }
+} else {
+  const files = getCurrentFiles();
+
+  files.push({
+    name: file.name,
+    type: "application/pdf",
+    pdfId: pdfId
+  });
+}
+
+save();
+render();
       } else {
         const arrayBuffer = await convertImageFileToPdfArrayBuffer(file);
         const savedName = suggestPdfNameFromPath(file.name);
