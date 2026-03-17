@@ -1,4 +1,4 @@
-alert("APP JS NUOVO");
+alert("NUOVO FILE CARICATO");
 
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
 
