@@ -1,3 +1,4 @@
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #f2f2f7;
@@ -19,51 +20,6 @@ header {
 h1 {
   margin: 0;
   font-size: 28px;
-}
-
-.headerTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#backupBtn,
-#restoreBtn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 10px;
-  padding: 0;
-  font-size: 17px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-}
-
-#backupBtn {
-  background: #007aff;
-}
-
-#restoreBtn {
-  background: #5856d6;
-}
-
-#backupBtn:disabled,
-#restoreBtn:disabled {
-  opacity: 0.55;
-  cursor: default;
-  box-shadow: none;
 }
 
 #search {
@@ -589,4 +545,231 @@ main {
     padding: 6px 8px;
     font-size: 12px;
   }
+}
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Archivio Bollette</title>
+
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Bollette">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>Archivio</h1>
+    <input type="text" id="search" placeholder="🔍 Cerca documento">
+
+    <div class="headerActions">
+      <button id="backupBtn">Backup</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="topbar">
+      <button id="backBtn">⬅️</button>
+      <div id="path"></div>
+    </div>
+
+    <ul id="folders"></ul>
+  </main>
+
+  <div class="floatingButtons">
+    <button id="addFolder">＋</button>
+    <button id="addFile">📄</button>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/pdf,image/*" hidden>
+
+  <div id="actionSheet">
+    <div id="actionSheetBackdrop"></div>
+
+    <div id="actionSheetPanel">
+      <button id="moveActionBtn" class="actionBtn">Sposta</button>
+      <button id="editActionBtn" class="actionBtn">Modifica</button>
+      <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
+
+      <div class="cancelWrap">
+        <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pdfViewer" class="hidden">
+    <div id="pdfViewerHeader">
+      <button id="closePdfBtn">Chiudi</button>
+      <div id="pdfTitle">PDF</div>
+
+      <div class="pdfActions">
+        <button id="sharePdfBtn">Condividi</button>
+        <button id="printPdfBtn">Stampa</button>
+      </div>
+    </div>
+
+    <embed id="pdfFrame" type="application/pdf">
+  </div>
+
+  <div id="deadlineEditor" class="hidden">
+    <div id="deadlineEditorBackdrop"></div>
+
+    <div id="deadlineEditorPanel">
+      <div class="deadlineHeader">
+        <h3>Modifica cartella</h3>
+        <button id="closeDeadlineEditorBtn">✕</button>
+      </div>
+
+      <div class="deadlineForm">
+        <label for="deadlineFolderNameInput">Nome cartella</label>
+        <input type="text" id="deadlineFolderNameInput">
+
+        <label for="deadlineLabelInput">Nome scadenza</label>
+        <input type="text" id="deadlineLabelInput">
+
+        <label for="deadlineFirstDateInput">Prima scadenza</label>
+        <input type="date" id="deadlineFirstDateInput">
+
+        <label for="deadlineIntervalSelect">Ripetizione</label>
+        <select id="deadlineIntervalSelect">
+          <option value="1">Ogni 1 mese</option>
+          <option value="2">Ogni 2 mesi</option>
+          <option value="3">Ogni 3 mesi</option>
+          <option value="4">Ogni 4 mesi</option>
+          <option value="6">Ogni 6 mesi</option>
+          <option value="12">Ogni 12 mesi</option>
+        </select>
+
+        <label for="deadlinePrefixInput">Prefisso PDF</label>
+        <input type="text" id="deadlinePrefixInput">
+      </div>
+
+      <div id="deadlineListBox"></div>
+
+      <div class="deadlineButtons">
+        <button id="saveDeadlineBtn" class="primaryBtn">Salva</button>
+        <button id="replaceDeadlinesBtn" class="secondaryBtn">Sostituisci scadenza</button>
+        <button id="clearDeadlinesBtn" class="dangerBtn">Elimina scadenze</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="renameModal" class="hidden">
+    <div id="renameBackdrop"></div>
+
+    <div id="renamePanel">
+      <h3>Rinomina PDF</h3>
+      <input type="text" id="renameInput">
+
+      <div class="renameButtons">
+        <button id="renameConfirm">Salva</button>
+        <button id="renameCancel">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="moveModal" class="hidden">
+    <div id="moveBackdrop"></div>
+
+    <div id="movePanel">
+      <div class="moveHeader">
+        <h3>Sposta PDF</h3>
+        <button id="closeMoveBtn">✕</button>
+      </div>
+
+      <div id="moveCurrentFile"></div>
+      <div id="moveFolderList"></div>
+    </div>
+  </div>
+
+  <div id="folderModal" class="hidden">
+    <div id="folderBackdrop"></div>
+
+    <div id="folderPanel">
+      <h3>Nuova cartella</h3>
+      <input type="text" id="folderNameInput" placeholder="Nome cartella">
+
+      <div class="folderButtons">
+        <button id="folderConfirmBtn">Salva</button>
+        <button id="folderCancelBtn">Annulla</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
+.headerActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#backupBtn,
+#restoreBtn {
+  border: none;
+  background: #007aff;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#restoreBtn {
+  background: #5856d6;
+}
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#backupBtn,
+#restoreBtn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+#backupBtn {
+  background: #007aff;
+}
+
+#restoreBtn {
+  background: #5856d6;
+}
+
+#backupBtn:disabled,
+#restoreBtn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
 }
