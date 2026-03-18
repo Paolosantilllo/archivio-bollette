@@ -675,6 +675,7 @@ function createFolder(name) {
     sub: [],
     files: [],
     deadlines: []
+    image: null  //
   });
 
   sortFolders(items);
@@ -1303,10 +1304,29 @@ function createSwipeRow(
   row.appendChild(content);
 
   attachSwipe(content, function () {
-    openActionSheet({
-      editAction,
-      deleteAction,
-      moveAction
+   editAction: function () {
+
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = "image/*";
+
+  picker.onchange = function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+      item.image = reader.result;
+      save();
+      render();
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  picker.click();
+},
     });
   });
 
@@ -1321,7 +1341,12 @@ function renderFolders(items, searchText) {
 
     if (searchText && !item.name.toLowerCase().includes(searchText)) return;
 
-    let labelHTML = item.name;
+    let labelHTML = `
+<div style="display:flex;align-items:center;gap:10px;">
+  ${item.image ? `<img src="${item.image}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;">` : "📁"}
+  <span>${item.name}</span>
+</div>
+`;
     const missingCount = getMissingCountFromMap(currentPath, i);
 
     if (missingCount > 0) {
