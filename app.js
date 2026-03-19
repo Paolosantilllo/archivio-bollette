@@ -1,4 +1,4 @@
-// ================== STATO ==================
+// ===================== STATO =====================
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
 let currentPath = [];
 
@@ -8,7 +8,7 @@ const addFileBtn = document.getElementById("addFile");
 const backBtn = document.getElementById("backBtn");
 const pathBox = document.getElementById("path");
 
-// ================== UTILS ==================
+// ===================== UTILS =====================
 function save() {
   localStorage.setItem("archivio", JSON.stringify(data));
 }
@@ -16,6 +16,7 @@ function save() {
 function ensureFolder(folder) {
   if (!folder.sub) folder.sub = [];
   if (!folder.files) folder.files = [];
+  if (!folder.image) folder.image = null;
 }
 
 function getCurrentLevel() {
@@ -31,79 +32,68 @@ function getCurrentFolder() {
   if (currentPath.length === 0) return null;
   let level = data;
   let folder;
+
   for (let i = 0; i < currentPath.length; i++) {
     folder = level[currentPath[i]];
     ensureFolder(folder);
     level = folder.sub;
   }
+
   return folder;
 }
 
 function getPathNames() {
   let names = ["Home"];
   let level = data;
+
   for (let i = 0; i < currentPath.length; i++) {
     const f = level[currentPath[i]];
     names.push(f.name);
     level = f.sub;
   }
+
   return names.join(" / ");
 }
 
-// ================== SWIPE ==================
+// ===================== SWIPE =====================
 function attachSwipe(el, onSwipeLeft) {
   let startX = 0;
-  let currentX = 0;
 
   el.addEventListener("touchstart", e => {
     startX = e.touches[0].clientX;
   });
 
-  el.addEventListener("touchmove", e => {
-    currentX = e.touches[0].clientX;
-  });
-
-  el.addEventListener("touchend", () => {
-    if (startX - currentX > 60) {
-      onSwipeLeft();
-    }
+  el.addEventListener("touchend", e => {
+    const endX = e.changedTouches[0].clientX;
+    if (startX - endX > 60) onSwipeLeft();
   });
 }
 
-// ================== ACTION SHEET ==================
-let currentAction = null;
-
-function openActionSheet(actions) {
-  currentAction = actions;
-
+// ===================== ACTION MENU =====================
+function openActionMenu(actions) {
   const scelta = prompt(
-    "Scrivi:\n1 = Modifica\n2 = Elimina\n3 = Sposta"
+    "1 = Rinomina\n2 = Elimina\n3 = Cambia immagine"
   );
 
-  if (scelta === "1" && actions.editAction) actions.editAction();
-  if (scelta === "2" && actions.deleteAction) actions.deleteAction();
-  if (scelta === "3" && actions.moveAction) actions.moveAction();
+  if (scelta === "1" && actions.rename) actions.rename();
+  if (scelta === "2" && actions.delete) actions.delete();
+  if (scelta === "3" && actions.image) actions.image();
 }
 
-// ================== CREAZIONE RIGA ==================
-function createRow(label, openAction, editAction, deleteAction, moveAction) {
+// ===================== RIGA =====================
+function createRow(contentHTML, onClick, actions) {
   const li = document.createElement("li");
-  li.textContent = label;
+  li.className = "row";
+  li.innerHTML = contentHTML;
 
-  li.onclick = openAction;
+  li.onclick = onClick;
 
-  attachSwipe(li, () => {
-    openActionSheet({
-      editAction,
-      deleteAction,
-      moveAction
-    });
-  });
+  attachSwipe(li, () => openActionMenu(actions));
 
   return li;
 }
 
-// ================== RENDER ==================
+// ===================== RENDER =====================
 function render() {
   list.innerHTML = "";
   pathBox.textContent = getPathNames();
@@ -115,29 +105,61 @@ function render() {
   backBtn.style.display = currentPath.length ? "block" : "none";
   addFileBtn.style.display = currentPath.length ? "block" : "none";
 
-  // CARTELLE
+  // ===== CARTELLE =====
   folders.forEach((f, i) => {
     ensureFolder(f);
 
+    const html = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        ${
+          f.image
+            ? `<img src="${f.image}" style="width:50px;height:50px;border-radius:12px;object-fit:cover;">`
+            : `<div style="font-size:30px;">📁</div>`
+        }
+        <div style="font-weight:600;">${f.name}</div>
+      </div>
+    `;
+
     const row = createRow(
-      "📁 " + f.name,
+      html,
       () => {
         currentPath.push(i);
         render();
       },
-      () => {
-        const nuovo = prompt("Nuovo nome:", f.name);
-        if (nuovo) {
+      {
+        rename: () => {
+          const nuovo = prompt("Nuovo nome:", f.name);
+          if (!nuovo) return;
           f.name = nuovo;
           save();
           render();
-        }
-      },
-      () => {
-        if (confirm("Eliminare cartella?")) {
-          folders.splice(i, 1);
-          save();
-          render();
+        },
+        delete: () => {
+          if (confirm("Eliminare cartella?")) {
+            folders.splice(i, 1);
+            save();
+            render();
+          }
+        },
+        image: () => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = "image/*";
+
+          input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+              f.image = reader.result;
+              save();
+              render();
+            };
+            reader.readAsDataURL(file);
+          };
+
+          input.click();
         }
       }
     );
@@ -145,24 +167,32 @@ function render() {
     list.appendChild(row);
   });
 
-  // FILE
+  // ===== FILE =====
   files.forEach((file, i) => {
+    const html = `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">📄</div>
+        <div>${file.name}</div>
+      </div>
+    `;
+
     const row = createRow(
-      "📄 " + file.name,
-      () => alert("Apertura file (qui puoi integrare PDF)"),
-      () => {
-        const nuovo = prompt("Nuovo nome:", file.name);
-        if (nuovo) {
+      html,
+      () => alert("Apertura file (puoi aggiungere PDF qui)"),
+      {
+        rename: () => {
+          const nuovo = prompt("Nuovo nome:", file.name);
+          if (!nuovo) return;
           file.name = nuovo;
           save();
           render();
-        }
-      },
-      () => {
-        if (confirm("Eliminare file?")) {
-          files.splice(i, 1);
-          save();
-          render();
+        },
+        delete: () => {
+          if (confirm("Eliminare file?")) {
+            files.splice(i, 1);
+            save();
+            render();
+          }
         }
       }
     );
@@ -171,7 +201,7 @@ function render() {
   });
 }
 
-// ================== EVENTI ==================
+// ===================== EVENTI =====================
 addBtn.onclick = () => {
   const nome = prompt("Nome cartella:");
   if (!nome) return;
@@ -179,7 +209,8 @@ addBtn.onclick = () => {
   getCurrentLevel().push({
     name: nome,
     sub: [],
-    files: []
+    files: [],
+    image: null
   });
 
   save();
@@ -202,5 +233,5 @@ backBtn.onclick = () => {
   render();
 };
 
-// ================== START ==================
+// ===================== START =====================
 render();
