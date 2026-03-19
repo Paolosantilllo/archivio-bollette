@@ -1278,7 +1278,8 @@ function attachSwipe(contentEl, onSwipeLeft) {
   });
 }
 
-function createSwipeRow(
+
+    function createSwipeRow(
   mainClass,
   labelClass,
   labelHTML,
@@ -1296,6 +1297,8 @@ function createSwipeRow(
   const nameSpan = document.createElement("span");
   nameSpan.className = labelClass;
   nameSpan.innerHTML = labelHTML;
+
+  // click normale
   nameSpan.onclick = function () {
     openAction();
   };
@@ -1303,36 +1306,17 @@ function createSwipeRow(
   content.appendChild(nameSpan);
   row.appendChild(content);
 
+  // swipe → apre menu azioni
   attachSwipe(content, function () {
-   editAction: function () {
-
-  const picker = document.createElement("input");
-  picker.type = "file";
-  picker.accept = "image/*";
-
-  picker.onchange = function(e){
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function(){
-      item.image = reader.result;
-      save();
-      render();
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  picker.click();
-},
+    openActionSheet({
+      editAction: editAction,
+      deleteAction: deleteAction,
+      moveAction: moveAction
     });
   });
 
   return row;
 }
-
 /* -------------------- RENDER -------------------- */
 
 function renderFolders(items, searchText) {
