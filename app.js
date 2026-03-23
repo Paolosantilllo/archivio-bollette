@@ -1,10 +1,90 @@
-let data = JSON.parse(localStorage.getItem("archivio")) || [];
+let data = [];
 let currentPath = [];
 let currentPdfUrl = null;
 let currentViewerFile = null;
 let selectedActionItem = null;
 let renameTarget = null;
 let editingBillingFolder = null;
+
+/* -------------------- DB -------------------- */
+
+const DB_NAME = "ArchivioBolletteDB";
+const DB_VERSION = 1;
+const STORE_NAME = "appdata";
+const DATA_KEY = "archivio";
+
+let dbPromise = null;
+let saveTimer = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+
+  dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+
+  return dbPromise;
+}
+
+async function loadDataFromDB() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(DATA_KEY);
+
+    request.onsuccess = () => {
+      resolve(request.result || []);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function writeDataToDB() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+
+    store.put(data, DATA_KEY);
+
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+function save() {
+  clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(async () => {
+    try {
+      await writeDataToDB();
+    } catch (err) {
+      console.error("Errore salvataggio IndexedDB:", err);
+      alert("Errore durante il salvataggio dei dati");
+    }
+  }, 80);
+}
+
+async function saveNow() {
+  clearTimeout(saveTimer);
+  await writeDataToDB();
+}
 
 /* -------------------- ELEMENTI -------------------- */
 
@@ -89,12 +169,6 @@ if (
   throw new Error("Elementi HTML mancanti");
 }
 
-/* -------------------- SAVE -------------------- */
-
-function save() {
-  localStorage.setItem("archivio", JSON.stringify(data));
-}
-
 /* -------------------- ID -------------------- */
 
 function createId() {
@@ -132,8 +206,6 @@ function ensureFolderShape(folder) {
 
   folder.sub.forEach(ensureFolderShape);
 }
-
-data.forEach(ensureFolderShape);
 
 /* -------------------- HELPERS -------------------- */
 
@@ -223,7 +295,7 @@ function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
 }
@@ -416,9 +488,7 @@ function ensureBillingCycles(folder) {
 function getOwnBillingBadgeCount(folder) {
   ensureBillingCycles(folder);
 
-  if (!folder.billing || !folder.billing.enabled) {
-    return 0;
-  }
+  if (!folder.billing || !folder.billing.enabled) return 0;
 
   let count = 0;
 
@@ -458,9 +528,7 @@ function getBillingBadgeCount(folder) {
 function getBillingStatusLines(folder) {
   ensureBillingCycles(folder);
 
-  if (!folder.billing || !folder.billing.enabled) {
-    return [];
-  }
+  if (!folder.billing || !folder.billing.enabled) return [];
 
   const lines = [];
 
@@ -914,7 +982,7 @@ function closePdfViewer() {
 
 function downloadBackup() {
   const backup = {
-    version: 4,
+    version: 5,
     createdAt: new Date().toISOString(),
     archivio: data
   };
@@ -949,7 +1017,7 @@ async function restoreBackup(file) {
     data.forEach(ensureFolderShape);
 
     currentPath = [];
-    save();
+    await saveNow();
     render();
     alert("Backup ripristinato con successo");
   } catch (err) {
@@ -1577,4 +1645,19 @@ clearDeadlinesBtn.onclick = () => {
 
 /* -------------------- START -------------------- */
 
-render();
+async function initApp() {
+  try {
+    data = await loadDataFromDB();
+    if (!Array.isArray(data)) data = [];
+
+    data.forEach(ensureFolderShape);
+    render();
+  } catch (err) {
+    console.error("Errore inizializzazione IndexedDB:", err);
+    alert("Errore nell'apertura dell'archivio");
+    data = [];
+    render();
+  }
+}
+
+initApp();
