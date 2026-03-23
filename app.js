@@ -56,7 +56,7 @@ const folderNameInput = document.getElementById("folderNameInput");
 const folderConfirmBtn = document.getElementById("folderConfirmBtn");
 const folderCancelBtn = document.getElementById("folderCancelBtn");
 
-/* DEADLINE EDITOR (per ora non usato davvero, ma lo teniamo compatibile) */
+/* DEADLINE EDITOR */
 const deadlineEditor = document.getElementById("deadlineEditor");
 const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
 
@@ -101,7 +101,7 @@ function getCurrentFolder() {
   return folder;
 }
 
-function getPathNames() {
+function getPath() {
   let names = ["Home"];
   let level = data;
 
@@ -110,11 +110,7 @@ function getPathNames() {
     level = level[i].sub;
   });
 
-  return names;
-}
-
-function getPath() {
-  return getPathNames().join(" / ");
+  return names.join(" / ");
 }
 
 function getFolderByPath(pathArray) {
@@ -137,6 +133,32 @@ function getLevelByPath(pathArray) {
   return level;
 }
 
+function getLabelFromPath(pathArray) {
+  const names = ["Home"];
+  let level = data;
+
+  pathArray.forEach(i => {
+    names.push(level[i].name);
+    level = level[i].sub;
+  });
+
+  return names.join(" / ");
+}
+
+function pathEquals(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => value === b[index]);
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function dataUrlToBlob(dataUrl) {
   const [meta, base64] = dataUrl.split(",");
   const mimeMatch = meta.match(/data:(.*?);base64/);
@@ -151,29 +173,6 @@ function dataUrlToBlob(dataUrl) {
   }
 
   return new Blob([bytes], { type: mime });
-}
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-
-    reader.readAsDataURL(file);
-  });
-}
-
-function closeAllOverlays() {
-  closeActionSheet();
-  closeRenameModal();
-  closeMoveModal();
-  closeFolderModal();
-  closePdfViewer();
-
-  if (deadlineEditor) {
-    deadlineEditor.classList.add("hidden");
-  }
 }
 
 /* -------------------- CREAZIONE -------------------- */
@@ -212,6 +211,7 @@ function openRenameModal(target) {
   renameTarget = target;
   renameInput.value = target.name || "";
   renameModal.classList.remove("hidden");
+
   setTimeout(() => {
     renameInput.focus();
     renameInput.select();
@@ -229,14 +229,15 @@ function closeRenameModal() {
 function openActionSheet(item) {
   selectedActionItem = item;
 
-  if (item.type === "file") {
-    moveActionBtn.style.display = "block";
-    editActionBtn.textContent = "Modifica";
-  } else {
+  if (item.type === "folder") {
     moveActionBtn.style.display = "none";
-    editActionBtn.textContent = "Modifica";
+    editActionBtn.textContent = "Cambia immagine";
+  } else {
+    moveActionBtn.style.display = "block";
+    editActionBtn.textContent = "Rinomina";
   }
 
+  deleteActionBtn.style.display = "block";
   actionSheet.classList.add("show");
 }
 
@@ -245,7 +246,123 @@ function closeActionSheet() {
   selectedActionItem = null;
 }
 
-/* -------------------- PICKER IMMAGINE CARTELLA -------------------- */
+/* -------------------- MENU CARTELLA CUSTOM -------------------- */
+
+function openFolderMenu(folderIndex) {
+  const existing = document.getElementById("folderCustomMenu");
+  if (existing) existing.remove();
+
+  const menu = document.createElement("div");
+  menu.id = "folderCustomMenu";
+  menu.style.position = "fixed";
+  menu.style.inset = "0";
+  menu.style.background = "rgba(0,0,0,0.28)";
+  menu.style.zIndex = "2000";
+  menu.style.display = "flex";
+  menu.style.alignItems = "flex-end";
+  menu.style.justifyContent = "center";
+  menu.style.padding = "12px";
+  menu.style.boxSizing = "border-box";
+
+  const panel = document.createElement("div");
+  panel.style.width = "100%";
+  panel.style.maxWidth = "500px";
+
+  const box = document.createElement("div");
+  box.style.background = "#f2f2f7";
+  box.style.borderRadius = "18px";
+  box.style.overflow = "hidden";
+
+  const cancelWrap = document.createElement("div");
+  cancelWrap.style.marginTop = "8px";
+
+  const cancelBox = document.createElement("div");
+  cancelBox.style.background = "#f2f2f7";
+  cancelBox.style.borderRadius = "18px";
+  cancelBox.style.overflow = "hidden";
+
+  const level = getCurrentLevel();
+  const folder = level[folderIndex];
+
+  function makeBtn(text, onClick, isDanger = false) {
+    const btn = document.createElement("button");
+    btn.textContent = text;
+    btn.style.width = "100%";
+    btn.style.border = "none";
+    btn.style.background = "#e9e9ef";
+    btn.style.padding = "18px";
+    btn.style.fontSize = "18px";
+    btn.style.cursor = "pointer";
+    btn.style.borderBottom = "1px solid #d7d7dd";
+    if (isDanger) btn.style.color = "#ff3b30";
+    btn.onclick = () => {
+      closeFolderMenu();
+      onClick();
+    };
+    return btn;
+  }
+
+  const openBtn = makeBtn("Apri", () => {
+    currentPath.push(folderIndex);
+    render();
+  });
+
+  const renameBtn = makeBtn("Rinomina", () => {
+    openRenameModal(folder);
+  });
+
+  const imageBtn = makeBtn("Cambia immagine", () => {
+    pickFolderImage(folder);
+  });
+
+  const deleteBtn = makeBtn("Elimina", () => {
+    const ok = confirm(`Eliminare la cartella "${folder.name}"?`);
+    if (!ok) return;
+    level.splice(folderIndex, 1);
+    save();
+    render();
+  }, true);
+
+  deleteBtn.style.borderBottom = "none";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.textContent = "Annulla";
+  cancelBtn.style.width = "100%";
+  cancelBtn.style.border = "none";
+  cancelBtn.style.background = "#e9e9ef";
+  cancelBtn.style.padding = "18px";
+  cancelBtn.style.fontSize = "18px";
+  cancelBtn.style.cursor = "pointer";
+  cancelBtn.style.fontWeight = "600";
+  cancelBtn.onclick = closeFolderMenu;
+
+  box.appendChild(openBtn);
+  box.appendChild(renameBtn);
+  box.appendChild(imageBtn);
+  box.appendChild(deleteBtn);
+
+  cancelBox.appendChild(cancelBtn);
+  cancelWrap.appendChild(cancelBox);
+
+  panel.appendChild(box);
+  panel.appendChild(cancelWrap);
+  menu.appendChild(panel);
+
+  menu.addEventListener("click", e => {
+    if (e.target === menu) {
+      closeFolderMenu();
+    }
+  });
+
+  document.body.appendChild(menu);
+}
+
+function closeFolderMenu() {
+  const menu = document.getElementById("folderCustomMenu");
+  if (menu) menu.remove();
+}
+
+/* -------------------- IMMAGINE CARTELLA -------------------- */
 
 function pickFolderImage(folder) {
   const picker = document.createElement("input");
@@ -261,38 +378,15 @@ function pickFolderImage(folder) {
       save();
       render();
     } catch (err) {
-      alert("Errore durante il caricamento dell'immagine");
       console.error(err);
+      alert("Errore durante il caricamento dell'immagine");
     }
   };
 
   picker.click();
 }
 
-function openFolderEditOptions(folder) {
-  const scelta = prompt(
-    "Modifica cartella:\n1 = Rinomina\n2 = Cambia immagine\n3 = Rimuovi immagine",
-    "2"
-  );
-
-  if (scelta === "1") {
-    openRenameModal(folder);
-    return;
-  }
-
-  if (scelta === "2") {
-    pickFolderImage(folder);
-    return;
-  }
-
-  if (scelta === "3") {
-    folder.image = null;
-    save();
-    render();
-  }
-}
-
-/* -------------------- PDF / FILE VIEWER -------------------- */
+/* -------------------- VIEWER FILE -------------------- */
 
 function openFile(file) {
   currentViewerFile = file;
@@ -347,13 +441,11 @@ function downloadBackup() {
 
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-
   a.href = url;
   a.download = "archivio-backup.json";
   document.body.appendChild(a);
   a.click();
   a.remove();
-
   URL.revokeObjectURL(url);
 }
 
@@ -375,8 +467,8 @@ async function restoreBackup(file) {
     render();
     alert("Backup ripristinato con successo");
   } catch (err) {
-    alert("Impossibile ripristinare il backup");
     console.error(err);
+    alert("Impossibile ripristinare il backup");
   }
 }
 
@@ -405,23 +497,6 @@ function collectFolders(level = data, path = [], result = []) {
   return result;
 }
 
-function getLabelFromPath(pathArray) {
-  const names = ["Home"];
-  let level = data;
-
-  pathArray.forEach(i => {
-    names.push(level[i].name);
-    level = level[i].sub;
-  });
-
-  return names.join(" / ");
-}
-
-function pathEquals(a, b) {
-  if (a.length !== b.length) return false;
-  return a.every((value, index) => value === b[index]);
-}
-
 function openMoveModal(fileItem, fromPath, fileIndex) {
   moveCurrentFile.textContent = `File: ${fileItem.name}`;
   moveFolderList.innerHTML = "";
@@ -430,6 +505,7 @@ function openMoveModal(fileItem, fromPath, fileIndex) {
 
   folders.forEach(folderInfo => {
     if (pathEquals(folderInfo.path, fromPath)) return;
+    if (!folderInfo.path.length) return;
 
     const btn = document.createElement("button");
     btn.className = "moveFolderItem";
@@ -437,19 +513,10 @@ function openMoveModal(fileItem, fromPath, fileIndex) {
 
     btn.onclick = () => {
       const sourceFolder = getFolderByPath(fromPath);
-      const destinationFolder = folderInfo.path.length
-        ? getFolderByPath(folderInfo.path)
-        : null;
+      const destinationFolder = getFolderByPath(folderInfo.path);
 
       const movedFile = sourceFolder.files.splice(fileIndex, 1)[0];
-
-      if (destinationFolder) {
-        destinationFolder.files.push(movedFile);
-      } else {
-        alert("I file possono stare solo dentro una cartella");
-        sourceFolder.files.splice(fileIndex, 0, movedFile);
-        return;
-      }
+      destinationFolder.files.push(movedFile);
 
       save();
       closeMoveModal();
@@ -482,7 +549,6 @@ function deleteSelectedItem() {
   if (type === "folder") {
     const level = getLevelByPath(parentPath);
     const folder = level[index];
-
     const ok = confirm(`Eliminare la cartella "${folder.name}"?`);
     if (!ok) return;
 
@@ -495,7 +561,6 @@ function deleteSelectedItem() {
   if (type === "file") {
     const folder = getFolderByPath(parentPath);
     const file = folder.files[index];
-
     const ok = confirm(`Eliminare il file "${file.name}"?`);
     if (!ok) return;
 
@@ -558,11 +623,7 @@ function render() {
 
     li.addEventListener("contextmenu", e => {
       e.preventDefault();
-      openActionSheet({
-        type: "folder",
-        index,
-        parentPath: [...currentPath]
-      });
+      openFolderMenu(index);
     });
 
     li.addEventListener("touchstart", () => {
@@ -570,11 +631,7 @@ function render() {
 
       timer = setTimeout(() => {
         longPressTriggered = true;
-        openActionSheet({
-          type: "folder",
-          index,
-          parentPath: [...currentPath]
-        });
+        openFolderMenu(index);
       }, 500);
     }, { passive: true });
 
@@ -699,8 +756,8 @@ fileInput.onchange = async e => {
     save();
     render();
   } catch (err) {
-    alert("Errore durante il caricamento del file");
     console.error(err);
+    alert("Errore durante il caricamento del file");
   }
 
   fileInput.value = "";
@@ -731,7 +788,7 @@ restoreInput.onchange = async e => {
   restoreInput.value = "";
 };
 
-/* ACTION SHEET */
+/* ACTION SHEET FILE */
 actionSheetBackdrop.onclick = closeActionSheet;
 cancelActionBtn.onclick = closeActionSheet;
 
@@ -747,14 +804,6 @@ moveActionBtn.onclick = () => {
 
 editActionBtn.onclick = () => {
   if (!selectedActionItem) return;
-
-  if (selectedActionItem.type === "folder") {
-    const level = getLevelByPath(selectedActionItem.parentPath);
-    const folder = level[selectedActionItem.index];
-    closeActionSheet();
-    openFolderEditOptions(folder);
-    return;
-  }
 
   if (selectedActionItem.type === "file") {
     const folder = getFolderByPath(selectedActionItem.parentPath);
@@ -803,13 +852,13 @@ sharePdfBtn.onclick = async () => {
 
   try {
     const blob = dataUrlToBlob(currentViewerFile.data);
-    const file = new File([blob], currentViewerFile.name, {
+    const sharedFile = new File([blob], currentViewerFile.name, {
       type: currentViewerFile.type || "application/pdf"
     });
 
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
       await navigator.share({
-        files: [file],
+        files: [sharedFile],
         title: currentViewerFile.name
       });
       return;
@@ -836,7 +885,7 @@ printPdfBtn.onclick = () => {
   };
 };
 
-/* DEADLINE EDITOR */
+/* DEADLINE */
 if (closeDeadlineEditorBtn) {
   closeDeadlineEditorBtn.onclick = () => {
     deadlineEditor.classList.add("hidden");
