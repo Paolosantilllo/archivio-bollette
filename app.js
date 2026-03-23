@@ -574,6 +574,7 @@ function deleteSelectedItem() {
 
 function render() {
   list.innerHTML = "";
+  list.className = "";
   pathBox.textContent = getPath();
 
   backBtn.style.display = currentPath.length ? "block" : "none";
@@ -593,20 +594,26 @@ function render() {
     .map((file, index) => ({ file, index }))
     .filter(({ file }) => file.name.toLowerCase().includes(searchTerm));
 
-  filteredFolders.forEach(({ folder, index }) => {
-    const li = document.createElement("li");
-    li.className = "swipeRow";
+if (filteredFolders.length) {
+  list.classList.add("folderGrid");
+} else {
+  list.classList.add("folderList");
+}
 
-    const imageHtml = folder.image
-      ? `<img src="${folder.image}" alt="" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex-shrink:0;">`
-      : `<div style="width:44px;height:44px;border-radius:12px;background:#d7d7dd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">📁</div>`;
+filteredFolders.forEach(({ folder, index }) => {
+  const li = document.createElement("li");
+  li.className = "swipeRow";
 
-    li.innerHTML = `
-      <div class="folder">
-        ${imageHtml}
-        <div class="folderName">${escapeHtml(folder.name)}</div>
-      </div>
-    `;
+  const imageHtml = folder.image
+    ? `<img src="${folder.image}" alt="" class="gridCover">`
+    : `<div class="gridCoverEmpty">📁</div>`;
+
+  li.innerHTML = `
+    <div class="gridCard">
+      ${imageHtml}
+      <div class="gridTitle">${escapeHtml(folder.name)}</div>
+    </div>
+  `;
 
     let timer = null;
     let longPressTriggered = false;
@@ -645,7 +652,26 @@ function render() {
 
     list.appendChild(li);
   });
+if (filteredFolders.length) {
+  list.classList.add("folderGrid");
+} else {
+  list.classList.add("folderList");
+}
 
+filteredFolders.forEach(({ folder, index }) => {
+  const li = document.createElement("li");
+  li.className = "swipeRow";
+
+  const imageHtml = folder.image
+    ? `<img src="${folder.image}" alt="" class="gridCover">`
+    : `<div class="gridCoverEmpty">📁</div>`;
+
+  li.innerHTML = `
+    <div class="gridCard">
+      ${imageHtml}
+      <div class="gridTitle">${escapeHtml(folder.name)}</div>
+    </div>
+  `;
   filteredFiles.forEach(({ file, index }) => {
     const li = document.createElement("li");
     li.className = "swipeRow";
