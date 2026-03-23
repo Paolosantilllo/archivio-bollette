@@ -1,167 +1,284 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Archivio Bollette</title>
+<title>Archivio</title>
 
-  <link rel="icon" href="icon.png">
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
 
-  <meta name="theme-color" content="#f2f2f7">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Bollette">
-
-  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <header>
-    <div class="headerTop">
-      <h1>Archivio</h1>
+<header>
 
-      <div class="headerActions" id="headerActions">
-        <button id="backupBtn" title="Backup" aria-label="Backup">💾</button>
-        <button id="restoreBtn" title="Ripristina" aria-label="Ripristina">📥</button>
-      </div>
-    </div>
+<div class="headerTop">
 
-    <input type="text" id="search" placeholder="🔎 Cerca documento">
-  </header>
+<h1>Archivio</h1>
 
-  <main>
-    <div class="topbar">
-      <button id="backBtn" type="button">⬅️</button>
-      <div id="path">Home</div>
-    </div>
+<div class="headerActions">
 
-    <ul id="folders"></ul>
-  </main>
+<button id="backupBtn">⬆️</button>
 
-  <div class="floatingButtons">
-    <button id="addFolder" type="button" title="Nuova cartella" aria-label="Nuova cartella">＋</button>
-    <button id="addFile" type="button" title="Aggiungi file" aria-label="Aggiungi file">📄</button>
-  </div>
+<button id="restoreBtn">⬇️</button>
 
-  <input type="file" id="fileInput" accept="application/pdf,image/*" hidden>
-  <input type="file" id="restoreInput" accept="application/json" hidden>
+<input type="file" id="restoreInput" accept=".json" hidden>
 
-  <div id="actionSheet">
-    <div id="actionSheetBackdrop"></div>
+</div>
 
-    <div id="actionSheetPanel">
-      <button id="moveActionBtn" class="actionBtn" type="button">Sposta</button>
-      <button id="editActionBtn" class="actionBtn" type="button">Rinomina</button>
-      <button id="deleteActionBtn" class="actionBtn deleteAction" type="button">Elimina</button>
+</div>
 
-      <div class="cancelWrap">
-        <button id="cancelActionBtn" class="cancelBtn" type="button">Annulla</button>
-      </div>
-    </div>
-  </div>
+<input type="text" id="search" placeholder="Cerca">
 
-  <div id="pdfViewer" class="hidden">
-    <div id="pdfViewerHeader">
-      <button id="closePdfBtn" type="button">Chiudi</button>
-      <div id="pdfTitle">PDF</div>
+</header>
 
-      <div class="pdfActions">
-        <button id="sharePdfBtn" type="button">Condividi</button>
-        <button id="printPdfBtn" type="button">Stampa</button>
-      </div>
-    </div>
+<main>
 
-    <embed id="pdfFrame" type="application/pdf">
-  </div>
+<div class="topbar">
 
-  <div id="deadlineEditor" class="hidden">
-    <div id="deadlineEditorBackdrop"></div>
+<button id="backBtn" class="hidden">←</button>
 
-    <div id="deadlineEditorPanel">
-      <div class="deadlineHeader">
-        <h3>Modifica cartella</h3>
-        <button id="closeDeadlineEditorBtn" type="button">✕</button>
-      </div>
+<div id="path">Home</div>
 
-      <div class="deadlineForm">
-        <label for="deadlineFolderNameInput">Nome cartella</label>
-        <input type="text" id="deadlineFolderNameInput">
+</div>
 
-        <label for="deadlineLabelInput">Nome scadenza</label>
-        <input type="text" id="deadlineLabelInput">
+<ul id="folders" class="folderGrid"></ul>
 
-        <label for="deadlineFirstDateInput">Prima scadenza</label>
-        <input type="date" id="deadlineFirstDateInput">
+</main>
 
-        <label for="deadlineIntervalSelect">Ripetizione</label>
-        <select id="deadlineIntervalSelect">
-          <option value="1">Ogni 1 mese</option>
-          <option value="2">Ogni 2 mesi</option>
-          <option value="3">Ogni 3 mesi</option>
-          <option value="4">Ogni 4 mesi</option>
-          <option value="6">Ogni 6 mesi</option>
-          <option value="12">Ogni 12 mesi</option>
-        </select>
+<div class="floatingButtons">
 
-        <label for="deadlinePrefixInput">Prefisso PDF</label>
-        <input type="text" id="deadlinePrefixInput">
-      </div>
+<button id="addFolder">📁</button>
 
-      <div id="deadlineListBox"></div>
+<button id="addFile" class="hidden">＋</button>
 
-      <div class="deadlineButtons">
-        <button id="saveDeadlineBtn" class="primaryBtn" type="button">Salva</button>
-        <button id="replaceDeadlinesBtn" class="secondaryBtn" type="button">Sostituisci scadenza</button>
-        <button id="clearDeadlinesBtn" class="dangerBtn" type="button">Elimina scadenze</button>
-      </div>
-    </div>
-  </div>
+<input type="file" id="fileInput" accept="application/pdf,image/*" hidden>
 
-  <div id="renameModal" class="hidden">
-    <div id="renameBackdrop"></div>
+</div>
 
-    <div id="renamePanel">
-      <h3>Rinomina elemento</h3>
-      <input type="text" id="renameInput">
+<!-- ACTION SHEET -->
 
-      <div class="renameButtons">
-        <button id="renameConfirm" type="button">Salva</button>
-        <button id="renameCancel" type="button">Annulla</button>
-      </div>
-    </div>
-  </div>
+<div id="actionSheet">
 
-  <div id="moveModal" class="hidden">
-    <div id="moveBackdrop"></div>
+<div id="actionSheetBackdrop"></div>
 
-    <div id="movePanel">
-      <div class="moveHeader">
-        <h3>Sposta file</h3>
-        <button id="closeMoveBtn" type="button">✕</button>
-      </div>
+<div id="actionSheetPanel">
 
-      <div id="moveCurrentFile"></div>
-      <div id="moveFolderList"></div>
-    </div>
-  </div>
+<button class="actionBtn" id="renameAction">Rinomina</button>
 
-  <div id="folderModal" class="hidden">
-    <div id="folderBackdrop"></div>
+<button class="actionBtn" id="moveAction">Sposta</button>
 
-    <div id="folderPanel">
-      <h3>Nuova cartella</h3>
-      <input type="text" id="folderNameInput" placeholder="Nome cartella">
+<button class="actionBtn deleteAction" id="deleteAction">Elimina</button>
 
-      <div class="folderButtons">
-        <button id="folderConfirmBtn" type="button">Salva</button>
-        <button id="folderCancelBtn" type="button">Annulla</button>
-      </div>
-    </div>
-  </div>
+<div class="cancelWrap">
 
-  <script src="app.js"></script>
+<button class="cancelBtn" id="cancelAction">Annulla</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- PDF VIEWER -->
+
+<div id="pdfViewer" class="hidden">
+
+<div id="pdfViewerHeader">
+
+<button id="closePdfBtn">Chiudi</button>
+
+<div id="pdfTitle"></div>
+
+<div class="pdfActions">
+
+<button id="renamePdfBtn">Rinomina</button>
+
+<button id="movePdfBtn">Sposta</button>
+
+<button id="deletePdfBtn">Elimina</button>
+
+</div>
+
+</div>
+
+<iframe id="pdfFrame"></iframe>
+
+</div>
+
+<!-- DEADLINE EDITOR -->
+
+<div id="deadlineEditor" class="hidden">
+
+<div id="deadlineEditorBackdrop"></div>
+
+<div id="deadlineEditorPanel">
+
+<div class="deadlineHeader">
+
+<h3>Scadenze</h3>
+
+<button id="closeDeadlineEditorBtn">✕</button>
+
+</div>
+
+<div class="deadlineForm">
+
+<label>Nome documento</label>
+
+<input id="deadlineName" placeholder="es. Patente">
+
+<label>Data scadenza</label>
+
+<input type="date" id="deadlineDate">
+
+<label>Ripetizione</label>
+
+<select id="repeatType">
+
+<option value="none">Nessuna</option>
+
+<option value="monthly">Ogni mese</option>
+
+<option value="bimonthly">Ogni 2 mesi</option>
+
+<option value="quarterly">Ogni 3 mesi</option>
+
+<option value="yearly">Ogni anno</option>
+
+<option value="custom">Personalizzata</option>
+
+</select>
+
+<div id="customRepeatBox" class="hidden">
+
+<label>Ogni quanti anni?</label>
+
+<input
+type="number"
+id="customRepeatYears"
+min="1"
+max="20"
+placeholder="es. 10"
+/>
+
+</div>
+
+</div>
+
+<div id="deadlineListBox">
+
+<div class="deadlineEmpty">
+
+Nessuna scadenza
+
+</div>
+
+</div>
+
+<div class="deadlineButtons">
+
+<button id="saveDeadlineBtn" class="primaryBtn">
+
+Salva
+
+</button>
+
+<button id="deleteDeadlineBtn" class="dangerBtn">
+
+Elimina
+
+</button>
+
+<button id="openDeadlineEditorBtn" class="secondaryBtn">
+
+Gestisci scadenze
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- RENAME MODAL -->
+
+<div id="renameModal" class="hidden">
+
+<div id="renameBackdrop"></div>
+
+<div id="renamePanel">
+
+<h3>Rinomina</h3>
+
+<input id="renameInput">
+
+<div class="renameButtons">
+
+<button id="renameCancel">Annulla</button>
+
+<button id="renameConfirm">OK</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- MOVE MODAL -->
+
+<div id="moveModal" class="hidden">
+
+<div id="moveBackdrop"></div>
+
+<div id="movePanel">
+
+<div class="moveHeader">
+
+<h3>Sposta</h3>
+
+<button id="closeMoveBtn">✕</button>
+
+</div>
+
+<div id="moveCurrentFile"></div>
+
+<div id="moveFolderList"></div>
+
+</div>
+
+</div>
+
+<!-- CREATE FOLDER -->
+
+<div id="folderModal" class="hidden">
+
+<div id="folderBackdrop"></div>
+
+<div id="folderPanel">
+
+<h3>Nuova cartella</h3>
+
+<input id="folderNameInput">
+
+<div class="folderButtons">
+
+<button id="folderCancelBtn">Annulla</button>
+
+<button id="folderConfirmBtn">Crea</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+
 </body>
+
 </html>
