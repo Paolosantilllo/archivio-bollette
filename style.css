@@ -609,7 +609,7 @@ main {
   background: #e9e9ef;
   border-radius: 18px;
   padding: 12px;
-  min-height: 150px;
+  min-height: 180px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -621,9 +621,11 @@ main {
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 16px;
-  object-fit: cover;
+  object-fit: contain;
   background: #d7d7dd;
   display: block;
+  padding: 6px;
+  box-sizing: border-box;
 }
 
 .gridCoverEmpty {
