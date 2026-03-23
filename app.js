@@ -3,6 +3,7 @@ let currentPath = [];
 let currentPdfUrl = null;
 let currentViewerFile = null;
 let selectedActionItem = null;
+
 let renameTarget = null;
 let editingBillingFolder = null;
 
@@ -400,28 +401,33 @@ function ensureBillingCycles(folder) {
 }
 
 function getBillingBadgeCount(folder) {
+  ensureFolderShape(folder);
   ensureBillingCycles(folder);
-
-  if (!folder.billing || !folder.billing.enabled) {
-    return 0;
-  }
 
   let count = 0;
 
-  folder.billing.cycles.forEach(cycle => {
-    if (isPastOrToday(cycle.expectedBillDate) && !cycle.billFileId) {
-      count += 1;
-    }
+  if (folder.billing && folder.billing.enabled) {
+    folder.billing.cycles.forEach(cycle => {
+      if (isPastOrToday(cycle.expectedBillDate) && !cycle.billFileId) {
+        count += 1;
+      }
 
-    if (
-      cycle.billFileId &&
-      cycle.debitDueDate &&
-      isPastOrToday(cycle.debitDueDate) &&
-      !cycle.debitFileId
-    ) {
-      count += 1;
-    }
-  });
+      if (
+        cycle.billFileId &&
+        cycle.debitDueDate &&
+        isPastOrToday(cycle.debitDueDate) &&
+        !cycle.debitFileId
+      ) {
+        count += 1;
+      }
+    });
+  }
+
+  if (folder.sub && folder.sub.length) {
+    folder.sub.forEach(subFolder => {
+      count += getBillingBadgeCount(subFolder);
+    });
+  }
 
   return count;
 }
