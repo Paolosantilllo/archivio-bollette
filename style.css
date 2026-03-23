@@ -609,25 +609,21 @@ main {
   background: #e9e9ef;
   border-radius: 18px;
   padding: 12px;
-  min-height: 180px;
+  min-height: 190px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   gap: 10px;
 }
 
 .gridCover {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
   border-radius: 16px;
-  object-fit: contain;
-  background: #d7d7dd;
+  object-fit: cover;
+  object-position: center;
   display: block;
-  padding: 6px;
-  box-sizing: border-box;
 }
-
 .gridCoverEmpty {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -645,6 +641,13 @@ main {
   color: #111;
   word-break: break-word;
   line-height: 1.25;
+}
+.gridImageWrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #d7d7dd;
 }
 
 /* FILE RESTANO A LISTA */
