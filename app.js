@@ -748,17 +748,20 @@ function render() {
     const li = document.createElement("li");
     li.className = "swipeRow";
 
-    const imageHtml = folder.image
-      ? `<img src="${folder.image}" alt="" class="gridCover">`
-      : `<div class="gridCoverEmpty">📁</div>`;
+const imageHtml = folder.image
+  ? `
+    <div class="gridImageWrap">
+      <img src="${folder.image}" alt="" class="gridCover">
+    </div>
+  `
+  : `<div class="gridCoverEmpty">📁</div>`;
 
-    li.innerHTML = `
-      <div class="gridCard">
-        ${imageHtml}
-        <div class="gridTitle">${escapeHtml(folder.name)}</div>
-      </div>
-    `;
-
+li.innerHTML = `
+  <div class="gridCard">
+    ${imageHtml}
+    <div class="gridTitle">${escapeHtml(folder.name)}</div>
+  </div>
+`;
     attachFolderInteractions(li, index);
     list.appendChild(li);
   });
