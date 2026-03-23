@@ -19,7 +19,7 @@ const backupBtn = document.getElementById("backupBtn");
 const restoreBtn = document.getElementById("restoreBtn");
 const restoreInput = document.getElementById("restoreInput");
 
-/* ACTION SHEET */
+/* ACTION SHEET FILE */
 const actionSheet = document.getElementById("actionSheet");
 const actionSheetBackdrop = document.getElementById("actionSheetBackdrop");
 const moveActionBtn = document.getElementById("moveActionBtn");
@@ -59,6 +59,24 @@ const folderCancelBtn = document.getElementById("folderCancelBtn");
 /* DEADLINE EDITOR */
 const deadlineEditor = document.getElementById("deadlineEditor");
 const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
+
+/* -------------------- CONTROLLO BASE -------------------- */
+
+if (
+  !list ||
+  !addBtn ||
+  !addFileBtn ||
+  !backBtn ||
+  !pathBox ||
+  !fileInput ||
+  !searchInput ||
+  !backupBtn ||
+  !restoreBtn ||
+  !restoreInput
+) {
+  alert("Errore: alcuni elementi HTML non sono stati trovati.");
+  throw new Error("Elementi HTML mancanti");
+}
 
 /* -------------------- SAVE -------------------- */
 
@@ -175,6 +193,54 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([bytes], { type: mime });
 }
 
+async function compressImage(file, maxSize = 700, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      const img = new Image();
+
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = Math.round(height * (maxSize / width));
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = Math.round(width * (maxSize / height));
+            height = maxSize;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas non disponibile"));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressed = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressed);
+      };
+
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 /* -------------------- CREAZIONE -------------------- */
 
 function createFolder(name) {
@@ -224,21 +290,17 @@ function closeRenameModal() {
   renameTarget = null;
 }
 
-/* -------------------- ACTION SHEET -------------------- */
+/* -------------------- ACTION SHEET FILE -------------------- */
 
 function openActionSheet(item) {
   selectedActionItem = item;
 
-  if (item.type === "folder") {
-    moveActionBtn.style.display = "none";
-    editActionBtn.textContent = "Cambia immagine";
-  } else {
+  if (item.type === "file") {
     moveActionBtn.style.display = "block";
     editActionBtn.textContent = "Rinomina";
+    deleteActionBtn.style.display = "block";
+    actionSheet.classList.add("show");
   }
-
-  deleteActionBtn.style.display = "block";
-  actionSheet.classList.add("show");
 }
 
 function closeActionSheet() {
@@ -246,11 +308,10 @@ function closeActionSheet() {
   selectedActionItem = null;
 }
 
-/* -------------------- MENU CARTELLA CUSTOM -------------------- */
+/* -------------------- MENU CARTELLA -------------------- */
 
 function openFolderMenu(folderIndex) {
-  const existing = document.getElementById("folderCustomMenu");
-  if (existing) existing.remove();
+  closeFolderMenu();
 
   const menu = document.createElement("div");
   menu.id = "folderCustomMenu";
@@ -284,7 +345,7 @@ function openFolderMenu(folderIndex) {
   const level = getCurrentLevel();
   const folder = level[folderIndex];
 
-  function makeBtn(text, onClick, isDanger = false) {
+  function makeBtn(text, onClick, isDanger = false, noBorder = false) {
     const btn = document.createElement("button");
     btn.textContent = text;
     btn.style.width = "100%";
@@ -293,12 +354,14 @@ function openFolderMenu(folderIndex) {
     btn.style.padding = "18px";
     btn.style.fontSize = "18px";
     btn.style.cursor = "pointer";
-    btn.style.borderBottom = "1px solid #d7d7dd";
+    btn.style.borderBottom = noBorder ? "none" : "1px solid #d7d7dd";
     if (isDanger) btn.style.color = "#ff3b30";
+
     btn.onclick = () => {
       closeFolderMenu();
       onClick();
     };
+
     return btn;
   }
 
@@ -315,15 +378,20 @@ function openFolderMenu(folderIndex) {
     pickFolderImage(folder);
   });
 
+  const removeImageBtn = makeBtn("Rimuovi immagine", () => {
+    folder.image = null;
+    save();
+    render();
+  });
+
   const deleteBtn = makeBtn("Elimina", () => {
     const ok = confirm(`Eliminare la cartella "${folder.name}"?`);
     if (!ok) return;
+
     level.splice(folderIndex, 1);
     save();
     render();
-  }, true);
-
-  deleteBtn.style.borderBottom = "none";
+  }, true, true);
 
   const cancelBtn = document.createElement("button");
   cancelBtn.textContent = "Annulla";
@@ -339,6 +407,7 @@ function openFolderMenu(folderIndex) {
   box.appendChild(openBtn);
   box.appendChild(renameBtn);
   box.appendChild(imageBtn);
+  box.appendChild(removeImageBtn);
   box.appendChild(deleteBtn);
 
   cancelBox.appendChild(cancelBtn);
@@ -374,7 +443,7 @@ function pickFolderImage(folder) {
     if (!file) return;
 
     try {
-      folder.image = await fileToDataUrl(file);
+      folder.image = await compressImage(file);
       save();
       render();
     } catch (err) {
@@ -546,18 +615,6 @@ function deleteSelectedItem() {
 
   const { type, index, parentPath } = selectedActionItem;
 
-  if (type === "folder") {
-    const level = getLevelByPath(parentPath);
-    const folder = level[index];
-    const ok = confirm(`Eliminare la cartella "${folder.name}"?`);
-    if (!ok) return;
-
-    level.splice(index, 1);
-    save();
-    render();
-    return;
-  }
-
   if (type === "file") {
     const folder = getFolderByPath(parentPath);
     const file = folder.files[index];
@@ -568,6 +625,93 @@ function deleteSelectedItem() {
     save();
     render();
   }
+}
+
+/* -------------------- LONG PRESS -------------------- */
+
+function attachFolderInteractions(li, index) {
+  let timer = null;
+  let longPressTriggered = false;
+
+  li.addEventListener("click", () => {
+    if (longPressTriggered) {
+      longPressTriggered = false;
+      return;
+    }
+
+    currentPath.push(index);
+    render();
+  });
+
+  li.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    openFolderMenu(index);
+  });
+
+  li.addEventListener("touchstart", () => {
+    longPressTriggered = false;
+
+    timer = setTimeout(() => {
+      longPressTriggered = true;
+      openFolderMenu(index);
+    }, 500);
+  }, { passive: true });
+
+  li.addEventListener("touchend", () => {
+    clearTimeout(timer);
+  });
+
+  li.addEventListener("touchmove", () => {
+    clearTimeout(timer);
+  });
+}
+
+function attachFileInteractions(li, index) {
+  let timer = null;
+  let longPressTriggered = false;
+
+  li.addEventListener("click", () => {
+    if (longPressTriggered) {
+      longPressTriggered = false;
+      return;
+    }
+
+    const currentFolder = getCurrentFolder();
+    if (!currentFolder) return;
+
+    const file = currentFolder.files[index];
+    openFile(file);
+  });
+
+  li.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    openActionSheet({
+      type: "file",
+      index,
+      parentPath: [...currentPath]
+    });
+  });
+
+  li.addEventListener("touchstart", () => {
+    longPressTriggered = false;
+
+    timer = setTimeout(() => {
+      longPressTriggered = true;
+      openActionSheet({
+        type: "file",
+        index,
+        parentPath: [...currentPath]
+      });
+    }, 500);
+  }, { passive: true });
+
+  li.addEventListener("touchend", () => {
+    clearTimeout(timer);
+  });
+
+  li.addEventListener("touchmove", () => {
+    clearTimeout(timer);
+  });
 }
 
 /* -------------------- RENDER -------------------- */
@@ -594,84 +738,35 @@ function render() {
     .map((file, index) => ({ file, index }))
     .filter(({ file }) => file.name.toLowerCase().includes(searchTerm));
 
-if (filteredFolders.length) {
-  list.classList.add("folderGrid");
-} else {
-  list.classList.add("folderList");
-}
+  if (filteredFolders.length) {
+    list.classList.add("folderGrid");
+  } else {
+    list.classList.add("folderList");
+  }
 
-filteredFolders.forEach(({ folder, index }) => {
-  const li = document.createElement("li");
-  li.className = "swipeRow";
+  filteredFolders.forEach(({ folder, index }) => {
+    const li = document.createElement("li");
+    li.className = "swipeRow";
 
-  const imageHtml = folder.image
-    ? `<img src="${folder.image}" alt="" class="gridCover">`
-    : `<div class="gridCoverEmpty">📁</div>`;
+    const imageHtml = folder.image
+      ? `<img src="${folder.image}" alt="" class="gridCover">`
+      : `<div class="gridCoverEmpty">📁</div>`;
 
-  li.innerHTML = `
-    <div class="gridCard">
-      ${imageHtml}
-      <div class="gridTitle">${escapeHtml(folder.name)}</div>
-    </div>
-  `;
+    li.innerHTML = `
+      <div class="gridCard">
+        ${imageHtml}
+        <div class="gridTitle">${escapeHtml(folder.name)}</div>
+      </div>
+    `;
 
-    let timer = null;
-    let longPressTriggered = false;
-
-    li.addEventListener("click", () => {
-      if (longPressTriggered) {
-        longPressTriggered = false;
-        return;
-      }
-
-      currentPath.push(index);
-      render();
-    });
-
-    li.addEventListener("contextmenu", e => {
-      e.preventDefault();
-      openFolderMenu(index);
-    });
-
-    li.addEventListener("touchstart", () => {
-      longPressTriggered = false;
-
-      timer = setTimeout(() => {
-        longPressTriggered = true;
-        openFolderMenu(index);
-      }, 500);
-    }, { passive: true });
-
-    li.addEventListener("touchend", () => {
-      clearTimeout(timer);
-    });
-
-    li.addEventListener("touchmove", () => {
-      clearTimeout(timer);
-    });
-
+    attachFolderInteractions(li, index);
     list.appendChild(li);
   });
-if (filteredFolders.length) {
-  list.classList.add("folderGrid");
-} else {
-  list.classList.add("folderList");
-}
 
-filteredFolders.forEach(({ folder, index }) => {
-  const li = document.createElement("li");
-  li.className = "swipeRow";
+  if (!filteredFolders.length) {
+    list.classList.add("folderList");
+  }
 
-  const imageHtml = folder.image
-    ? `<img src="${folder.image}" alt="" class="gridCover">`
-    : `<div class="gridCoverEmpty">📁</div>`;
-
-  li.innerHTML = `
-    <div class="gridCard">
-      ${imageHtml}
-      <div class="gridTitle">${escapeHtml(folder.name)}</div>
-    </div>
-  `;
   filteredFiles.forEach(({ file, index }) => {
     const li = document.createElement("li");
     li.className = "swipeRow";
@@ -684,48 +779,7 @@ filteredFolders.forEach(({ folder, index }) => {
       </div>
     `;
 
-    let timer = null;
-    let longPressTriggered = false;
-
-    li.addEventListener("click", () => {
-      if (longPressTriggered) {
-        longPressTriggered = false;
-        return;
-      }
-
-      openFile(file);
-    });
-
-    li.addEventListener("contextmenu", e => {
-      e.preventDefault();
-      openActionSheet({
-        type: "file",
-        index,
-        parentPath: [...currentPath]
-      });
-    });
-
-    li.addEventListener("touchstart", () => {
-      longPressTriggered = false;
-
-      timer = setTimeout(() => {
-        longPressTriggered = true;
-        openActionSheet({
-          type: "file",
-          index,
-          parentPath: [...currentPath]
-        });
-      }, 500);
-    }, { passive: true });
-
-    li.addEventListener("touchend", () => {
-      clearTimeout(timer);
-    });
-
-    li.addEventListener("touchmove", () => {
-      clearTimeout(timer);
-    });
-
+    attachFileInteractions(li, index);
     list.appendChild(li);
   });
 
@@ -757,6 +811,12 @@ folderConfirmBtn.onclick = () => {
 folderCancelBtn.onclick = closeFolderModal;
 folderBackdrop.onclick = closeFolderModal;
 
+folderNameInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    folderConfirmBtn.click();
+  }
+});
+
 addFileBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = async e => {
@@ -771,12 +831,18 @@ fileInput.onchange = async e => {
   }
 
   try {
-    const dataUrl = await fileToDataUrl(file);
+    let storedData;
+
+    if (file.type.startsWith("image/")) {
+      storedData = await compressImage(file, 1200, 0.82);
+    } else {
+      storedData = await fileToDataUrl(file);
+    }
 
     currentFolder.files.push({
       name: file.name,
       type: file.type || "application/octet-stream",
-      data: dataUrl
+      data: storedData
     });
 
     save();
