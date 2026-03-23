@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
   <title>Archivio Bollette</title>
 
@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="icon.png">
   <link rel="manifest" href="manifest.json">
 
+  <meta name="theme-color" content="#f2f2f7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Bollette">
@@ -28,21 +29,21 @@
       </div>
     </div>
 
-    <input type="text" id="search" placeholder="🔍 Cerca documento">
+    <input type="text" id="search" placeholder="🔎 Cerca documento">
   </header>
 
   <main>
     <div class="topbar">
-      <button id="backBtn">⬅️</button>
-      <div id="path"></div>
+      <button id="backBtn" type="button">⬅️</button>
+      <div id="path">Home</div>
     </div>
 
     <ul id="folders"></ul>
   </main>
 
   <div class="floatingButtons">
-    <button id="addFolder">＋</button>
-    <button id="addFile">📄</button>
+    <button id="addFolder" type="button" title="Nuova cartella" aria-label="Nuova cartella">＋</button>
+    <button id="addFile" type="button" title="Aggiungi file" aria-label="Aggiungi file">📄</button>
   </div>
 
   <input type="file" id="fileInput" accept="application/pdf,image/*" hidden>
@@ -52,24 +53,24 @@
     <div id="actionSheetBackdrop"></div>
 
     <div id="actionSheetPanel">
-      <button id="moveActionBtn" class="actionBtn">Sposta</button>
-      <button id="editActionBtn" class="actionBtn">Modifica</button>
-      <button id="deleteActionBtn" class="actionBtn deleteAction">Elimina</button>
+      <button id="moveActionBtn" class="actionBtn" type="button">Sposta</button>
+      <button id="editActionBtn" class="actionBtn" type="button">Rinomina</button>
+      <button id="deleteActionBtn" class="actionBtn deleteAction" type="button">Elimina</button>
 
       <div class="cancelWrap">
-        <button id="cancelActionBtn" class="cancelBtn">Annulla</button>
+        <button id="cancelActionBtn" class="cancelBtn" type="button">Annulla</button>
       </div>
     </div>
   </div>
 
   <div id="pdfViewer" class="hidden">
     <div id="pdfViewerHeader">
-      <button id="closePdfBtn">Chiudi</button>
+      <button id="closePdfBtn" type="button">Chiudi</button>
       <div id="pdfTitle">PDF</div>
 
       <div class="pdfActions">
-        <button id="sharePdfBtn">Condividi</button>
-        <button id="printPdfBtn">Stampa</button>
+        <button id="sharePdfBtn" type="button">Condividi</button>
+        <button id="printPdfBtn" type="button">Stampa</button>
       </div>
     </div>
 
@@ -82,7 +83,7 @@
     <div id="deadlineEditorPanel">
       <div class="deadlineHeader">
         <h3>Modifica cartella</h3>
-        <button id="closeDeadlineEditorBtn">✕</button>
+        <button id="closeDeadlineEditorBtn" type="button">✕</button>
       </div>
 
       <div class="deadlineForm">
@@ -112,9 +113,9 @@
       <div id="deadlineListBox"></div>
 
       <div class="deadlineButtons">
-        <button id="saveDeadlineBtn" class="primaryBtn">Salva</button>
-        <button id="replaceDeadlinesBtn" class="secondaryBtn">Sostituisci scadenza</button>
-        <button id="clearDeadlinesBtn" class="dangerBtn">Elimina scadenze</button>
+        <button id="saveDeadlineBtn" class="primaryBtn" type="button">Salva</button>
+        <button id="replaceDeadlinesBtn" class="secondaryBtn" type="button">Sostituisci scadenza</button>
+        <button id="clearDeadlinesBtn" class="dangerBtn" type="button">Elimina scadenze</button>
       </div>
     </div>
   </div>
@@ -127,8 +128,8 @@
       <input type="text" id="renameInput">
 
       <div class="renameButtons">
-        <button id="renameConfirm">Salva</button>
-        <button id="renameCancel">Annulla</button>
+        <button id="renameConfirm" type="button">Salva</button>
+        <button id="renameCancel" type="button">Annulla</button>
       </div>
     </div>
   </div>
@@ -139,7 +140,7 @@
     <div id="movePanel">
       <div class="moveHeader">
         <h3>Sposta file</h3>
-        <button id="closeMoveBtn">✕</button>
+        <button id="closeMoveBtn" type="button">✕</button>
       </div>
 
       <div id="moveCurrentFile"></div>
@@ -155,8 +156,8 @@
       <input type="text" id="folderNameInput" placeholder="Nome cartella">
 
       <div class="folderButtons">
-        <button id="folderConfirmBtn">Salva</button>
-        <button id="folderCancelBtn">Annulla</button>
+        <button id="folderConfirmBtn" type="button">Salva</button>
+        <button id="folderCancelBtn" type="button">Annulla</button>
       </div>
     </div>
   </div>
