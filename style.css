@@ -590,3 +590,74 @@ main {
     font-size: 12px;
   }
 }
+/* GRIGLIA CARTELLE */
+
+#folders.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+#folders.folderGrid .swipeRow {
+  background: transparent;
+  margin: 0;
+}
+
+.gridCard {
+  background: #e9e9ef;
+  border-radius: 18px;
+  padding: 12px;
+  min-height: 150px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.gridCover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #d7d7dd;
+  display: block;
+}
+
+.gridCoverEmpty {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  background: #d7d7dd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+}
+
+.gridTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+/* FILE RESTANO A LISTA */
+
+#folders.folderList {
+  display: block;
+  padding: 0;
+}
+
+#folders.folderList .swipeRow {
+  margin: 0;
+}
+
+@media (min-width: 700px) {
+  #folders.folderGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
