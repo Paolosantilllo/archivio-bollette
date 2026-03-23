@@ -36,19 +36,19 @@ h1 {
 
 #backupBtn,
 #restoreBtn {
-  width: 36px;
-  height: 36px;
+  width: 56px;
+  height: 56px;
   border: none;
-  border-radius: 10px;
+  border-radius: 18px;
   padding: 0;
-  font-size: 17px;
+  font-size: 28px;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
 }
 
 #backupBtn {
@@ -68,26 +68,31 @@ h1 {
 
 #search {
   width: 100%;
-  padding: 10px 12px;
-  margin-top: 10px;
-  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  border-radius: 18px;
   border: none;
   background: #e5e5ea;
   font-size: 16px;
   box-sizing: border-box;
+  color: #111;
+}
+
+#search::placeholder {
+  color: #8e8e93;
 }
 
 /* MAIN */
 
 main {
-  padding: 10px 0 110px 0;
+  padding: 10px 0 120px 0;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 15px 10px 15px;
+  padding: 0 15px 14px 15px;
 }
 
 #backBtn {
@@ -95,7 +100,7 @@ main {
   background: #007aff;
   color: white;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 15px;
   cursor: pointer;
 }
@@ -106,7 +111,7 @@ main {
   word-break: break-word;
 }
 
-/* LISTA */
+/* LISTA BASE */
 
 #folders {
   list-style: none;
@@ -117,24 +122,101 @@ main {
 .swipeRow {
   position: relative;
   overflow: visible;
-  background: #f2f2f7;
+  background: transparent;
 }
 
-.folder,
+/* GRIGLIA CARTELLE */
+
+#folders.folderGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+#folders.folderGrid .swipeRow {
+  margin: 0;
+}
+
+.gridCard {
+  background: #e9e9ef;
+  border-radius: 22px;
+  padding: 12px;
+  min-height: 205px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.gridCard:active {
+  transform: scale(0.96);
+}
+
+.gridImageWrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #d7d7dd;
+}
+
+.gridCover {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.gridCoverEmpty {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  background: #d7d7dd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+}
+
+.gridTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  word-break: break-word;
+  line-height: 1.25;
+  padding: 0 2px 2px 2px;
+}
+
+/* FILE RESTANO IN LISTA */
+
+#folders.folderList {
+  display: block;
+  padding: 0;
+}
+
+#folders.folderList .swipeRow {
+  margin: 0;
+}
+
 .fileItem {
   background: #e9e9ef;
-  padding: 15px;
+  padding: 16px;
   font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin: 6px 10px;
-  border-radius: 14px;
+  border-radius: 16px;
   transition: transform 0.18s ease;
 }
 
-.folderName,
 .fileName {
   flex: 1;
   cursor: pointer;
@@ -150,18 +232,19 @@ main {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  z-index: 50;
 }
 
 #addFolder,
 #addFile {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
   color: white;
-  font-size: 26px;
+  font-size: 30px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 
 #addFolder {
@@ -227,6 +310,7 @@ main {
 .cancelBtn {
   border-radius: 18px;
   font-weight: 600;
+  border-bottom: none;
 }
 
 /* PDF VIEWER */
@@ -248,6 +332,7 @@ main {
   padding: 8px 12px;
   border-bottom: 1px solid #d7d7dd;
   box-sizing: border-box;
+  background: #f2f2f7;
 }
 
 #closePdfBtn {
@@ -469,9 +554,10 @@ main {
   top: 50%;
   transform: translateY(-50%);
   background: #f2f2f7;
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 20px;
   box-sizing: border-box;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 /* INPUT */
@@ -482,7 +568,7 @@ main {
   padding: 12px;
   border: none;
   background: #e9e9ef;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 16px;
   margin-top: 10px;
   box-sizing: border-box;
@@ -502,7 +588,7 @@ main {
   flex: 1;
   border: none;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 16px;
   cursor: pointer;
 }
@@ -519,7 +605,7 @@ main {
   color: #111;
 }
 
-/* MOVE PDF */
+/* MOVE FILE */
 
 .moveHeader {
   display: flex;
@@ -531,7 +617,7 @@ main {
 #closeMoveBtn {
   border: none;
   background: #e9e9ef;
-  border-radius: 8px;
+  border-radius: 10px;
   width: 36px;
   height: 36px;
   cursor: pointer;
@@ -565,6 +651,12 @@ main {
 
 /* RESPONSIVE */
 
+@media (min-width: 700px) {
+  #folders.folderGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (orientation: landscape) {
   #pdfFrame {
     height: calc(100vh - 56px);
@@ -588,81 +680,5 @@ main {
   .pdfActions button {
     padding: 6px 8px;
     font-size: 12px;
-  }
-}
-/* GRIGLIA CARTELLE */
-
-#folders.folderGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding: 0 12px;
-  box-sizing: border-box;
-}
-
-#folders.folderGrid .swipeRow {
-  background: transparent;
-  margin: 0;
-}
-
-.gridCard {
-  background: #e9e9ef;
-  border-radius: 18px;
-  padding: 12px;
-  min-height: 190px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.gridCover {
-  width: 100%;
-  height: 100%;
-  border-radius: 16px;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-.gridCoverEmpty {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  background: #d7d7dd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42px;
-}
-
-.gridTitle {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111;
-  word-break: break-word;
-  line-height: 1.25;
-}
-.gridImageWrap {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #d7d7dd;
-}
-
-/* FILE RESTANO A LISTA */
-
-#folders.folderList {
-  display: block;
-  padding: 0;
-}
-
-#folders.folderList .swipeRow {
-  margin: 0;
-}
-
-@media (min-width: 700px) {
-  #folders.folderGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
