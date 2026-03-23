@@ -682,3 +682,53 @@ main {
     font-size: 12px;
   }
 }
+/* SWIPE FILE ACTIONS */
+
+.fileSwipeWrap {
+  position: relative;
+  margin: 6px 10px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.fileSwipeActions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.fileSwipeBtn {
+  border: none;
+  color: white;
+  font-size: 14px;
+  padding: 0 14px;
+  min-width: 74px;
+  cursor: pointer;
+}
+
+.fileSwipeBtn.rename {
+  background: #ff9500;
+}
+
+.fileSwipeBtn.move {
+  background: #007aff;
+}
+
+.fileSwipeBtn.delete {
+  background: #ff3b30;
+}
+
+.fileSwipeContent {
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s ease;
+  touch-action: pan-y;
+}
+
+.fileSwipeWrap.open .fileSwipeContent {
+  transform: translateX(-222px);
+}
