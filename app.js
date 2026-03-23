@@ -3,7 +3,6 @@ let currentPath = [];
 let currentPdfUrl = null;
 let currentViewerFile = null;
 let selectedActionItem = null;
-
 let renameTarget = null;
 let editingBillingFolder = null;
 
@@ -58,7 +57,7 @@ const folderNameInput = document.getElementById("folderNameInput");
 const folderConfirmBtn = document.getElementById("folderConfirmBtn");
 const folderCancelBtn = document.getElementById("folderCancelBtn");
 
-/* BILLING / DEADLINE EDITOR */
+/* BILLING EDITOR */
 const deadlineEditor = document.getElementById("deadlineEditor");
 const deadlineEditorBackdrop = document.getElementById("deadlineEditorBackdrop");
 const closeDeadlineEditorBtn = document.getElementById("closeDeadlineEditorBtn");
@@ -96,6 +95,16 @@ function save() {
   localStorage.setItem("archivio", JSON.stringify(data));
 }
 
+/* -------------------- ID -------------------- */
+
+function createId() {
+  if (window.crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+
 /* -------------------- NORMALIZZAZIONE DATI -------------------- */
 
 function ensureFolderShape(folder) {
@@ -109,7 +118,6 @@ function ensureFolderShape(folder) {
       billDay: "",
       firstBillDate: "",
       intervalMonths: 2,
-      nextDebitDate: "",
       cycles: []
     };
   }
@@ -129,14 +137,6 @@ function ensureFolderShape(folder) {
 data.forEach(ensureFolderShape);
 
 /* -------------------- HELPERS -------------------- */
-
-function createId() {
-  if (window.crypto && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
 
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, ch => {
@@ -322,6 +322,24 @@ function formatDisplayDate(dateOrIso) {
   return `${d}-${m}-${y}`;
 }
 
+function parseDisplayDateToIso(displayDate) {
+  if (!displayDate || !/^\d{2}-\d{2}-\d{4}$/.test(displayDate)) return "";
+
+  const [d, m, y] = displayDate.split("-");
+  return `${y}-${m}-${d}`;
+}
+
+function extractLeadingDateFromFileName(fileName) {
+  const match = String(fileName).match(/^(\d{2}-\d{2}-\d{4})\b/);
+  if (!match) return "";
+  return match[1];
+}
+
+function extractLeadingIsoDateFromFileName(fileName) {
+  const displayDate = extractLeadingDateFromFileName(fileName);
+  return parseDisplayDateToIso(displayDate);
+}
+
 function isPastOrToday(isoDate) {
   const date = parseIsoDate(isoDate);
   if (!date) return false;
@@ -340,7 +358,7 @@ function addMonthsKeepingDay(baseDate, monthsToAdd, desiredDay) {
 }
 
 function getDisplayName(fileName) {
-  return fileName.replace(/^\d{2}-\d{2}-\d{4}\s+/, "").trim();
+  return String(fileName).replace(/^\d{2}-\d{2}-\d{4}\s+/, "").trim();
 }
 
 function isDebitFileName(fileName) {
@@ -354,7 +372,6 @@ function ensureBillingCycles(folder) {
 
   const billing = folder.billing;
   if (!billing.enabled) return;
-
   if (!billing.firstBillDate) return;
 
   const firstDate = parseIsoDate(billing.firstBillDate);
@@ -383,7 +400,6 @@ function ensureBillingCycles(folder) {
         debitFileId: null,
         debitLoadedName: ""
       };
-
       billing.cycles.push(cycle);
     } else {
       cycle.expectedBillDate = key;
@@ -400,28 +416,38 @@ function ensureBillingCycles(folder) {
   billing.cycles.sort((a, b) => a.expectedBillDate.localeCompare(b.expectedBillDate));
 }
 
+function getOwnBillingBadgeCount(folder) {
+  ensureBillingCycles(folder);
+
+  if (!folder.billing || !folder.billing.enabled) {
+    return 0;
+  }
+
+  let count = 0;
+
+  folder.billing.cycles.forEach(cycle => {
+    if (isPastOrToday(cycle.expectedBillDate) && !cycle.billFileId) {
+      count += 1;
+    }
+
+    if (
+      cycle.billFileId &&
+      cycle.debitDueDate &&
+      isPastOrToday(cycle.debitDueDate) &&
+      !cycle.debitFileId
+    ) {
+      count += 1;
+    }
+  });
+
+  return count;
+}
+
 function getBillingBadgeCount(folder) {
   ensureFolderShape(folder);
   ensureBillingCycles(folder);
 
-  let count = 0;
-
-  if (folder.billing && folder.billing.enabled) {
-    folder.billing.cycles.forEach(cycle => {
-      if (isPastOrToday(cycle.expectedBillDate) && !cycle.billFileId) {
-        count += 1;
-      }
-
-      if (
-        cycle.billFileId &&
-        cycle.debitDueDate &&
-        isPastOrToday(cycle.debitDueDate) &&
-        !cycle.debitFileId
-      ) {
-        count += 1;
-      }
-    });
-  }
+  let count = getOwnBillingBadgeCount(folder);
 
   if (folder.sub && folder.sub.length) {
     folder.sub.forEach(subFolder => {
@@ -465,15 +491,32 @@ function assignUploadedFileToBilling(folder, storedFile) {
   if (!folder.billing || !folder.billing.enabled) return;
 
   const cycles = folder.billing.cycles;
-  const debitFile = isDebitFileName(storedFile.name);
+  const isDebit = isDebitFileName(storedFile.name);
+  const fileLeadingIsoDate = extractLeadingIsoDateFromFileName(storedFile.name);
 
-  if (debitFile) {
-    const cycle = cycles.find(c =>
-      c.billFileId &&
-      c.debitDueDate &&
-      isPastOrToday(c.debitDueDate) &&
-      !c.debitFileId
-    ) || cycles.find(c => c.billFileId && !c.debitFileId);
+  if (isDebit) {
+    let cycle = null;
+
+    if (fileLeadingIsoDate) {
+      cycle = cycles.find(c =>
+        c.billFileId &&
+        c.debitDueDate === fileLeadingIsoDate &&
+        !c.debitFileId
+      );
+    }
+
+    if (!cycle) {
+      cycle = cycles.find(c =>
+        c.billFileId &&
+        c.debitDueDate &&
+        isPastOrToday(c.debitDueDate) &&
+        !c.debitFileId
+      );
+    }
+
+    if (!cycle) {
+      cycle = cycles.find(c => c.billFileId && !c.debitFileId);
+    }
 
     if (cycle) {
       cycle.debitFileId = storedFile.id;
@@ -483,18 +526,21 @@ function assignUploadedFileToBilling(folder, storedFile) {
     return;
   }
 
-  const cycle = cycles.find(c =>
+  let cycle = cycles.find(c =>
     isPastOrToday(c.expectedBillDate) &&
     !c.billFileId
-  ) || cycles.find(c => !c.billFileId);
+  );
+
+  if (!cycle) {
+    cycle = cycles.find(c => !c.billFileId);
+  }
 
   if (cycle) {
     cycle.billFileId = storedFile.id;
     cycle.billLoadedName = storedFile.name;
 
-    if (folder.billing.nextDebitDate && !cycle.debitDueDate) {
-      cycle.debitDueDate = folder.billing.nextDebitDate;
-      folder.billing.nextDebitDate = "";
+    if (fileLeadingIsoDate) {
+      cycle.debitDueDate = fileLeadingIsoDate;
     }
   }
 }
@@ -515,7 +561,6 @@ function createFolder(name) {
       billDay: "",
       firstBillDate: "",
       intervalMonths: 2,
-      nextDebitDate: "",
       cycles: []
     }
   };
@@ -715,7 +760,13 @@ function setDeadlineEditorLabels() {
   setLabel("deadlineLabelInput", "Giorno bolletta");
   setLabel("deadlineFirstDateInput", "Prima bolletta attesa");
   setLabel("deadlineIntervalSelect", "Ripetizione");
-  setLabel("deadlinePrefixInput", "Prossima data addebito");
+  setLabel("deadlinePrefixInput", "Data addebito letta dal nome PDF");
+}
+
+function hideUnusedDebitField() {
+  const label = document.querySelector('label[for="deadlinePrefixInput"]');
+  if (label) label.style.display = "none";
+  if (deadlinePrefixInput) deadlinePrefixInput.style.display = "none";
 }
 
 function openBillingEditor(folder) {
@@ -724,12 +775,13 @@ function openBillingEditor(folder) {
 
   editingBillingFolder = folder;
   setDeadlineEditorLabels();
+  hideUnusedDebitField();
 
   deadlineFolderNameInput.value = folder.name || "";
   deadlineLabelInput.value = folder.billing.billDay || "";
   deadlineFirstDateInput.value = folder.billing.firstBillDate || "";
   deadlineIntervalSelect.value = String(folder.billing.intervalMonths || 2);
-  deadlinePrefixInput.value = folder.billing.nextDebitDate || "";
+  deadlinePrefixInput.value = "";
 
   renderDeadlineList(folder);
   deadlineEditor.classList.remove("hidden");
@@ -745,7 +797,6 @@ function renderDeadlineList(folder) {
 
   const lines = getBillingStatusLines(folder);
   const cycles = folder.billing.cycles || [];
-
   const summary = [];
 
   if (folder.billing.enabled) {
@@ -753,9 +804,7 @@ function renderDeadlineList(folder) {
     if (folder.billing.billDay) {
       summary.push(`Giorno bolletta: ${folder.billing.billDay}`);
     }
-    if (folder.billing.nextDebitDate) {
-      summary.push(`Prossimo addebito: ${formatDisplayDate(folder.billing.nextDebitDate)}`);
-    }
+    summary.push("Data addebito: letta automaticamente dal nome del PDF bolletta");
   }
 
   const htmlParts = [];
@@ -775,8 +824,10 @@ function renderDeadlineList(folder) {
       cycles.forEach(cycle => {
         const billOk = cycle.billFileId ? "✅ Bolletta caricata" : "❌ Bolletta mancante";
         const debitText = cycle.debitDueDate
-          ? (cycle.debitFileId ? `✅ Addebito caricato (${formatDisplayDate(cycle.debitDueDate)})` : `⏳ Addebito atteso il ${formatDisplayDate(cycle.debitDueDate)}`)
-          : "— Nessuna data addebito impostata";
+          ? (cycle.debitFileId
+              ? `✅ Addebito caricato (${formatDisplayDate(cycle.debitDueDate)})`
+              : `⏳ Addebito atteso dal ${formatDisplayDate(cycle.debitDueDate)}`)
+          : "— Data addebito non ancora letta da nessun PDF";
 
         htmlParts.push(`
           <div class="deadlineItem">
@@ -866,7 +917,7 @@ function closePdfViewer() {
 
 function downloadBackup() {
   const backup = {
-    version: 2,
+    version: 3,
     createdAt: new Date().toISOString(),
     archivio: data
   };
@@ -995,6 +1046,7 @@ function deleteSelectedItem() {
         if (cycle.billFileId === file.id) {
           cycle.billFileId = null;
           cycle.billLoadedName = "";
+          cycle.debitDueDate = "";
         }
 
         if (cycle.debitFileId === file.id) {
@@ -1395,7 +1447,6 @@ saveDeadlineBtn.onclick = () => {
   const billDay = Number(deadlineLabelInput.value.trim());
   const firstBillDate = deadlineFirstDateInput.value;
   const intervalMonths = Number(deadlineIntervalSelect.value || 2);
-  const nextDebitDate = deadlinePrefixInput.value;
 
   if (!firstBillDate) {
     alert("Inserisci la prima bolletta attesa");
@@ -1412,7 +1463,6 @@ saveDeadlineBtn.onclick = () => {
   editingBillingFolder.billing.billDay = billDay;
   editingBillingFolder.billing.firstBillDate = firstBillDate;
   editingBillingFolder.billing.intervalMonths = intervalMonths;
-  editingBillingFolder.billing.nextDebitDate = nextDebitDate || "";
 
   ensureBillingCycles(editingBillingFolder);
   save();
@@ -1424,7 +1474,7 @@ saveDeadlineBtn.onclick = () => {
 replaceDeadlinesBtn.onclick = () => {
   if (!editingBillingFolder) return;
 
-  const ok = confirm("Vuoi rigenerare i cicli delle bollette? I collegamenti ai file resteranno solo se le date coincidono.");
+  const ok = confirm("Vuoi rigenerare i cicli delle bollette?");
   if (!ok) return;
 
   editingBillingFolder.billing.cycles = [];
@@ -1444,7 +1494,6 @@ clearDeadlinesBtn.onclick = () => {
   editingBillingFolder.billing.billDay = "";
   editingBillingFolder.billing.firstBillDate = "";
   editingBillingFolder.billing.intervalMonths = 2;
-  editingBillingFolder.billing.nextDebitDate = "";
   editingBillingFolder.billing.cycles = [];
 
   save();
