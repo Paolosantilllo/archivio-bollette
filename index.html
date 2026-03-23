@@ -16,40 +16,20 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
-<div id="menu" style="
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:white;
-border-top:1px solid #ccc;
-display:none;
-padding:10px;
-z-index:1000;
-">
-
-<button onclick="azione('apri')">Apri</button><br><br>
-<button onclick="azione('img')">Cambia immagine</button><br><br>
-<button onclick="azione('rinomina')">Rinomina</button><br><br>
-<button onclick="azione('elimina')">Elimina</button><br><br>
-<button onclick="chiudiMenu()">Annulla</button>
-
-</div>
-
 <body>
 
- <header>
-  <div class="headerTop">
-    <h1>Archivio</h1>
+  <header>
+    <div class="headerTop">
+      <h1>Archivio</h1>
 
-    <div class="headerActions" id="headerActions">
-      <button id="backupBtn" title="Backup" aria-label="Backup">💾</button>
-      <button id="restoreBtn" title="Ripristina" aria-label="Ripristina">📥</button>
+      <div class="headerActions" id="headerActions">
+        <button id="backupBtn" title="Backup" aria-label="Backup">💾</button>
+        <button id="restoreBtn" title="Ripristina" aria-label="Ripristina">📥</button>
+      </div>
     </div>
-  </div>
 
-  <input type="text" id="search" placeholder="🔍 Cerca documento">
-</header>
+    <input type="text" id="search" placeholder="🔍 Cerca documento">
+  </header>
 
   <main>
     <div class="topbar">
@@ -143,7 +123,7 @@ z-index:1000;
     <div id="renameBackdrop"></div>
 
     <div id="renamePanel">
-      <h3>Rinomina PDF</h3>
+      <h3>Rinomina elemento</h3>
       <input type="text" id="renameInput">
 
       <div class="renameButtons">
@@ -158,7 +138,7 @@ z-index:1000;
 
     <div id="movePanel">
       <div class="moveHeader">
-        <h3>Sposta PDF</h3>
+        <h3>Sposta file</h3>
         <button id="closeMoveBtn">✕</button>
       </div>
 
