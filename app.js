@@ -101,7 +101,6 @@ function createId() {
   if (window.crypto && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-
   return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
@@ -300,7 +299,6 @@ function todayStart() {
 
 function parseIsoDate(iso) {
   if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
-
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
@@ -324,7 +322,6 @@ function formatDisplayDate(dateOrIso) {
 
 function parseDisplayDateToIso(displayDate) {
   if (!displayDate || !/^\d{2}-\d{2}-\d{4}$/.test(displayDate)) return "";
-
   const [d, m, y] = displayDate.split("-");
   return `${y}-${m}-${d}`;
 }
@@ -917,7 +914,7 @@ function closePdfViewer() {
 
 function downloadBackup() {
   const backup = {
-    version: 3,
+    version: 4,
     createdAt: new Date().toISOString(),
     archivio: data
   };
@@ -1030,6 +1027,30 @@ function closeMoveModal() {
 
 /* -------------------- DELETE -------------------- */
 
+function deleteFileById(folder, fileId) {
+  const realIndex = folder.files.findIndex(f => f.id === fileId);
+  if (realIndex < 0) return;
+
+  const file = folder.files[realIndex];
+
+  if (folder.billing && folder.billing.cycles) {
+    folder.billing.cycles.forEach(cycle => {
+      if (cycle.billFileId === file.id) {
+        cycle.billFileId = null;
+        cycle.billLoadedName = "";
+        cycle.debitDueDate = "";
+      }
+
+      if (cycle.debitFileId === file.id) {
+        cycle.debitFileId = null;
+        cycle.debitLoadedName = "";
+      }
+    });
+  }
+
+  folder.files.splice(realIndex, 1);
+}
+
 function deleteSelectedItem() {
   if (!selectedActionItem) return;
 
@@ -1041,28 +1062,13 @@ function deleteSelectedItem() {
     const ok = confirm(`Eliminare il file "${file.displayName || file.name}"?`);
     if (!ok) return;
 
-    if (folder.billing && folder.billing.cycles) {
-      folder.billing.cycles.forEach(cycle => {
-        if (cycle.billFileId === file.id) {
-          cycle.billFileId = null;
-          cycle.billLoadedName = "";
-          cycle.debitDueDate = "";
-        }
-
-        if (cycle.debitFileId === file.id) {
-          cycle.debitFileId = null;
-          cycle.debitLoadedName = "";
-        }
-      });
-    }
-
-    folder.files.splice(index, 1);
+    deleteFileById(folder, file.id);
     save();
     render();
   }
 }
 
-/* -------------------- LONG PRESS -------------------- */
+/* -------------------- INTERAZIONI CARTELLE -------------------- */
 
 function attachFolderInteractions(li, index) {
   let timer = null;
@@ -1101,48 +1107,102 @@ function attachFolderInteractions(li, index) {
   });
 }
 
-function attachFileInteractions(li, index, file) {
-  let timer = null;
-  let longPressTriggered = false;
+/* -------------------- SWIPE FILE -------------------- */
 
-  li.addEventListener("click", () => {
-    if (longPressTriggered) {
-      longPressTriggered = false;
-      return;
+function closeAllFileSwipes(exceptElement = null) {
+  document.querySelectorAll(".fileSwipeWrap.open").forEach(el => {
+    if (el !== exceptElement) {
+      el.classList.remove("open");
     }
-
-    openFile(file);
   });
+}
 
-  li.addEventListener("contextmenu", e => {
-    e.preventDefault();
-    openActionSheet({
-      type: "file",
-      index,
-      parentPath: [...currentPath]
-    });
-  });
+function attachFileSwipe(li, file, filteredIndex) {
+  let startX = 0;
+  let startY = 0;
+  let deltaX = 0;
+  let dragging = false;
+  let moved = false;
 
-  li.addEventListener("touchstart", () => {
-    longPressTriggered = false;
+  li.addEventListener("touchstart", e => {
+    const touch = e.touches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+    deltaX = 0;
+    dragging = true;
+    moved = false;
+  }, { passive: true });
 
-    timer = setTimeout(() => {
-      longPressTriggered = true;
-      openActionSheet({
-        type: "file",
-        index,
-        parentPath: [...currentPath]
-      });
-    }, 500);
+  li.addEventListener("touchmove", e => {
+    if (!dragging) return;
+
+    const touch = e.touches[0];
+    const diffX = touch.clientX - startX;
+    const diffY = touch.clientY - startY;
+
+    if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+    deltaX = diffX;
+    if (Math.abs(deltaX) > 20) moved = true;
   }, { passive: true });
 
   li.addEventListener("touchend", () => {
-    clearTimeout(timer);
+    if (!dragging) return;
+    dragging = false;
+
+    if (deltaX < -50) {
+      closeAllFileSwipes(li);
+      li.classList.add("open");
+    } else if (deltaX > 50) {
+      li.classList.remove("open");
+    }
   });
 
-  li.addEventListener("touchmove", () => {
-    clearTimeout(timer);
+  li.addEventListener("click", e => {
+    const actionButton = e.target.closest(".fileSwipeBtn");
+    if (actionButton) return;
+
+    if (li.classList.contains("open")) {
+      li.classList.remove("open");
+      return;
+    }
+
+    if (moved) return;
+
+    closeAllFileSwipes();
+    openFile(file);
   });
+
+  const renameBtn = li.querySelector(".fileSwipeBtn.rename");
+  const moveBtn = li.querySelector(".fileSwipeBtn.move");
+  const deleteBtn = li.querySelector(".fileSwipeBtn.delete");
+
+  renameBtn.onclick = e => {
+    e.stopPropagation();
+    closeAllFileSwipes();
+    openRenameModal(file);
+  };
+
+  moveBtn.onclick = e => {
+    e.stopPropagation();
+    closeAllFileSwipes();
+    openMoveModal(file, [...currentPath], filteredIndex);
+  };
+
+  deleteBtn.onclick = e => {
+    e.stopPropagation();
+    closeAllFileSwipes();
+
+    const folder = getCurrentFolder();
+    if (!folder) return;
+
+    const ok = confirm(`Eliminare il file "${file.displayName || file.name}"?`);
+    if (!ok) return;
+
+    deleteFileById(folder, file.id);
+    save();
+    render();
+  };
 }
 
 /* -------------------- RENDER -------------------- */
@@ -1213,17 +1273,25 @@ function render() {
 
   filteredFiles.forEach(({ file, index }) => {
     const li = document.createElement("li");
-    li.className = "swipeRow";
+    li.className = "fileSwipeWrap";
 
     const icon = file.type && file.type.startsWith("image/") ? "🖼️" : "📄";
 
     li.innerHTML = `
-      <div class="fileItem">
-        <div class="fileName">${icon} ${escapeHtml(file.displayName || file.name)}</div>
+      <div class="fileSwipeActions">
+        <button class="fileSwipeBtn rename">Rinomina</button>
+        <button class="fileSwipeBtn move">Sposta</button>
+        <button class="fileSwipeBtn delete">Elimina</button>
+      </div>
+
+      <div class="fileSwipeContent">
+        <div class="fileItem">
+          <div class="fileName">${icon} ${escapeHtml(file.displayName || file.name)}</div>
+        </div>
       </div>
     `;
 
-    attachFileInteractions(li, index, file);
+    attachFileSwipe(li, file, index);
     list.appendChild(li);
   });
 
@@ -1243,6 +1311,12 @@ function render() {
 }
 
 /* -------------------- EVENTI -------------------- */
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".fileSwipeWrap")) {
+    closeAllFileSwipes();
+  }
+});
 
 addBtn.onclick = () => {
   openFolderModal();
