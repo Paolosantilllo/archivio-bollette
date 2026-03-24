@@ -1,12 +1,13 @@
 let data = [];
 let currentPath = [];
+
 let currentPdfUrl = null;
 let currentViewerFile = null;
 let selectedActionItem = null;
 let renameTarget = null;
 let editingBillingFolder = null;
 
-/* -------------------- DB -------------------- */
+/* -------------------- DATABASE -------------------- */
 
 const DB_NAME = "ArchivioBolletteDB";
 const STORE_NAME = "store";
@@ -14,99 +15,88 @@ const DATA_KEY = "archivio";
 
 let saveTimer = null;
 
-async function loadDataFromDB() {
+function openDB(){
+return new Promise((resolve,reject)=>{
 
-  return new Promise((resolve) => {
+const request = indexedDB.open(DB_NAME,1);
 
-    const request = indexedDB.open(DB_NAME,1);
+request.onupgradeneeded = ()=>{
 
-    request.onupgradeneeded = () => {
+request.result.createObjectStore(STORE_NAME);
 
-      request.result.createObjectStore(STORE_NAME);
+};
 
-    };
+request.onsuccess = ()=> resolve(request.result);
 
-    request.onsuccess = () => {
+request.onerror = ()=> reject();
 
-      const db = request.result;
+});
+}
 
-      const tx = db.transaction(STORE_NAME,"readonly");
+async function loadData(){
 
-      const store = tx.objectStore(STORE_NAME);
+try{
 
-      const getReq = store.get(DATA_KEY);
+const db = await openDB();
 
-      getReq.onsuccess = () => {
+const tx = db.transaction(STORE_NAME,"readonly");
 
-        resolve(getReq.result || []);
+const store = tx.objectStore(STORE_NAME);
 
-      };
+const req = store.get(DATA_KEY);
 
-      getReq.onerror = () => resolve([]);
+return new Promise(resolve=>{
 
-    };
+req.onsuccess = ()=>{
 
-    request.onerror = () => resolve([]);
+data = req.result || [];
 
-  });
+resolve();
+
+};
+
+req.onerror = ()=>{
+
+data = [];
+
+resolve();
+
+};
+
+});
+
+}catch{
+
+data = [];
 
 }
 
-
-
-async function writeDataToDB(){
-
-  return new Promise((resolve,reject)=>{
-
-    const request=indexedDB.open(DB_NAME,1);
-
-    request.onupgradeneeded=()=>{
-
-      request.result.createObjectStore(STORE_NAME);
-
-    };
-
-    request.onsuccess=()=>{
-
-      const db=request.result;
-
-      const tx=db.transaction(STORE_NAME,"readwrite");
-
-      const store=tx.objectStore(STORE_NAME);
-
-      store.put(data,DATA_KEY);
-
-      tx.oncomplete=()=>resolve();
-
-      tx.onerror=()=>reject();
-
-    };
-
-    request.onerror=()=>reject();
-
-  });
-
 }
 
+async function saveNow(){
 
+const db = await openDB();
+
+const tx = db.transaction(STORE_NAME,"readwrite");
+
+const store = tx.objectStore(STORE_NAME);
+
+store.put(data,DATA_KEY);
+
+}
 
 function save(){
 
 clearTimeout(saveTimer);
 
-saveTimer=setTimeout(async()=>{
+saveTimer = setTimeout(()=>{
 
-try{
+saveNow();
 
-await writeDataToDB();
-
-localStorage.setItem("backup_archivio",JSON.stringify(data));
-
-}catch(err){
-
-console.error("Errore salvataggio",err);
-
-}
+localStorage.setItem(
+"backup_archivio",
+JSON.stringify(data)
+);
 
 },300);
 
