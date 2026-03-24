@@ -7,9 +7,17 @@
 
 <meta
 name="viewport"
-content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>Archivio</title>
+<title>Archivio Bollette</title>
+
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bollette">
 
 <link rel="stylesheet" href="style.css">
 
@@ -43,12 +51,6 @@ aria-label="Ripristina">
 
 </button>
 
-<input
-type="file"
-id="restoreInput"
-accept=".json"
-hidden>
-
 </div>
 
 </div>
@@ -56,7 +58,7 @@ hidden>
 <input
 type="text"
 id="search"
-placeholder="Cerca documenti">
+placeholder="🔍 Cerca documento">
 
 </header>
 
@@ -100,9 +102,11 @@ class="folderGrid">
 id="addFile"
 class="hidden">
 
-＋
+📄
 
 </button>
+
+</div>
 
 <input
 type="file"
@@ -110,7 +114,11 @@ id="fileInput"
 accept="application/pdf,image/*"
 hidden>
 
-</div>
+<input
+type="file"
+id="restoreInput"
+accept="application/json"
+hidden>
 
 <!-- ACTION SHEET -->
 
@@ -121,24 +129,24 @@ hidden>
 <div id="actionSheetPanel">
 
 <button
-class="actionBtn"
-id="renameAction">
+id="renameAction"
+class="actionBtn">
 
 Rinomina
 
 </button>
 
 <button
-class="actionBtn"
-id="moveAction">
+id="moveAction"
+class="actionBtn">
 
 Sposta
 
 </button>
 
 <button
-class="actionBtn deleteAction"
-id="deleteAction">
+id="deleteAction"
+class="actionBtn deleteAction">
 
 Elimina
 
@@ -147,8 +155,8 @@ Elimina
 <div class="cancelWrap">
 
 <button
-class="cancelBtn"
-id="cancelAction">
+id="cancelAction"
+class="cancelBtn">
 
 Annulla
 
@@ -174,7 +182,11 @@ Chiudi
 
 </button>
 
-<div id="pdfTitle"></div>
+<div id="pdfTitle">
+
+PDF
+
+</div>
 
 <div class="pdfActions">
 
@@ -200,7 +212,108 @@ Elimina
 
 </div>
 
-<iframe id="pdfFrame"></iframe>
+<iframe
+id="pdfFrame">
+
+</iframe>
+
+</div>
+
+<!-- EDITOR SCADENZE -->
+
+<div
+id="deadlineEditor"
+class="hidden">
+
+<div id="deadlineEditorBackdrop"></div>
+
+<div id="deadlineEditorPanel">
+
+<div class="deadlineHeader">
+
+<h3>Modifica cartella</h3>
+
+<button id="closeDeadlineEditorBtn">
+
+✕
+
+</button>
+
+</div>
+
+<div class="deadlineForm">
+
+<label>Nome cartella</label>
+
+<input
+type="text"
+id="deadlineFolderNameInput">
+
+<label>Nome scadenza</label>
+
+<input
+type="text"
+id="deadlineLabelInput">
+
+<label>Prima scadenza</label>
+
+<input
+type="date"
+id="deadlineFirstDateInput">
+
+<label>Ripetizione</label>
+
+<select id="deadlineIntervalSelect">
+
+<option value="1">Ogni 1 mese</option>
+<option value="2">Ogni 2 mesi</option>
+<option value="3">Ogni 3 mesi</option>
+<option value="4">Ogni 4 mesi</option>
+<option value="6">Ogni 6 mesi</option>
+<option value="12">Ogni 12 mesi</option>
+<option value="120">Ogni 10 anni</option>
+
+</select>
+
+<label>Prefisso PDF</label>
+
+<input
+type="text"
+id="deadlinePrefixInput">
+
+</div>
+
+<div id="deadlineListBox"></div>
+
+<div class="deadlineButtons">
+
+<button
+id="saveDeadlineBtn"
+class="primaryBtn">
+
+Salva
+
+</button>
+
+<button
+id="replaceDeadlinesBtn"
+class="secondaryBtn">
+
+Sostituisci scadenza
+
+</button>
+
+<button
+id="clearDeadlinesBtn"
+class="dangerBtn">
+
+Elimina scadenze
+
+</button>
+
+</div>
+
+</div>
 
 </div>
 
@@ -281,6 +394,7 @@ class="hidden">
 <h3>Nuova cartella</h3>
 
 <input
+type="text"
 id="folderNameInput"
 placeholder="Nome cartella">
 
@@ -294,7 +408,7 @@ Annulla
 
 <button id="folderConfirmBtn">
 
-Crea
+Salva
 
 </button>
 
