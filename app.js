@@ -74,11 +74,11 @@ function save() {
   saveTimer = setTimeout(async () => {
     try {
       await writeDataToDB();
+      localStorage.setItem("backup_archivio", JSON.stringify(data)); // backup extra
     } catch (err) {
-      console.error("Errore salvataggio IndexedDB:", err);
-      alert("Errore durante il salvataggio dei dati");
+      console.error("Errore salvataggio:", err);
     }
-  }, 80);
+  }, 300);
 }
 
 async function saveNow() {
@@ -1783,16 +1783,47 @@ clearDeadlinesBtn.onclick = () => {
 async function initApp() {
   try {
     data = await loadDataFromDB();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      const backup = localStorage.getItem("backup_archivio");
+      if (backup) {
+        data = JSON.parse(backup);
+        console.log("Recupero da backup locale");
+      }
+    }
+
     if (!Array.isArray(data)) data = [];
 
     data.forEach(ensureFolderShape);
     render();
+
   } catch (err) {
-    console.error("Errore inizializzazione IndexedDB:", err);
-    alert("Errore nell'apertura dell'archivio");
-    data = [];
+    console.error("Errore DB:", err);
+
+    const backup = localStorage.getItem("backup_archivio");
+    if (backup) {
+      data = JSON.parse(backup);
+      alert("Recuperati dati dal backup");
+    } else {
+      data = [];
+    }
+
     render();
   }
 }
 
 initApp();
+
+window.addEventListener("beforeunload", async () => {
+  try {
+    await saveNow();
+  } catch {}
+});
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "hidden") {
+    try {
+      await saveNow();
+    } catch {}
+  }
+});
