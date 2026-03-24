@@ -95,6 +95,45 @@ const backBtn = document.getElementById("backBtn");
 const pathBox = document.getElementById("path");
 const fileInput = document.getElementById("fileInput");
 const searchInput = document.getElementById("search");
+const viewToggleBtn = document.getElementById("viewToggleBtn");
+
+let currentView = localStorage.getItem("viewMode") || "grid";
+
+function applyViewMode() {
+
+if(currentView === "grid"){
+
+foldersEl.classList.add("folderGrid");
+
+foldersEl.classList.remove("folderList");
+
+viewToggleBtn.textContent = "🔲";
+
+}else{
+
+foldersEl.classList.remove("folderGrid");
+
+foldersEl.classList.add("folderList");
+
+viewToggleBtn.textContent = "📄";
+
+}
+
+}
+
+viewToggleBtn.addEventListener("click", () => {
+
+currentView = currentView === "grid" ? "list" : "grid";
+
+localStorage.setItem("viewMode", currentView);
+
+applyViewMode();
+
+render();
+
+});
+
+applyViewMode();
 
 const backupBtn = document.getElementById("backupBtn");
 const restoreBtn = document.getElementById("restoreBtn");
