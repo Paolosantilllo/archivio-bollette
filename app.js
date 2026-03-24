@@ -1777,13 +1777,13 @@ clearDeadlinesBtn.onclick = () => {
 
 async function initApp() {
   try {
-    data = await loadDataFromDB();
+    data = await loadData();
 
     if (!Array.isArray(data) || data.length === 0) {
       const backup = localStorage.getItem("backup_archivio");
       if (backup) {
         data = JSON.parse(backup);
-        console.log("Recupero da backup locale");
+        console.log("Recupero da backup");
       }
     }
 
@@ -1793,12 +1793,11 @@ async function initApp() {
     render();
 
   } catch (err) {
-    console.error("Errore DB:", err);
+    console.error(err);
 
     const backup = localStorage.getItem("backup_archivio");
     if (backup) {
       data = JSON.parse(backup);
-      alert("Recuperati dati dal backup");
     } else {
       data = [];
     }
