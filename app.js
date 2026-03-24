@@ -99,21 +99,19 @@ const viewToggleBtn = document.getElementById("viewToggleBtn");
 
 let currentView = localStorage.getItem("viewMode") || "grid";
 
-function applyViewMode() {
+function applyViewMode(){
 
 if(currentView === "grid"){
 
-foldersEl.classList.add("folderGrid");
-
-foldersEl.classList.remove("folderList");
+list.classList.add("folderGrid");
+list.classList.remove("folderList");
 
 viewToggleBtn.textContent = "🔲";
 
 }else{
 
-foldersEl.classList.remove("folderGrid");
-
-foldersEl.classList.add("folderList");
+list.classList.remove("folderGrid");
+list.classList.add("folderList");
 
 viewToggleBtn.textContent = "📄";
 
@@ -128,7 +126,6 @@ currentView = currentView === "grid" ? "list" : "grid";
 localStorage.setItem("viewMode", currentView);
 
 applyViewMode();
-
 render();
 
 });
@@ -1340,12 +1337,7 @@ function render() {
       (file.displayName || file.name).toLowerCase().includes(searchTerm)
     );
 
-  if (filteredFolders.length) {
-    list.classList.add("folderGrid");
-  } else {
-    list.classList.add("folderList");
-  }
-
+  
   filteredFolders.forEach(({ folder, index }) => {
     const badgeCount = getBillingBadgeCount(folder);
 
