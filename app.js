@@ -7,7 +7,8 @@ let selectedActionItem = null;
 let renameTarget = null;
 let editingBillingFolder = null;
 
-/* -------------------- DATABASE -------------------- */
+
+/* -------------------- DATABASE FIX DEFINITIVO -------------------- */
 
 const DB_NAME = "ArchivioBolletteDB";
 const STORE_NAME = "store";
@@ -15,99 +16,69 @@ const DATA_KEY = "archivio";
 
 let saveTimer = null;
 
+// APRI DB
 function openDB(){
-return new Promise((resolve,reject)=>{
+  return new Promise((resolve,reject)=>{
+    const request = indexedDB.open(DB_NAME,1);
 
-const request = indexedDB.open(DB_NAME,1);
+    request.onupgradeneeded = ()=>{
+      request.result.createObjectStore(STORE_NAME);
+    };
 
-request.onupgradeneeded = ()=>{
-
-request.result.createObjectStore(STORE_NAME);
-
-};
-
-request.onsuccess = ()=> resolve(request.result);
-
-request.onerror = ()=> reject();
-
-});
+    request.onsuccess = ()=> resolve(request.result);
+    request.onerror = ()=> reject();
+  });
 }
 
-async function loadData(){
-
-try{
-
-const db = await openDB();
-
-const tx = db.transaction(STORE_NAME,"readonly");
-
-const store = tx.objectStore(STORE_NAME);
-
-const req = store.get(DATA_KEY);
-
-return new Promise(resolve=>{
-
-req.onsuccess = ()=>{
-
-data = req.result || [];
-
-resolve();
-
-};
-
-req.onerror = ()=>{
-
-data = [];
-
-resolve();
-
-};
-
-});
-
-}catch{
-
-data = [];
-
-}
-
-}
-
+// SALVA
 async function saveNow(){
+  const db = await openDB();
+  const tx = db.transaction(STORE_NAME,"readwrite");
+  const store = tx.objectStore(STORE_NAME);
 
-const db = await openDB();
+  store.put(data, DATA_KEY);
 
-const tx = db.transaction(STORE_NAME,"readwrite");
-
-const store = tx.objectStore(STORE_NAME);
-
-store.put(data,DATA_KEY);
-
+  return new Promise((resolve)=>{
+    tx.oncomplete = ()=> resolve();
+  });
 }
 
+// SALVATAGGIO CON SICUREZZA
 function save(){
+  clearTimeout(saveTimer);
 
-clearTimeout(saveTimer);
-
-saveTimer = setTimeout(()=>{
-
-saveNow();
-
-localStorage.setItem(
-"backup_archivio",
-JSON.stringify(data)
-);
-
-},300);
-
+  saveTimer = setTimeout(async ()=>{
+    try{
+      await saveNow();
+      localStorage.setItem("backup_archivio", JSON.stringify(data));
+      console.log("SALVATO ✅");
+    }catch(e){
+      console.error("Errore salvataggio", e);
+    }
+  },200);
 }
 
-async function saveNow(){
+// CARICAMENTO
+async function loadData(){
+  try{
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME,"readonly");
+    const store = tx.objectStore(STORE_NAME);
 
-await writeDataToDB();
+    const req = store.get(DATA_KEY);
 
-localStorage.setItem("backup_archivio",JSON.stringify(data));
+    return new Promise(resolve=>{
+      req.onsuccess = ()=>{
+        resolve(req.result || []);
+      };
+      req.onerror = ()=>{
+        resolve([]);
+      };
+    });
 
+  }catch{
+    return [];
+  }
 }
 
 /* -------------------- ELEMENTI -------------------- */
