@@ -5,9 +5,7 @@
 
 <meta charset="UTF-8">
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Archivio Bollette</title>
 
@@ -25,8 +23,6 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <body>
 
-      <button onclick="testSalvataggio()">TEST SALVA</button>
-<button onclick="testCaricamento()">TEST CARICA</button>
 <header>
 
 <div class="headerTop">
@@ -37,8 +33,7 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <button
 id="viewToggleBtn"
-title="Cambia vista"
-aria-label="Cambia vista">
+title="Cambia vista">
 
 🔲
 
@@ -46,8 +41,7 @@ aria-label="Cambia vista">
 
 <button
 id="backupBtn"
-title="Backup"
-aria-label="Backup">
+title="Backup">
 
 💾
 
@@ -55,14 +49,14 @@ aria-label="Backup">
 
 <button
 id="restoreBtn"
-title="Ripristina"
-aria-label="Ripristina">
+title="Ripristina">
 
 📥
 
 </button>
 
 </div>
+
 </div>
 
 <input
@@ -75,9 +69,14 @@ placeholder="🔍 Cerca documento">
 <main>
 
 <div class="topbar">
-      <button id="backBtn">⬅️</button>
-      <div id="path"></div>
-    </div>
+
+<button id="backBtn">
+
+⬅️
+
+</button>
+
+<div id="path">
 
 Home
 
@@ -85,11 +84,7 @@ Home
 
 </div>
 
-<ul
-id="folders"
-class="folderGrid">
-
-</ul>
+<ul id="folders"></ul>
 
 </main>
 
@@ -101,9 +96,7 @@ class="folderGrid">
 
 </button>
 
-<button
-id="addFile"
-class="hidden">
+<button id="addFile" class="hidden">
 
 📄
 
@@ -123,7 +116,7 @@ id="restoreInput"
 accept="application/json"
 hidden>
 
-<!-- ACTION SHEET -->
+<!-- MENU AZIONI -->
 
 <div id="actionSheet">
 
@@ -131,25 +124,19 @@ hidden>
 
 <div id="actionSheetPanel">
 
-<button
-id="renameAction"
-class="actionBtn">
+<button id="renameAction" class="actionBtn">
 
 Rinomina
 
 </button>
 
-<button
-id="moveAction"
-class="actionBtn">
+<button id="moveAction" class="actionBtn">
 
 Sposta
 
 </button>
 
-<button
-id="deleteAction"
-class="actionBtn deleteAction">
+<button id="deleteAction" class="actionBtn deleteAction">
 
 Elimina
 
@@ -157,9 +144,7 @@ Elimina
 
 <div class="cancelWrap">
 
-<button
-id="cancelAction"
-class="cancelBtn">
+<button id="cancelAction" class="cancelBtn">
 
 Annulla
 
@@ -171,11 +156,9 @@ Annulla
 
 </div>
 
-<!-- PDF VIEWER -->
+<!-- VISUALIZZATORE PDF -->
 
-<div
-id="pdfViewer"
-class="hidden">
+<div id="pdfViewer" class="hidden">
 
 <div id="pdfViewerHeader">
 
@@ -215,18 +198,13 @@ Elimina
 
 </div>
 
-<iframe
-id="pdfFrame">
-
-</iframe>
+<iframe id="pdfFrame"></iframe>
 
 </div>
 
 <!-- EDITOR SCADENZE -->
 
-<div
-id="deadlineEditor"
-class="hidden">
+<div id="deadlineEditor" class="hidden">
 
 <div id="deadlineEditorBackdrop"></div>
 
@@ -290,25 +268,19 @@ id="deadlinePrefixInput">
 
 <div class="deadlineButtons">
 
-<button
-id="saveDeadlineBtn"
-class="primaryBtn">
+<button id="saveDeadlineBtn" class="primaryBtn">
 
 Salva
 
 </button>
 
-<button
-id="replaceDeadlinesBtn"
-class="secondaryBtn">
+<button id="replaceDeadlinesBtn" class="secondaryBtn">
 
 Sostituisci scadenza
 
 </button>
 
-<button
-id="clearDeadlinesBtn"
-class="dangerBtn">
+<button id="clearDeadlinesBtn" class="dangerBtn">
 
 Elimina scadenze
 
@@ -320,11 +292,9 @@ Elimina scadenze
 
 </div>
 
-<!-- RENAME -->
+<!-- RINOMINA -->
 
-<div
-id="renameModal"
-class="hidden">
+<div id="renameModal" class="hidden">
 
 <div id="renameBackdrop"></div>
 
@@ -354,11 +324,9 @@ OK
 
 </div>
 
-<!-- MOVE -->
+<!-- SPOSTA -->
 
-<div
-id="moveModal"
-class="hidden">
+<div id="moveModal" class="hidden">
 
 <div id="moveBackdrop"></div>
 
@@ -386,9 +354,7 @@ class="hidden">
 
 <!-- NUOVA CARTELLA -->
 
-<div
-id="folderModal"
-class="hidden">
+<div id="folderModal" class="hidden">
 
 <div id="folderBackdrop"></div>
 
