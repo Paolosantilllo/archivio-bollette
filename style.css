@@ -783,3 +783,41 @@ main {
   font-weight: 600;
 
 }
+/* LISTA COMPATTA */
+
+.folderList .fileItem,
+.folderList .folderItem {
+
+display:flex;
+align-items:center;
+gap:10px;
+
+background:#e9e9ef;
+
+padding:10px 12px;
+
+margin:6px 10px;
+
+border-radius:12px;
+
+font-size:15px;
+
+}
+
+.folderIcon{
+
+font-size:18px;
+
+width:22px;
+
+text-align:center;
+
+}
+
+.folderName{
+
+flex:1;
+
+word-break:break-word;
+
+}
