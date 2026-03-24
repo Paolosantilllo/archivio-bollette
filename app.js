@@ -38,33 +38,52 @@ function openDB() {
 }
 
 async function loadDataFromDB() {
-  const db = await openDB();
+  return new Promise((resolve) => {
+    const request = indexedDB.open(DB_NAME, 1);
 
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.get(DATA_KEY);
-
-    request.onsuccess = () => {
-      resolve(request.result || []);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore("store");
     };
 
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction("store", "readonly");
+      const store = tx.objectStore("store");
+
+      const getReq = store.get("archivio");
+
+      getReq.onsuccess = () => {
+        resolve(getReq.result || []);
+      };
+
+      getReq.onerror = () => resolve([]);
+    };
+
+    request.onerror = () => resolve([]);
   });
 }
 
+
 async function writeDataToDB() {
-  const db = await openDB();
-
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
+    const request = indexedDB.open(DB_NAME, 1);
 
-    store.put(data, DATA_KEY);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore("store");
+    };
 
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction("store", "readwrite");
+      const store = tx.objectStore("store");
+
+      store.put(data, "archivio");
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject();
+    };
+
+    request.onerror = () => reject();
   });
 }
 
