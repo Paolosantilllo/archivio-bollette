@@ -1963,18 +1963,20 @@ async function initApp() {
 
 initApp();
 
-window.addEventListener("beforeunload", async () => {
-  try {
-    await saveNow();
-  } catch {}
+window.addEventListener("beforeunload", () => {
+
+saveNow();
+
 });
 
-document.addEventListener("visibilitychange", async () => {
-  if (document.visibilityState === "hidden") {
-    try {
-      await saveNow();
-    } catch {}
-  }
+document.addEventListener("visibilitychange", () => {
+
+if(document.visibilityState==="hidden"){
+
+saveNow();
+
+}
+
 });
 async function testSalvataggio() {
   const request = indexedDB.open("TEST_DB", 1);
