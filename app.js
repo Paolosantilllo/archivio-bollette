@@ -1898,3 +1898,6 @@ async function testCaricamento() {
     };
   };
 }
+
+loadData();
+render();
