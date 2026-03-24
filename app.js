@@ -1838,18 +1838,4 @@ async function initApp() {
 
 initApp();
 
-window.addEventListener("beforeunload", () => {
 
-saveNow();
-
-});
-
-document.addEventListener("visibilitychange", () => {
-
-if(document.visibilityState==="hidden"){
-
-saveNow();
-
-}
-
-});
