@@ -1318,100 +1318,201 @@ list.innerHTML = "";
 pathBox.textContent = getPath();
 
 backBtn.style.display = currentPath.length ? "block" : "none";
-addFileBtn.style.display = currentPath.length ? "block" : "block";
+addFileBtn.style.display = currentPath.length ? "block" : "none";
 
-applyViewMode(); // mantiene la vista scelta
+applyViewMode();
 
 const searchTerm = (searchInput.value || "").trim().toLowerCase();
 
 const folders = getCurrentLevel();
 const currentFolder = getCurrentFolder();
 const files = currentFolder ? currentFolder.files : [];
-  
-  folders.forEach(ensureFolderShape);
 
-  const filteredFolders = folders
-    .map((folder, index) => ({ folder, index }))
-    .filter(({ folder }) => folder.name.toLowerCase().includes(searchTerm));
+folders.forEach(ensureFolderShape);
 
-  const filteredFiles = files
-    .map((file, index) => ({ file, index }))
-    .filter(({ file }) =>
-      (file.displayName || file.name).toLowerCase().includes(searchTerm)
-    );
+const filteredFolders = folders
+.map((folder, index) => ({ folder, index }))
+.filter(({ folder }) =>
+folder.name.toLowerCase().includes(searchTerm)
+);
 
-  
-  filteredFolders.forEach(({ folder, index }) => {
-    const badgeCount = getBillingBadgeCount(folder);
+const filteredFiles = files
+.map((file, index) => ({ file, index }))
+.filter(({ file }) =>
+(file.displayName || file.name).toLowerCase().includes(searchTerm)
+);
 
-    const li = document.createElement("li");
-    li.className = "swipeRow";
 
-    const imageHtml = folder.image
-      ? `
-        <div class="gridImageWrap">
-          <img src="${folder.image}" alt="" class="gridCover">
-        </div>
-      `
-      : `<div class="gridCoverEmpty">📁</div>`;
 
-    li.innerHTML = `
-      <div class="gridCard">
-        ${imageHtml}
-        <div class="gridTitle">
-          ${escapeHtml(folder.name)}
-          ${badgeCount ? `<span class="missingCount">(${badgeCount})</span>` : ""}
-        </div>
-      </div>
-    `;
 
-    attachFolderInteractions(li, index);
-    list.appendChild(li);
-  });
 
-  if (!filteredFolders.length) {
-    list.classList.add("folderList");
-  }
+/* ---------------- CARTELLE ---------------- */
 
-  filteredFiles.forEach(({ file, index }) => {
-    const li = document.createElement("li");
-    li.className = "fileSwipeWrap";
+filteredFolders.forEach(({ folder, index }) => {
 
-    const icon = file.type && file.type.startsWith("image/") ? "🖼️" : "📄";
+const badgeCount = getBillingBadgeCount(folder);
 
-    li.innerHTML = `
-      <div class="fileSwipeActions">
-        <button class="fileSwipeBtn rename">Rinomina</button>
-        <button class="fileSwipeBtn move">Sposta</button>
-        <button class="fileSwipeBtn delete">Elimina</button>
-      </div>
+const li = document.createElement("li");
 
-      <div class="fileSwipeContent">
-        <div class="fileItem">
-          <div class="fileName">${icon} ${escapeHtml(file.displayName || file.name)}</div>
-        </div>
-      </div>
-    `;
 
-    attachFileSwipe(li, file, index);
-    list.appendChild(li);
-  });
 
-  if (!filteredFolders.length && !filteredFiles.length) {
-    const empty = document.createElement("li");
-    empty.innerHTML = `
-      <div class="fileItem" style="justify-content:center;color:#666;">
-        Nessun elemento trovato
-      </div>
-    `;
-    list.appendChild(empty);
-  }
+/* ---------- VISTA GRIGLIA ---------- */
 
-  if (editingBillingFolder && !deadlineEditor.classList.contains("hidden")) {
-    renderDeadlineList(editingBillingFolder);
-  }
+if(currentView === "grid"){
+
+li.className = "swipeRow";
+
+const imageHtml = folder.image
+? `
+<div class="gridImageWrap">
+<img src="${folder.image}" class="gridCover">
+</div>
+`
+: `<div class="gridCoverEmpty">📁</div>`;
+
+li.innerHTML = `
+
+<div class="gridCard">
+
+${imageHtml}
+
+<div class="gridTitle">
+
+${escapeHtml(folder.name)}
+
+${badgeCount ? `<span class="missingCount">(${badgeCount})</span>` : ""}
+
+</div>
+
+</div>
+
+`;
+
 }
 
+
+
+/* ---------- VISTA LISTA ---------- */
+
+else{
+
+li.className = "folderItem";
+
+li.innerHTML = `
+
+<span class="folderIcon">
+
+${folder.image ? "🖼️" : "📁"}
+
+</span>
+
+<span class="folderName">
+
+${escapeHtml(folder.name)}
+
+${badgeCount ? `<span class="missingCount">(${badgeCount})</span>` : ""}
+
+</span>
+
+`;
+
+}
+
+
+
+attachFolderInteractions(li,index);
+
+list.appendChild(li);
+
+});
+
+
+
+
+
+
+
+/* ---------------- FILE ---------------- */
+
+filteredFiles.forEach(({ file, index }) => {
+
+const li = document.createElement("li");
+
+li.className = "fileSwipeWrap";
+
+const icon = file.type && file.type.startsWith("image/")
+? "🖼️"
+: "📄";
+
+li.innerHTML = `
+
+<div class="fileSwipeActions">
+
+<button class="fileSwipeBtn rename">Rinomina</button>
+
+<button class="fileSwipeBtn move">Sposta</button>
+
+<button class="fileSwipeBtn delete">Elimina</button>
+
+</div>
+
+
+
+<div class="fileSwipeContent">
+
+<div class="fileItem">
+
+<div class="fileName">
+
+${icon} ${escapeHtml(file.displayName || file.name)}
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+attachFileSwipe(li,file,index);
+
+list.appendChild(li);
+
+});
+
+
+
+
+
+/* ---------- LISTA VUOTA ---------- */
+
+if(!filteredFolders.length && !filteredFiles.length){
+
+const empty=document.createElement("li");
+
+empty.innerHTML=`
+
+<div class="fileItem" style="justify-content:center;color:#666;">
+
+Nessun elemento
+
+</div>
+
+`;
+
+list.appendChild(empty);
+
+}
+
+
+
+if(editingBillingFolder && !deadlineEditor.classList.contains("hidden")){
+
+renderDeadlineList(editingBillingFolder);
+
+}
+
+}
 /* -------------------- EVENTI -------------------- */
 
 document.addEventListener("click", e => {
