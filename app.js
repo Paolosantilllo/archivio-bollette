@@ -100,8 +100,7 @@ function save() {
   }, 300);
 }
 
-async function saveNow() {
-  clearTimeout(saveTimer);
+async function save() {
   await writeDataToDB();
 }
 
