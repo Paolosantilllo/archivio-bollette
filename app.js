@@ -1312,19 +1312,22 @@ function attachFileSwipe(li, file, filteredIndex) {
 /* -------------------- RENDER -------------------- */
 
 function render() {
-  list.innerHTML = "";
-  list.className = "";
-  pathBox.textContent = getPath();
 
-  backBtn.style.display = currentPath.length ? "block" : "none";
-  addFileBtn.style.display = currentPath.length ? "block" : "none";
+list.innerHTML = "";
 
-  const searchTerm = (searchInput.value || "").trim().toLowerCase();
+pathBox.textContent = getPath();
 
-  const folders = getCurrentLevel();
-  const currentFolder = getCurrentFolder();
-  const files = currentFolder ? currentFolder.files : [];
+backBtn.style.display = currentPath.length ? "block" : "none";
+addFileBtn.style.display = currentPath.length ? "block" : "block";
 
+applyViewMode(); // mantiene la vista scelta
+
+const searchTerm = (searchInput.value || "").trim().toLowerCase();
+
+const folders = getCurrentLevel();
+const currentFolder = getCurrentFolder();
+const files = currentFolder ? currentFolder.files : [];
+  
   folders.forEach(ensureFolderShape);
 
   const filteredFolders = folders
