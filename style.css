@@ -741,3 +741,45 @@ main {
 .fileSwipeWrap.open .fileSwipeContent {
   transform: translateX(-222px);
 }
+/* vista lista */
+
+#folders.folderList {
+  display: block;
+  padding: 0 10px;
+}
+
+.folderList .gridCard {
+
+  display: flex;
+
+  flex-direction: row;
+
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: auto;
+
+  padding: 10px;
+
+}
+
+.folderList .gridImageWrap {
+
+  width: 55px;
+
+  height: 55px;
+
+  aspect-ratio: auto;
+
+  flex-shrink: 0;
+
+}
+
+.folderList .gridTitle {
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+}
