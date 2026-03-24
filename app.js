@@ -1835,6 +1835,21 @@ async function initApp() {
     render();
   }
 }
+window.addEventListener("beforeunload", () => {
+
+saveNow();
+
+});
+
+document.addEventListener("visibilitychange", () => {
+
+if(document.visibilityState==="hidden"){
+
+saveNow();
+
+}
+
+});
 
 initApp();
 
