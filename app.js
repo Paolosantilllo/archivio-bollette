@@ -1846,3 +1846,38 @@ document.addEventListener("visibilitychange", async () => {
     } catch {}
   }
 });
+async function testSalvataggio() {
+  const request = indexedDB.open("TEST_DB", 1);
+
+  request.onupgradeneeded = () => {
+    request.result.createObjectStore("store");
+  };
+
+  request.onsuccess = () => {
+    const db = request.result;
+    const tx = db.transaction("store", "readwrite");
+    const store = tx.objectStore("store");
+
+    store.put({ nome: "PROVA" }, "chiave");
+
+    tx.oncomplete = () => {
+      alert("SALVATO");
+    };
+  };
+}
+
+async function testCaricamento() {
+  const request = indexedDB.open("TEST_DB", 1);
+
+  request.onsuccess = () => {
+    const db = request.result;
+    const tx = db.transaction("store", "readonly");
+    const store = tx.objectStore("store");
+
+    const getReq = store.get("chiave");
+
+    getReq.onsuccess = () => {
+      alert(JSON.stringify(getReq.result));
+    };
+  };
+}
