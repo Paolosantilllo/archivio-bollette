@@ -1,4 +1,4 @@
-let data = [];
+et data = JSON.parse(localStorage.getItem("archivio")) || [];
 let currentPath = [];
 let currentPdfUrl = null;
 let currentViewerFile = null;
