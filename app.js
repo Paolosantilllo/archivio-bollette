@@ -1,6 +1,8 @@
 /* -------------------- DATI -------------------- */
 
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
+
+/* sempre partenza da Home */
 let currentPath = [];
 
 let currentPdfUrl = null;
@@ -14,18 +16,10 @@ let editingBillingFolder = null;
 
 function save(){
 
-try{
-
 localStorage.setItem(
 "archivio",
 JSON.stringify(data)
 );
-
-}catch(e){
-
-console.error("errore salvataggio",e);
-
-}
 
 }
 /* -------------------- ELEMENTI -------------------- */
@@ -1259,8 +1253,11 @@ list.innerHTML = "";
 
 pathBox.textContent = getPath();
 
-backBtn.style.display = currentPath.length ? "block" : "none";
-addFileBtn.style.display = currentPath.length ? "block" : "none";
+backBtn.style.display = 
+  currentPath.length ? "block" : "none";
+
+  addFileBtn.style.display = 
+  currentPath.length ? "block" : "none";
 
 applyViewMode();
 
@@ -1722,16 +1719,13 @@ clearDeadlinesBtn.onclick = () => {
 
 /* -------------------- AVVIO APP -------------------- */
 
-// se non esiste archivio salvato
-if(!Array.isArray(data)){
-data = [];
-}
+/* torna sempre alla Home quando riapri */
+currentPath = [];
 
-// assicura struttura corretta cartelle
+/* controlla che tutte le cartelle abbiano la struttura corretta */
 data.forEach(ensureFolderShape);
 
-// prima visualizzazione
+/* mostra contenuto */
 render();
 
-// debug: verifica che JS parte
 console.log("APP AVVIATA");
