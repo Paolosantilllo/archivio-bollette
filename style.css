@@ -315,13 +315,32 @@ main {
 
 /* PDF VIEWER */
 
-#pdfViewer {
-  position: fixed;
-  inset: 0;
-  background: #f2f2f7;
-  z-index: 1200;
-  display: flex;
-  flex-direction: column;
+#pdfViewer{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:100%;
+
+background:white;
+
+z-index:999;
+
+}
+
+#pdfFrame{
+
+width:100%;
+
+height:100%;
+
+border:none;
+
 }
 
 #pdfViewerHeader {
