@@ -8,7 +8,7 @@ let renameTarget = null;
 let editingBillingFolder = null;
 
 
-/* -------------------- DATABASE FIX DEFINITIVO -------------------- */
+/* -------------------- DATABASE -------------------- */
 
 const DB_NAME = "ArchivioBolletteDB";
 const STORE_NAME = "store";
@@ -16,48 +16,122 @@ const DATA_KEY = "archivio";
 
 let saveTimer = null;
 
-// APRI DB
+
+// APERTURA DATABASE
 function openDB(){
-  return new Promise((resolve,reject)=>{
-    const request = indexedDB.open(DB_NAME,1);
 
-    request.onupgradeneeded = ()=>{
-      request.result.createObjectStore(STORE_NAME);
-    };
+return new Promise((resolve,reject)=>{
 
-    request.onsuccess = ()=> resolve(request.result);
-    request.onerror = ()=> reject();
-  });
+const request = indexedDB.open(DB_NAME,1);
+
+request.onupgradeneeded = ()=>{
+
+if(!request.result.objectStoreNames.contains(STORE_NAME)){
+
+request.result.createObjectStore(STORE_NAME);
+
 }
 
-// SALVA
+};
+
+request.onsuccess = ()=> resolve(request.result);
+
+request.onerror = ()=> reject(request.error);
+
+});
+
+}
+
+
+// CARICA DATI
+async function loadData(){
+
+try{
+
+const db = await openDB();
+
+const tx = db.transaction(STORE_NAME,"readonly");
+
+const store = tx.objectStore(STORE_NAME);
+
+const req = store.get(DATA_KEY);
+
+return new Promise(resolve=>{
+
+req.onsuccess = ()=>{
+
+data = req.result || [];
+
+resolve();
+
+};
+
+req.onerror = ()=>{
+
+data = [];
+
+resolve();
+
+};
+
+});
+
+}catch(e){
+
+console.error("errore load",e);
+
+data = [];
+
+}
+
+}
+
+
+// SALVA SUBITO
 async function saveNow(){
-  const db = await openDB();
-  const tx = db.transaction(STORE_NAME,"readwrite");
-  const store = tx.objectStore(STORE_NAME);
 
-  store.put(data, DATA_KEY);
+try{
 
-  return new Promise((resolve)=>{
-    tx.oncomplete = ()=> resolve();
-  });
+const db = await openDB();
+
+const tx = db.transaction(STORE_NAME,"readwrite");
+
+const store = tx.objectStore(STORE_NAME);
+
+store.put(data, DATA_KEY);
+
+return new Promise(resolve=>{
+
+tx.oncomplete = ()=> resolve();
+
+});
+
+}catch(e){
+
+console.error("errore saveNow",e);
+
 }
 
-// SALVATAGGIO CON SICUREZZA
+}
+
+
+// SALVA AUTOMATICO
 function save(){
-  clearTimeout(saveTimer);
 
-  saveTimer = setTimeout(async ()=>{
-    try{
-      await saveNow();
-      localStorage.setItem("backup_archivio", JSON.stringify(data));
-      console.log("SALVATO ✅");
-    }catch(e){
-      console.error("Errore salvataggio", e);
-    }
-  },200);
+clearTimeout(saveTimer);
+
+saveTimer = setTimeout(()=>{
+
+saveNow();
+
+localStorage.setItem(
+"backup_archivio",
+JSON.stringify(data)
+);
+
+},300);
+
 }
-
 // CARICAMENTO
 async function loadData(){
   try{
