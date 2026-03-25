@@ -1849,34 +1849,96 @@ clearDeadlinesBtn.onclick = () => {
 
 /* -------------------- START -------------------- */
 
+// CARICA DATI DAL DATABASE
 async function loadData(){
-  try{
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME,"readonly");
-    const store = tx.objectStore(STORE_NAME);
 
-    const req = store.get(DATA_KEY);
+try{
 
-    return new Promise(resolve=>{
-      req.onsuccess = ()=>{
-        resolve(req.result || []);
-      };
-      req.onerror = ()=>{
-        resolve([]);
-      };
-    });
+const db = await openDB();
 
-  }catch{
-    return [];
-  }
+const tx = db.transaction(STORE_NAME,"readonly");
+
+const store = tx.objectStore(STORE_NAME);
+
+const req = store.get(DATA_KEY);
+
+return new Promise(resolve=>{
+
+req.onsuccess = ()=>{
+
+resolve(req.result || []);
+
+};
+
+req.onerror = ()=>{
+
+resolve([]);
+
+};
+
+});
+
+}catch(e){
+
+console.error("errore load",e);
+
+return [];
+
 }
-window.addEventListener("beforeunload", () => {
+
+}
+
+
+// AVVIO APP
+async function initApp(){
+
+try{
+
+data = await loadData();
+
+if(!Array.isArray(data) || data.length===0){
+
+const backup = localStorage.getItem("backup_archivio");
+
+if(backup){
+
+data = JSON.parse(backup);
+
+console.log("recupero backup");
+
+}
+
+}
+
+if(!Array.isArray(data)) data = [];
+
+data.forEach(ensureFolderShape);
+
+render();
+
+}catch(err){
+
+console.error(err);
+
+data = [];
+
+render();
+
+}
+
+}
+
+
+// SALVA QUANDO ESCI
+window.addEventListener("beforeunload", ()=>{
 
 saveNow();
 
 });
 
-document.addEventListener("visibilitychange", () => {
+
+// SALVA SE APP VA IN BACKGROUND
+document.addEventListener("visibilitychange", ()=>{
 
 if(document.visibilityState==="hidden"){
 
@@ -1886,6 +1948,6 @@ saveNow();
 
 });
 
+
+// AVVIA APP
 initApp();
-
-
