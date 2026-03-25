@@ -1,7 +1,6 @@
 /* -------------------- DATI -------------------- */
 
 let data = JSON.parse(localStorage.getItem("archivio")) || [];
-
 let currentPath = [];
 
 let currentPdfUrl = null;
@@ -15,13 +14,20 @@ let editingBillingFolder = null;
 
 function save(){
 
+try{
+
 localStorage.setItem(
 "archivio",
 JSON.stringify(data)
 );
 
+}catch(e){
+
+console.error("errore salvataggio",e);
+
 }
 
+}
 /* -------------------- ELEMENTI -------------------- */
 
 const list = document.getElementById("folders");
@@ -1714,8 +1720,18 @@ clearDeadlinesBtn.onclick = () => {
   renderDeadlineList(editingBillingFolder);
 };
 
-/* -------------------- START -------------------- */
+/* -------------------- AVVIO APP -------------------- */
 
+// se non esiste archivio salvato
+if(!Array.isArray(data)){
+data = [];
+}
+
+// assicura struttura corretta cartelle
 data.forEach(ensureFolderShape);
 
+// prima visualizzazione
 render();
+
+// debug: verifica che JS parte
+console.log("APP AVVIATA");
