@@ -32,6 +32,8 @@ const pathBox = document.getElementById("path");
 const fileInput = document.getElementById("fileInput");
 const searchInput = document.getElementById("search");
 const viewToggleBtn = document.getElementById("viewToggleBtn");
+const sharePdfBtn = document.getElementById("sharePdfBtn");
+const printPdfBtn = document.getElementById("printPdfBtn");
 
 let currentView = localStorage.getItem("viewMode") || "grid";
 
