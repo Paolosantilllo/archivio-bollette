@@ -1,4 +1,7 @@
-let data = [];
+/* -------------------- DATI -------------------- */
+
+let data = JSON.parse(localStorage.getItem("archivio")) || [];
+
 let currentPath = [];
 
 let currentPdfUrl = null;
@@ -8,151 +11,15 @@ let renameTarget = null;
 let editingBillingFolder = null;
 
 
-/* -------------------- DATABASE -------------------- */
+/* -------------------- SALVATAGGIO -------------------- */
 
-const DB_NAME = "ArchivioBolletteDB";
-const STORE_NAME = "store";
-const DATA_KEY = "archivio";
-
-let saveTimer = null;
-
-
-// APERTURA DATABASE
-function openDB(){
-
-return new Promise((resolve,reject)=>{
-
-const request = indexedDB.open(DB_NAME,1);
-
-request.onupgradeneeded = ()=>{
-
-if(!request.result.objectStoreNames.contains(STORE_NAME)){
-
-request.result.createObjectStore(STORE_NAME);
-
-}
-
-};
-
-request.onsuccess = ()=> resolve(request.result);
-
-request.onerror = ()=> reject(request.error);
-
-});
-
-}
-
-
-// CARICA DATI
-async function loadData(){
-
-try{
-
-const db = await openDB();
-
-const tx = db.transaction(STORE_NAME,"readonly");
-
-const store = tx.objectStore(STORE_NAME);
-
-const req = store.get(DATA_KEY);
-
-return new Promise(resolve=>{
-
-req.onsuccess = ()=>{
-
-data = req.result || [];
-
-resolve();
-
-};
-
-req.onerror = ()=>{
-
-data = [];
-
-resolve();
-
-};
-
-});
-
-}catch(e){
-
-console.error("errore load",e);
-
-data = [];
-
-}
-
-}
-
-
-// SALVA SUBITO
-async function saveNow(){
-
-try{
-
-const db = await openDB();
-
-const tx = db.transaction(STORE_NAME,"readwrite");
-
-const store = tx.objectStore(STORE_NAME);
-
-store.put(data, DATA_KEY);
-
-return new Promise(resolve=>{
-
-tx.oncomplete = ()=> resolve();
-
-});
-
-}catch(e){
-
-console.error("errore saveNow",e);
-
-}
-
-}
-
-
-// SALVA AUTOMATICO
 function save(){
 
-clearTimeout(saveTimer);
-
-saveTimer = setTimeout(()=>{
-
-saveNow();
-
 localStorage.setItem(
-"backup_archivio",
+"archivio",
 JSON.stringify(data)
 );
 
-},300);
-
-}
-// CARICAMENTO
-async function loadData(){
-  try{
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME,"readonly");
-    const store = tx.objectStore(STORE_NAME);
-
-    const req = store.get(DATA_KEY);
-
-    return new Promise(resolve=>{
-      req.onsuccess = ()=>{
-        resolve(req.result || []);
-      };
-      req.onerror = ()=>{
-        resolve([]);
-      };
-    });
-
-  }catch{
-    return [];
-  }
 }
 
 /* -------------------- ELEMENTI -------------------- */
@@ -1849,105 +1716,6 @@ clearDeadlinesBtn.onclick = () => {
 
 /* -------------------- START -------------------- */
 
-// CARICA DATI DAL DATABASE
-async function loadData(){
-
-try{
-
-const db = await openDB();
-
-const tx = db.transaction(STORE_NAME,"readonly");
-
-const store = tx.objectStore(STORE_NAME);
-
-const req = store.get(DATA_KEY);
-
-return new Promise(resolve=>{
-
-req.onsuccess = ()=>{
-
-resolve(req.result || []);
-
-};
-
-req.onerror = ()=>{
-
-resolve([]);
-
-};
-
-});
-
-}catch(e){
-
-console.error("errore load",e);
-
-return [];
-
-}
-
-}
-
-
-// AVVIO APP
-async function initApp(){
-
-try{
-
-data = await loadData();
-
-if(!Array.isArray(data) || data.length===0){
-
-const backup = localStorage.getItem("backup_archivio");
-
-if(backup){
-
-data = JSON.parse(backup);
-
-console.log("recupero backup");
-
-}
-
-}
-
-if(!Array.isArray(data)) data = [];
-
 data.forEach(ensureFolderShape);
 
 render();
-
-}catch(err){
-
-console.error(err);
-
-data = [];
-
-render();
-
-}
-
-}
-
-
-// SALVA QUANDO ESCI
-window.addEventListener("beforeunload", ()=>{
-
-saveNow();
-
-});
-
-
-// SALVA SE APP VA IN BACKGROUND
-document.addEventListener("visibilitychange", ()=>{
-
-if(document.visibilityState==="hidden"){
-
-saveNow();
-
-}
-
-});
-
-
-// AVVIA APP
-initApp();
