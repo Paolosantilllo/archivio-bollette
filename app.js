@@ -1253,11 +1253,19 @@ list.innerHTML = "";
 
 pathBox.textContent = getPath();
 
-backBtn.style.display = 
-  currentPath.length ? "block" : "none";
+backBtn.style.display =
+currentPath.length ? "block" : "none";
 
-  addFileBtn.style.display = 
-  currentPath.length ? "block" : "none";
+/* mostra o nasconde pulsante PDF */
+if(currentPath.length){
+
+addFileBtn.classList.remove("hidden");
+
+}else{
+
+addFileBtn.classList.add("hidden");
+
+}
 
 applyViewMode();
 
@@ -1281,10 +1289,6 @@ const filteredFiles = files
 (file.displayName || file.name).toLowerCase().includes(searchTerm)
 );
 
-
-
-
-
 /* ---------------- CARTELLE ---------------- */
 
 filteredFolders.forEach(({ folder, index }) => {
@@ -1292,8 +1296,6 @@ filteredFolders.forEach(({ folder, index }) => {
 const badgeCount = getBillingBadgeCount(folder);
 
 const li = document.createElement("li");
-
-
 
 /* ---------- VISTA GRIGLIA ---------- */
 
