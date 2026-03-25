@@ -1849,34 +1849,25 @@ clearDeadlinesBtn.onclick = () => {
 
 /* -------------------- START -------------------- */
 
-async function initApp() {
-  try {
-    data = await loadData();
+async function loadData(){
+  try{
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME,"readonly");
+    const store = tx.objectStore(STORE_NAME);
 
-    if (!Array.isArray(data) || data.length === 0) {
-      const backup = localStorage.getItem("backup_archivio");
-      if (backup) {
-        data = JSON.parse(backup);
-        console.log("Recupero da backup");
-      }
-    }
+    const req = store.get(DATA_KEY);
 
-    if (!Array.isArray(data)) data = [];
+    return new Promise(resolve=>{
+      req.onsuccess = ()=>{
+        resolve(req.result || []);
+      };
+      req.onerror = ()=>{
+        resolve([]);
+      };
+    });
 
-    data.forEach(ensureFolderShape);
-    render();
-
-  } catch (err) {
-    console.error(err);
-
-    const backup = localStorage.getItem("backup_archivio");
-    if (backup) {
-      data = JSON.parse(backup);
-    } else {
-      data = [];
-    }
-
-    render();
+  }catch{
+    return [];
   }
 }
 window.addEventListener("beforeunload", () => {
