@@ -11,7 +11,6 @@ let selectedActionItem = null;
 let renameTarget = null;
 let editingBillingFolder = null;
 
-
 /* -------------------- SALVATAGGIO -------------------- */
 
 function save(){
@@ -59,7 +58,7 @@ viewToggleBtn.textContent = "📄";
 
 viewToggleBtn.addEventListener("click", () => {
 
-currentView = currentView === "grid" ? "list" : "grid";
+  currentView = currentView === "grid" ? "list" : "grid";
 
 localStorage.setItem("viewMode", currentView);
 
