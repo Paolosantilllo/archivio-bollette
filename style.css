@@ -314,31 +314,23 @@ main {
 /* PDF VIEWER */
 
 #pdfViewer{
-
 position:fixed;
-
 top:0;
-
 left:0;
-
 width:100%;
-
 height:100%;
-
-background:white;
-
-z-index:999;
-
+background:black;
+display:flex;
+flex-direction:column;
+z-index:9999;
 }
 
 #pdfFrame{
-
+flex:1;
 width:100%;
-
 height:100%;
-
 border:none;
-
+background:#222;
 }
 
 #pdfViewerHeader {
