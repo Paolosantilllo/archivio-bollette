@@ -911,44 +911,33 @@ function pickFolderImage(folder) {
 
 /* -------------------- VIEWER FILE -------------------- */
 
-function openFile(file) {
-  currentViewerFile = file;
+function openFile(file){
 
-  if (file.type && file.type.startsWith("image/")) {
-    window.open(file.data, "_blank");
-    return;
-  }
+currentViewerFile = file;
 
-  if (file.type !== "application/pdf") {
-    window.open(file.data, "_blank");
-    return;
-  }
+/* salva url corrente per stampa */
+currentPdfUrl = file.data;
 
-  if (currentPdfUrl) {
-    URL.revokeObjectURL(currentPdfUrl);
-    currentPdfUrl = null;
-  }
+pdfTitle.textContent =
+file.displayName || file.name;
 
-  const blob = dataUrlToBlob(file.data);
-  const url = URL.createObjectURL(blob);
+/* forza adattamento pagina */
+pdfFrame.src = file.data + "#view=FitH";
 
-  currentPdfUrl = url;
-  pdfTitle.textContent = file.displayName || file.name;
-  pdfFrame.src = url;
-  pdfViewer.classList.remove("hidden");
+pdfViewer.classList.remove("hidden");
+
 }
+function closePdfViewer(){
 
-function closePdfViewer() {
-  pdfViewer.classList.add("hidden");
-  pdfFrame.removeAttribute("src");
-  currentViewerFile = null;
+pdfViewer.classList.add("hidden");
 
-  if (currentPdfUrl) {
-    URL.revokeObjectURL(currentPdfUrl);
-    currentPdfUrl = null;
-  }
+pdfFrame.src = "";
+
+currentViewerFile = null;
+
+currentPdfUrl = null;
+
 }
-
 /* -------------------- BACKUP / RESTORE -------------------- */
 
 function downloadBackup() {
@@ -1636,17 +1625,24 @@ sharePdfBtn.onclick = async () => {
 };
 
 printPdfBtn.onclick = () => {
-  if (!currentPdfUrl) return;
 
-  const win = window.open(currentPdfUrl, "_blank");
-  if (!win) {
-    alert("Popup bloccato");
-    return;
-  }
+if(!currentViewerFile) return;
 
-  win.onload = () => {
-    win.print();
-  };
+const blob =
+dataUrlToBlob(currentViewerFile.data);
+
+const url =
+URL.createObjectURL(blob);
+
+const win =
+window.open(url,"_blank");
+
+if(win){
+
+win.onload = ()=> win.print();
+
+}
+
 };
 
 /* BILLING EDITOR */
