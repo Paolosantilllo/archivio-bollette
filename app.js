@@ -31,8 +31,6 @@ const pathBox = document.getElementById("path");
 const fileInput = document.getElementById("fileInput");
 const searchInput = document.getElementById("search");
 const viewToggleBtn = document.getElementById("viewToggleBtn");
-const sharePdfBtn = document.getElementById("sharePdfBtn");
-const printPdfBtn = document.getElementById("printPdfBtn");
 
 let currentView = localStorage.getItem("viewMode") || "grid";
 
@@ -990,7 +988,7 @@ async function restoreBackup(file) {
     data.forEach(ensureFolderShape);
 
     currentPath = [];
-    await saveNow();
+    save();
     render();
     alert("Backup ripristinato con successo");
   } catch (err) {
