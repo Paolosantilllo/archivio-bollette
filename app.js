@@ -916,12 +916,19 @@ function openFile(file){
 
 currentViewerFile = file;
 
+/* convertiamo il base64 in blob */
+const blob = dataUrlToBlob(file.data);
+
+/* creiamo url compatibile con Safari */
+const url = URL.createObjectURL(blob);
+
+currentPdfUrl = url;
+
 pdfTitle.textContent =
 file.displayName || file.name;
 
-/* per iPhone e Safari */
-pdfFrame.src =
-file.data + "#toolbar=0&navpanes=0&scrollbar=1";
+/* IMPORTANTISSIMO */
+pdfFrame.src = url;
 
 /* mostra viewer */
 pdfViewer.classList.remove("hidden");
@@ -1591,9 +1598,17 @@ closePdfBtn.onclick = () => {
 
 pdfViewer.classList.add("hidden");
 
+/* reset viewer */
 pdfFrame.src = "";
 
+if(currentPdfUrl){
+
+URL.revokeObjectURL(currentPdfUrl);
+
+}
+
 currentViewerFile = null;
+currentPdfUrl = null;
 
 };
 sharePdfBtn.onclick = async () => {
@@ -1605,18 +1620,37 @@ try{
 const blob =
 dataUrlToBlob(currentViewerFile.data);
 
-const file = new File(
+const fileObj =
+new File(
 [blob],
 currentViewerFile.name,
-{type:"application/pdf"}
+{ type:"application/pdf" }
 );
 
 if(navigator.share){
 
 await navigator.share({
-files:[file],
-title:currentViewerFile.name
+files:[fileObj],
+title: currentViewerFile.name
 });
+
+}else{
+
+/* fallback */
+const url =
+URL.createObjectURL(blob);
+
+window.open(url);
+
+}
+
+}catch(err){
+
+console.error(err);
+
+}
+
+};
 
 }else{
 
@@ -1643,16 +1677,19 @@ const url =
 URL.createObjectURL(blob);
 
 const win =
-window.open(url);
+window.open(url,"_blank");
 
 if(win){
 
-win.onload = () => win.print();
+win.onload = () => {
+
+win.print();
+
+};
 
 }
 
 };
-
 /* BILLING EDITOR */
 if (closeDeadlineEditorBtn) {
   closeDeadlineEditorBtn.onclick = closeBillingEditor;
