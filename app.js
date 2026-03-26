@@ -915,27 +915,15 @@ function openFile(file){
 
 currentViewerFile = file;
 
-/* salva url corrente per stampa */
-currentPdfUrl = file.data;
-
 pdfTitle.textContent =
 file.displayName || file.name;
 
-/* forza adattamento pagina */
-pdfFrame.src = file.data + "#view=FitH";
+/* per iPhone e Safari */
+pdfFrame.src =
+file.data + "#toolbar=0&navpanes=0&scrollbar=1";
 
+/* mostra viewer */
 pdfViewer.classList.remove("hidden");
-
-}
-function closePdfViewer(){
-
-pdfViewer.classList.add("hidden");
-
-pdfFrame.src = "";
-
-currentViewerFile = null;
-
-currentPdfUrl = null;
 
 }
 /* -------------------- BACKUP / RESTORE -------------------- */
@@ -1598,30 +1586,49 @@ closeMoveBtn.onclick = closeMoveModal;
 moveBackdrop.onclick = closeMoveModal;
 
 /* PDF VIEWER */
-closePdfBtn.onclick = closePdfViewer;
+closePdfBtn.onclick = () => {
 
+pdfViewer.classList.add("hidden");
+
+pdfFrame.src = "";
+
+currentViewerFile = null;
+
+};
 sharePdfBtn.onclick = async () => {
-  if (!currentViewerFile) return;
 
-  try {
-    const blob = dataUrlToBlob(currentViewerFile.data);
-    const sharedFile = new File([blob], currentViewerFile.name, {
-      type: currentViewerFile.type || "application/pdf"
-    });
+if(!currentViewerFile) return;
 
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [sharedFile] })) {
-      await navigator.share({
-        files: [sharedFile],
-        title: currentViewerFile.displayName || currentViewerFile.name
-      });
-      return;
-    }
+try{
 
-    alert("Condivisione non supportata su questo dispositivo");
-  } catch (err) {
-    console.error(err);
-    alert("Impossibile condividere il file");
-  }
+const blob =
+dataUrlToBlob(currentViewerFile.data);
+
+const file = new File(
+[blob],
+currentViewerFile.name,
+{type:"application/pdf"}
+);
+
+if(navigator.share){
+
+await navigator.share({
+files:[file],
+title:currentViewerFile.name
+});
+
+}else{
+
+alert("Condivisione non supportata");
+
+}
+
+}catch(err){
+
+console.error(err);
+
+}
+
 };
 
 printPdfBtn.onclick = () => {
@@ -1635,11 +1642,11 @@ const url =
 URL.createObjectURL(blob);
 
 const win =
-window.open(url,"_blank");
+window.open(url);
 
 if(win){
 
-win.onload = ()=> win.print();
+win.onload = () => win.print();
 
 }
 
