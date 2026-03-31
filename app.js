@@ -1594,28 +1594,44 @@ closeMoveBtn.onclick = closeMoveModal;
 moveBackdrop.onclick = closeMoveModal;
 
 /* PDF VIEWER */
+/* ---------------- PDF VIEWER ---------------- */
+
+/* apertura file */
+function openFile(file){
+
+currentViewerFile = file;
+
+pdfTitle.textContent =
+file.displayName || file.name;
+
+/* uso diretto base64 → compatibile iPhone */
+pdfFrame.src = file.data;
+
+pdfViewer.classList.remove("hidden");
+
+}
+
+
+/* chiudi */
 closePdfBtn.onclick = () => {
 
 pdfViewer.classList.add("hidden");
 
-/* reset viewer */
 pdfFrame.src = "";
 
-if(currentPdfUrl){
-
-URL.revokeObjectURL(currentPdfUrl);
-
-}
-
 currentViewerFile = null;
-currentPdfUrl = null;
 
 };
+
+
+/* condividi (icona iPhone) */
 sharePdfBtn.onclick = async () => {
 
 if(!currentViewerFile) return;
 
 try{
+
+if(navigator.share){
 
 const blob =
 dataUrlToBlob(currentViewerFile.data);
@@ -1627,30 +1643,10 @@ currentViewerFile.name,
 { type:"application/pdf" }
 );
 
-if(navigator.share){
-
 await navigator.share({
 files:[fileObj],
 title: currentViewerFile.name
 });
-
-}else{
-
-/* fallback */
-const url =
-URL.createObjectURL(blob);
-
-window.open(url);
-
-}
-
-}catch(err){
-
-console.error(err);
-
-}
-
-};
 
 }else{
 
@@ -1666,26 +1662,18 @@ console.error(err);
 
 };
 
+
+/* stampa */
 printPdfBtn.onclick = () => {
 
 if(!currentViewerFile) return;
 
-const blob =
-dataUrlToBlob(currentViewerFile.data);
-
-const url =
-URL.createObjectURL(blob);
-
 const win =
-window.open(url,"_blank");
+window.open(currentViewerFile.data);
 
 if(win){
 
-win.onload = () => {
-
-win.print();
-
-};
+win.onload = () => win.print();
 
 }
 
