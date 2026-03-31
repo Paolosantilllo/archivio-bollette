@@ -88,14 +88,6 @@ const editActionBtn = document.getElementById("editActionBtn");
 const deleteActionBtn = document.getElementById("deleteActionBtn");
 const cancelActionBtn = document.getElementById("cancelActionBtn");
 
-/* PDF VIEWER */
-const pdfViewer = document.getElementById("pdfViewer");
-const pdfFrame = document.getElementById("pdfFrame");
-const pdfTitle = document.getElementById("pdfTitle");
-const closePdfBtn = document.getElementById("closePdfBtn");
-const sharePdfBtn = document.getElementById("sharePdfBtn");
-const printPdfBtn = document.getElementById("printPdfBtn");
-
 /* RENAME MODAL */
 const renameModal = document.getElementById("renameModal");
 const renameBackdrop = document.getElementById("renameBackdrop");
