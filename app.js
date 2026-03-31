@@ -911,7 +911,6 @@ function pickFolderImage(folder) {
 }
 
 /* -------------------- VIEWER FILE -------------------- */
-
 function openFile(file){
 
 currentViewerFile = file;
@@ -921,11 +920,16 @@ file.displayName || file.name;
 
 /* forza adattamento larghezza */
 pdfFrame.src =
-file.data + "#view=FitH";
+file.data + "#toolbar=0&navpanes=0&scrollbar=1&view=FitH";
 
 pdfViewer.classList.remove("hidden");
 
+/* reset scroll */
+pdfFrame.style.width = "100%";
+pdfFrame.style.height = "100%";
+
 }
+
 /* -------------------- BACKUP / RESTORE -------------------- */
 
 function downloadBackup() {
@@ -1605,7 +1609,7 @@ pdfViewer.classList.remove("hidden");
 
 
 /* chiudi */
-/* CHIUDI */
+
 closePdfBtn.addEventListener("click", () => {
 
 pdfViewer.classList.add("hidden");
@@ -1629,7 +1633,7 @@ if(navigator.share){
 const blob =
 dataUrlToBlob(currentViewerFile.data);
 
-const file =
+const pdfFile =
 new File(
 [blob],
 currentViewerFile.name,
@@ -1637,7 +1641,7 @@ currentViewerFile.name,
 );
 
 await navigator.share({
-files:[file],
+files:[pdfFile],
 title: currentViewerFile.name
 });
 
@@ -1666,8 +1670,9 @@ window.open(currentViewerFile.data);
 
 if(win){
 
-win.onload = () => win.print();
-
+win.onload = () => 
+win.print();
+win.print();
 }
 
 });
