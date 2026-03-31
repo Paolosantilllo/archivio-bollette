@@ -33,6 +33,14 @@ const fileInput = document.getElementById("fileInput");
 const searchInput = document.getElementById("search");
 const viewToggleBtn = document.getElementById("viewToggleBtn");
 
+const pdfViewer = document.getElementById("pdfViewer");
+const pdfFrame = document.getElementById("pdfFrame");
+const pdfTitle = document.getElementById("pdfTitle");
+
+const closePdfBtn = document.getElementById("closePdfBtn");
+const sharePdfBtn = document.getElementById("sharePdfBtn");
+const printPdfBtn = document.getElementById("printPdfBtn");
+
 let currentView = localStorage.getItem("viewMode") || "grid";
 
 function applyViewMode(){
@@ -1613,7 +1621,8 @@ pdfViewer.classList.remove("hidden");
 
 
 /* chiudi */
-closePdfBtn.onclick = () => {
+/* CHIUDI */
+closePdfBtn.addEventListener("click", () => {
 
 pdfViewer.classList.add("hidden");
 
@@ -1621,11 +1630,11 @@ pdfFrame.src = "";
 
 currentViewerFile = null;
 
-};
+});
 
 
-/* condividi (icona iPhone) */
-sharePdfBtn.onclick = async () => {
+/* CONDIVIDI */
+sharePdfBtn.addEventListener("click", async () => {
 
 if(!currentViewerFile) return;
 
@@ -1636,35 +1645,35 @@ if(navigator.share){
 const blob =
 dataUrlToBlob(currentViewerFile.data);
 
-const fileObj =
+const file =
 new File(
 [blob],
 currentViewerFile.name,
-{ type:"application/pdf" }
+{type:"application/pdf"}
 );
 
 await navigator.share({
-files:[fileObj],
+files:[file],
 title: currentViewerFile.name
 });
 
 }else{
 
-alert("Condivisione non supportata");
+alert("Condivisione non supportata su questo dispositivo");
 
 }
 
-}catch(err){
+}catch(e){
 
-console.error(err);
+console.log(e);
 
 }
 
-};
+});
 
 
-/* stampa */
-printPdfBtn.onclick = () => {
+/* STAMPA */
+printPdfBtn.addEventListener("click", () => {
 
 if(!currentViewerFile) return;
 
@@ -1677,7 +1686,7 @@ win.onload = () => win.print();
 
 }
 
-};
+});
 /* BILLING EDITOR */
 if (closeDeadlineEditorBtn) {
   closeDeadlineEditorBtn.onclick = closeBillingEditor;
