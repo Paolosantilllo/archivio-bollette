@@ -924,21 +924,13 @@ function openFile(file){
 
 currentViewerFile = file;
 
-/* convertiamo il base64 in blob */
-const blob = dataUrlToBlob(file.data);
-
-/* creiamo url compatibile con Safari */
-const url = URL.createObjectURL(blob);
-
-currentPdfUrl = url;
-
 pdfTitle.textContent =
 file.displayName || file.name;
 
-/* IMPORTANTISSIMO */
-pdfFrame.src = url;
+/* forza adattamento larghezza */
+pdfFrame.src =
+file.data + "#view=FitH";
 
-/* mostra viewer */
 pdfViewer.classList.remove("hidden");
 
 }
