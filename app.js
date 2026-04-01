@@ -421,11 +421,10 @@ function openFile(file){
 
 currentViewerFile = file;
 
-pdfTitle.textContent =
-file.name;
+pdfTitle.textContent = file.name;
 
 
-/* PDF adattato automaticamente su iPhone */
+function loadPDF(){
 
 pdfFrame.srcdoc = `
 <html>
@@ -439,15 +438,19 @@ maximum-scale=5">
 
 <style>
 
-body{
+html,body{
+
 margin:0;
+padding:0;
+height:100%;
 background:#111;
+
 }
 
 embed{
 
 width:100%;
-height:100vh;
+height:100%;
 
 }
 
@@ -466,7 +469,27 @@ type="application/pdf">
 </html>
 `;
 
+}
+
+
+/* prima apertura */
+
+loadPDF();
+
 pdfViewer.classList.remove("hidden");
+
+
+/* aggiorna quando ruoti telefono */
+
+window.addEventListener(
+"orientationchange",
+loadPDF
+);
+
+window.addEventListener(
+"resize",
+loadPDF
+);
 
 }
 
