@@ -9,6 +9,10 @@ let currentPath = [];
 
 let currentViewerFile = null;
 
+let currentView =
+localStorage.getItem("viewMode")
+|| "grid";
+
 
 /* -------------------- ELEMENTI -------------------- */
 
@@ -48,6 +52,9 @@ document.getElementById("sharePdfBtn");
 const printPdfBtn =
 document.getElementById("printPdfBtn");
 
+const viewToggleBtn =
+document.getElementById("viewToggleBtn");
+
 
 /* -------------------- UTILS -------------------- */
 
@@ -56,6 +63,29 @@ function save(){
 localStorage.setItem(
 "archivio",
 JSON.stringify(data)
+);
+
+localStorage.setItem(
+"viewMode",
+currentView
+);
+
+}
+
+
+function ensureFolderShape(folder){
+
+if(!folder.folders)
+folder.folders = [];
+
+if(!folder.files)
+folder.files = [];
+
+if(!folder.cover)
+folder.cover = null;
+
+folder.folders.forEach(
+ensureFolderShape
 );
 
 }
@@ -86,21 +116,6 @@ return getCurrentFolder().folders;
 function getCurrentFiles(){
 
 return getCurrentFolder().files || [];
-
-}
-
-
-function ensureFolderShape(folder){
-
-if(!folder.folders)
-folder.folders = [];
-
-if(!folder.files)
-folder.files = [];
-
-folder.folders.forEach(
-ensureFolderShape
-);
 
 }
 
@@ -147,12 +162,20 @@ currentPath.length
 : "none";
 
 
+list.className =
+currentView === "grid"
+? "folderGrid"
+: "folderList";
+
+
 const folders =
 getCurrentLevel();
 
 const files =
 getCurrentFiles();
 
+
+/* CARTELLE */
 
 folders.forEach((folder,i)=>{
 
@@ -161,10 +184,106 @@ ensureFolderShape(folder);
 const li =
 document.createElement("li");
 
-li.textContent =
-"📁 " + folder.name;
+li.className =
+"swipeRow";
 
-li.onclick = ()=>{
+const card =
+document.createElement("div");
+
+card.className =
+"gridCard";
+
+const imgWrap =
+document.createElement("div");
+
+imgWrap.className =
+"gridImageWrap";
+
+if(folder.cover){
+
+const img =
+document.createElement("img");
+
+img.src =
+folder.cover;
+
+img.className =
+"gridCover";
+
+imgWrap.appendChild(img);
+
+}else{
+
+const empty =
+document.createElement("div");
+
+empty.className =
+"gridCoverEmpty";
+
+empty.textContent =
+"📁";
+
+imgWrap.appendChild(empty);
+
+}
+
+/* click immagine = cambia cover */
+
+imgWrap.onclick = e=>{
+
+e.stopPropagation();
+
+fileInput.accept =
+"image/*";
+
+fileInput.onchange = ev=>{
+
+const file =
+ev.target.files[0];
+
+if(!file) return;
+
+const reader =
+new FileReader();
+
+reader.onload = ()=>{
+
+folder.cover =
+reader.result;
+
+save();
+
+render();
+
+};
+
+reader.readAsDataURL(file);
+
+};
+
+fileInput.click();
+
+};
+
+
+const title =
+document.createElement("div");
+
+title.className =
+"gridTitle";
+
+title.textContent =
+folder.name;
+
+
+card.appendChild(imgWrap);
+
+card.appendChild(title);
+
+
+/* apri cartella */
+
+card.onclick = ()=>{
 
 currentPath.push(i);
 
@@ -172,19 +291,28 @@ render();
 
 };
 
+
+li.appendChild(card);
+
 list.appendChild(li);
 
 });
 
+
+/* FILE */
 
 files.forEach((file,i)=>{
 
 const li =
 document.createElement("li");
 
+li.className =
+"fileItem";
+
 li.textContent =
 "📄 " +
 file.name.replace(".pdf","");
+
 
 li.onclick = ()=>{
 
@@ -195,6 +323,7 @@ openFile(file);
 list.appendChild(li);
 
 });
+
 
 save();
 
@@ -214,7 +343,8 @@ getCurrentLevel().push({
 
 name,
 folders:[],
-files:[]
+files:[],
+cover:null
 
 });
 
@@ -236,10 +366,8 @@ render();
 
 addFileBtn.onclick = ()=>{
 
-fileInput.click();
-
-};
-
+fileInput.accept =
+"application/pdf,image/*";
 
 fileInput.onchange = e => {
 
@@ -268,6 +396,24 @@ reader.readAsDataURL(file);
 
 };
 
+fileInput.click();
+
+};
+
+
+/* -------------------- VISTA -------------------- */
+
+viewToggleBtn.onclick = ()=>{
+
+currentView =
+currentView === "grid"
+? "list"
+: "grid";
+
+render();
+
+};
+
 
 /* -------------------- PDF -------------------- */
 
@@ -278,7 +424,6 @@ currentViewerFile = file;
 pdfTitle.textContent =
 file.name;
 
-/* adattamento automatico */
 pdfFrame.src =
 file.data +
 "#toolbar=0&view=FitH";
@@ -386,4 +531,6 @@ ensureFolderShape
 
 render();
 
-console.log("APP PRONTA");
+console.log(
+"APP PRONTA"
+);
