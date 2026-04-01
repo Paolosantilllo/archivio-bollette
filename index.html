@@ -1,12 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="it">
 
 <head>
 
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <title>Archivio Bollette</title>
@@ -33,28 +30,16 @@
 
 <div class="headerActions">
 
-<button
-id="viewToggleBtn"
-title="Cambia vista">
-
+<button id="viewToggleBtn" title="Vista griglia / elenco">
 🔲
-
 </button>
 
-<button
-id="backupBtn"
-title="Backup">
-
+<button id="backupBtn" title="Backup">
 💾
-
 </button>
 
-<button
-id="restoreBtn"
-title="Ripristina">
-
+<button id="restoreBtn" title="Ripristina">
 📥
-
 </button>
 
 </div>
@@ -78,21 +63,18 @@ placeholder="🔍 Cerca documento">
 
 </div>
 
-<ul id="folders"></ul>
+<ul id="folders" class="folderGrid"></ul>
 
 </main>
+
 <div class="floatingButtons">
 
-<button id="addFolder">
-
+<button id="addFolder" title="Nuova cartella">
 📁
-
 </button>
 
-<button id="addFile" class="hidden">
-
+<button id="addFile" title="Aggiungi PDF">
 📄
-
 </button>
 
 </div>
@@ -109,7 +91,7 @@ id="restoreInput"
 accept="application/json"
 hidden>
 
-<!-- MENU AZIONI -->
+<!-- ACTION SHEET -->
 
 <div id="actionSheet">
 
@@ -118,29 +100,21 @@ hidden>
 <div id="actionSheetPanel">
 
 <button id="renameAction" class="actionBtn">
-
 Rinomina
-
 </button>
 
 <button id="moveAction" class="actionBtn">
-
 Sposta
-
 </button>
 
 <button id="deleteAction" class="actionBtn deleteAction">
-
 Elimina
-
 </button>
 
 <div class="cancelWrap">
 
 <button id="cancelAction" class="cancelBtn">
-
 Annulla
-
 </button>
 
 </div>
@@ -149,22 +123,18 @@ Annulla
 
 </div>
 
-<!-- VISUALIZZATORE PDF -->
+<!-- PDF VIEWER -->
 
 <div id="pdfViewer" class="hidden">
 
 <div id="pdfViewerHeader">
 
 <button id="closePdfBtn">
-
 Chiudi
-
 </button>
 
 <div id="pdfTitle">
-
 PDF
-
 </div>
 
 <div class="pdfActions">
@@ -185,7 +155,7 @@ PDF
 
 </div>
 
-<!-- EDITOR SCADENZE -->
+<!-- MODIFICA CARTELLA -->
 
 <div id="deadlineEditor" class="hidden">
 
@@ -198,9 +168,7 @@ PDF
 <h3>Modifica cartella</h3>
 
 <button id="closeDeadlineEditorBtn">
-
 ✕
-
 </button>
 
 </div>
@@ -252,21 +220,15 @@ id="deadlinePrefixInput">
 <div class="deadlineButtons">
 
 <button id="saveDeadlineBtn" class="primaryBtn">
-
 Salva
-
 </button>
 
 <button id="replaceDeadlinesBtn" class="secondaryBtn">
-
 Sostituisci scadenza
-
 </button>
 
 <button id="clearDeadlinesBtn" class="dangerBtn">
-
 Elimina scadenze
-
 </button>
 
 </div>
@@ -290,15 +252,11 @@ Elimina scadenze
 <div class="renameButtons">
 
 <button id="renameCancel">
-
 Annulla
-
 </button>
 
 <button id="renameConfirm">
-
 OK
-
 </button>
 
 </div>
@@ -320,9 +278,7 @@ OK
 <h3>Sposta</h3>
 
 <button id="closeMoveBtn">
-
 ✕
-
 </button>
 
 </div>
@@ -353,15 +309,11 @@ placeholder="Nome cartella">
 <div class="folderButtons">
 
 <button id="folderCancelBtn">
-
 Annulla
-
 </button>
 
 <button id="folderConfirmBtn">
-
 Salva
-
 </button>
 
 </div>
