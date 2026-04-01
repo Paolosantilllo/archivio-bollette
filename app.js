@@ -424,12 +424,20 @@ currentViewerFile = file;
 pdfTitle.textContent =
 file.name;
 
+
+/* PDF adattato alla larghezza schermo */
+
 pdfFrame.src =
 file.data +
-"#toolbar=0&view=FitH";
+"#toolbar=0&zoom=page-width";
 
-pdfViewer.classList
-.remove("hidden");
+
+pdfFrame.style.width = "100%";
+pdfFrame.style.height = "100%";
+pdfFrame.style.border = "none";
+
+
+pdfViewer.classList.remove("hidden");
 
 }
 
