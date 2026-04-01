@@ -60,11 +60,20 @@ document.getElementById("viewToggleBtn");
 
 function save(){
 
+try{
+
 localStorage.setItem(
 "archivio",
 JSON.stringify(data)
 );
 
+}catch(e){
+
+console.warn("memoria piena");
+
+}
+
+}
 localStorage.setItem(
 "viewMode",
 currentView
@@ -576,3 +585,48 @@ render();
 console.log(
 "APP PRONTA"
 );
+function enableSwipe(li,onRename,onMove,onDelete){
+
+let startX = 0;
+
+li.addEventListener("touchstart",e=>{
+
+startX = e.touches[0].clientX;
+
+});
+
+li.addEventListener("touchend",e=>{
+
+let endX = e.changedTouches[0].clientX;
+
+let diff = startX - endX;
+
+
+/* swipe sinistra */
+
+if(diff > 60){
+
+showActions();
+
+}
+
+});
+
+
+function showActions(){
+
+const action = prompt(
+
+"1 rinomina\n2 sposta\n3 elimina"
+
+);
+
+if(action=="1") onRename();
+
+if(action=="2" && onMove) onMove();
+
+if(action=="3") onDelete();
+
+}
+
+}
