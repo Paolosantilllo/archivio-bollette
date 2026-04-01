@@ -425,17 +425,46 @@ pdfTitle.textContent =
 file.name;
 
 
-/* PDF adattato alla larghezza schermo */
+/* PDF adattato automaticamente su iPhone */
 
-pdfFrame.src =
-file.data +
-"#toolbar=0&zoom=page-width";
+pdfFrame.srcdoc = `
+<html>
 
+<head>
 
-pdfFrame.style.width = "100%";
-pdfFrame.style.height = "100%";
-pdfFrame.style.border = "none";
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=5">
 
+<style>
+
+body{
+margin:0;
+background:#111;
+}
+
+embed{
+
+width:100%;
+height:100vh;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<embed
+src="${file.data}"
+type="application/pdf">
+
+</body>
+
+</html>
+`;
 
 pdfViewer.classList.remove("hidden");
 
@@ -477,24 +506,6 @@ files:[pdfFile]
 });
 
 }
-
-};
-
-
-printPdfBtn.onclick = ()=>{
-
-if(!currentViewerFile) return;
-
-const win =
-window.open(
-currentViewerFile.data
-);
-
-win.onload = ()=>{
-
-win.print();
-
-};
 
 };
 
