@@ -190,75 +190,67 @@ folders.forEach((folder,i)=>{
 
 ensureFolderShape(folder);
 
-const li =
-document.createElement("li");
+const li = document.createElement("li");
 
-li.className =
-"swipeRow";
+li.className = "swipeRow";
 
-const card =
-document.createElement("div");
 
-card.className =
-"gridCard";
+/* CARD */
 
-const imgWrap =
-document.createElement("div");
+const card = document.createElement("div");
 
-imgWrap.className =
-"gridImageWrap";
+card.className = "gridCard";
+
+
+/* COVER */
+
+const imgWrap = document.createElement("div");
+
+imgWrap.className = "gridImageWrap";
+
 
 if(folder.cover){
 
-const img =
-document.createElement("img");
+const img = document.createElement("img");
 
-img.src =
-folder.cover;
+img.src = folder.cover;
 
-img.className =
-"gridCover";
+img.className = "gridCover";
 
 imgWrap.appendChild(img);
 
 }else{
 
-const empty =
-document.createElement("div");
+const empty = document.createElement("div");
 
-empty.className =
-"gridCoverEmpty";
+empty.className = "gridCoverEmpty";
 
-empty.textContent =
-"📁";
+empty.textContent = "📁";
 
 imgWrap.appendChild(empty);
 
 }
 
-/* click immagine = cambia cover */
+
+/* cambia immagine cartella */
 
 imgWrap.onclick = e=>{
 
 e.stopPropagation();
 
-fileInput.accept =
-"image/*";
+fileInput.accept = "image/*";
 
 fileInput.onchange = ev=>{
 
-const file =
-ev.target.files[0];
+const file = ev.target.files[0];
 
 if(!file) return;
 
-const reader =
-new FileReader();
+const reader = new FileReader();
 
 reader.onload = ()=>{
 
-folder.cover =
-reader.result;
+folder.cover = reader.result;
 
 save();
 
@@ -275,14 +267,13 @@ fileInput.click();
 };
 
 
-const title =
-document.createElement("div");
+/* titolo */
 
-title.className =
-"gridTitle";
+const title = document.createElement("div");
 
-title.textContent =
-folder.name;
+title.className = "gridTitle";
+
+title.textContent = folder.name;
 
 
 card.appendChild(imgWrap);
@@ -303,6 +294,50 @@ render();
 
 li.appendChild(card);
 
+
+/* SWIPE CARTELLA */
+
+enableSwipe(
+
+li,
+
+()=>{
+
+const nuovo = prompt(
+
+"Nuovo nome",
+
+folder.name
+
+);
+
+if(nuovo){
+
+folder.name = nuovo;
+
+render();
+
+}
+
+},
+
+null,
+
+()=>{
+
+if(confirm("Eliminare cartella?")){
+
+folders.splice(i,1);
+
+render();
+
+}
+
+}
+
+);
+
+
 list.appendChild(li);
 
 });
@@ -312,11 +347,9 @@ list.appendChild(li);
 
 files.forEach((file,i)=>{
 
-const li =
-document.createElement("li");
+const li = document.createElement("li");
 
-li.className =
-"fileItem";
+li.className = "fileItem";
 
 li.textContent =
 "📄 " +
@@ -328,6 +361,74 @@ li.onclick = ()=>{
 openFile(file);
 
 };
+
+
+/* SWIPE PDF */
+
+enableSwipe(
+
+li,
+
+()=>{
+
+const nuovo = prompt(
+
+"Nuovo nome",
+
+file.name
+
+);
+
+if(nuovo){
+
+file.name = nuovo;
+
+render();
+
+}
+
+},
+
+()=>{
+
+const dest = prompt(
+
+"Indice cartella destinazione"
+
+);
+
+if(dest!==null){
+
+const folder = getCurrentLevel()[dest];
+
+if(folder){
+
+folder.files.push(file);
+
+files.splice(i,1);
+
+render();
+
+}
+
+}
+
+},
+
+()=>{
+
+if(confirm("Eliminare file?")){
+
+files.splice(i,1);
+
+render();
+
+}
+
+}
+
+);
+
 
 list.appendChild(li);
 
