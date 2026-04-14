@@ -675,229 +675,46 @@ main {
     font-size: 12px;
   }
 }
-/* SWIPE FILE ACTIONS */
+/* SWIPE iOS STYLE DEFINITIVO */
 
-.fileSwipeWrap {
+.swipeRow {
   position: relative;
+  overflow: hidden;
   margin: 6px 10px;
   border-radius: 16px;
-  overflow: hidden;
+}
+
+.swipeContent {
   background: #e9e9ef;
-}
-
-.fileSwipeActions {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: stretch;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.fileSwipeWrap.open .fileSwipeActions {
-  opacity: 1;
-}
-
-.fileSwipeBtn {
-  border: none;
-  color: white;
-  font-size: 14px;
-  padding: 0 14px;
-  min-width: 74px;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.fileSwipeBtn.rename {
-  background: #ff9500;
-}
-
-.fileSwipeBtn.move {
-  background: #007aff;
-}
-
-.fileSwipeBtn.delete {
-  background: #ff3b30;
-}
-
-.fileSwipeContent {
-  position: relative;
-  z-index: 2;
-  transition: transform 0.2s ease;
+  border-radius: 16px;
+  transition: transform 0.25s ease;
   touch-action: pan-y;
 }
 
-.fileSwipeWrap.open .fileSwipeContent {
-  transform: translateX(-222px);
-}
-/* vista lista */
+/* bottoni dietro */
 
-#folders.folderList {
-  display: block;
-  padding: 0 10px;
-}
-
-.folderList .gridCard {
-
+.swipeActions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   display: flex;
-
-  flex-direction: row;
-
-  align-items: center;
-
-  gap: 12px;
-
-  min-height: auto;
-
-  padding: 10px;
-
 }
 
-.folderList .gridImageWrap {
-
-  width: 55px;
-
-  height: 55px;
-
-  aspect-ratio: auto;
-
-  flex-shrink: 0;
-
+.swipeActions button {
+  border: none;
+  padding: 0 18px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
 }
 
-.folderList .gridTitle {
+/* colori */
 
-  font-size: 16px;
-
-  font-weight: 600;
-
-}
-/* LISTA COMPATTA */
-
-.folderList .fileItem,
-.folderList .folderItem {
-
-display:flex;
-align-items:center;
-gap:10px;
-
-background:#e9e9ef;
-
-padding:10px 12px;
-
-margin:6px 10px;
-
-border-radius:12px;
-
-font-size:15px;
-
+.renameBtn {
+  background: #ff9500;
 }
 
-.folderIcon{
-
-font-size:18px;
-
-width:22px;
-
-text-align:center;
-
-}
-
-.folderName{
-
-flex:1;
-
-word-break:break-word;
-
-}
-/* SWIPE IOS STYLE */
-
-.swipeRow{
-
-position:relative;
-
-overflow:hidden;
-
-margin-bottom:12px;
-
-border-radius:16px;
-
-}
-
-
-.swipeContent{
-
-background:white;
-
-padding:18px;
-
-border-radius:16px;
-
-transition:0.3s;
-
-font-size:18px;
-
-display:flex;
-
-align-items:center;
-
-gap:12px;
-
-}
-
-
-.swipeActions{
-
-position:absolute;
-
-right:0;
-
-top:0;
-
-bottom:0;
-
-display:flex;
-
-}
-
-
-.swipeActions button{
-
-border:none;
-
-padding:0 18px;
-
-font-size:20px;
-
-cursor:pointer;
-
-}
-
-
-.renameBtn{
-
-background:#007aff;
-
-color:white;
-
-}
-
-
-.deleteBtn{
-
-background:#ff3b30;
-
-color:white;
-
-}
-
-
-.swipeRow:hover .swipeContent{
-
-transform:translateX(-120px);
-
+.deleteBtn {
+  background: #ff3b30;
 }
