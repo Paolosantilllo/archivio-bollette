@@ -25,13 +25,14 @@ request.onerror = () => {
 
 let currentFolderId = null;
 let currentViewerFile = null;
-
+let pathStack = [];
 
 /* -------------------- ELEMENTI -------------------- */
 
 const list = document.getElementById("folders");
 const addFolderBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
+const backBtn = document.getElementById("backBtn");
 const fileInput = document.getElementById("fileInput");
 
 const pdfViewer = document.getElementById("pdfViewer");
@@ -68,11 +69,11 @@ function render(){
       const li = document.createElement("li");
       li.textContent = "📁 " + folder.name;
 
-      li.onclick = () => {
-        currentFolderId = folder.id;
-        render();
-      };
-
+li.onclick = () => {
+  pathStack.push(currentFolderId);
+  currentFolderId = folder.id;
+  render();
+};
       enableSwipe(li,
         ()=>renameFolder(folder),
         null,
@@ -137,6 +138,15 @@ addFileBtn.onclick = ()=>{
     const file = e.target.files[0];
     if(!file) return;
 
+    /* reset input (importantissimo) */
+    fileInput.value = "";
+
+    /* 🚫 blocco file troppo grandi */
+    if(file.size > 5 * 1024 * 1024){
+      alert("PDF troppo grande (max 5MB)");
+      return;
+    }
+
     const reader = new FileReader();
 
     reader.onload = ()=>{
@@ -144,12 +154,17 @@ addFileBtn.onclick = ()=>{
       const tx = db.transaction("files","readwrite");
 
       tx.objectStore("files").add({
-        name:file.name,
-        data:reader.result,
-        parent: currentFolderId
+        name: file.name,
+        data: reader.result,
+        parent: currentFolderId,
+        type: "pdf",
+        created: Date.now()
       });
 
-      tx.oncomplete = render;
+      tx.oncomplete = ()=>{
+        render();
+      };
+
     };
 
     reader.readAsDataURL(file);
