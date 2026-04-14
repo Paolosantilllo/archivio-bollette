@@ -1,19 +1,35 @@
-/* -------------------- DATI -------------------- */
+/* -------------------- DATABASE -------------------- */
 
-let data = JSON.parse(localStorage.getItem("archivio")) || [];
+let db;
 
-let currentPath = [];
+const request = indexedDB.open("ArchivioDB", 1);
+
+request.onupgradeneeded = e => {
+  db = e.target.result;
+
+  db.createObjectStore("folders", { keyPath: "id", autoIncrement: true });
+  db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
+};
+
+request.onsuccess = e => {
+  db = e.target.result;
+  init();
+};
+
+request.onerror = () => {
+  alert("Errore database");
+};
+
+
+/* -------------------- STATO -------------------- */
+
+let currentFolderId = null;
 let currentViewerFile = null;
-
-let currentView =
-  localStorage.getItem("viewMode") || "grid";
 
 
 /* -------------------- ELEMENTI -------------------- */
 
 const list = document.getElementById("folders");
-const pathBox = document.getElementById("path");
-const backBtn = document.getElementById("backBtn");
 const addFolderBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
 const fileInput = document.getElementById("fileInput");
@@ -24,58 +40,11 @@ const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
 const sharePdfBtn = document.getElementById("sharePdfBtn");
 
-const viewToggleBtn = document.getElementById("viewToggleBtn");
 
+/* -------------------- INIT -------------------- */
 
-/* -------------------- UTILS -------------------- */
-
-function save(){
-  try{
-    localStorage.setItem("archivio", JSON.stringify(data));
-    localStorage.setItem("viewMode", currentView);
-  }catch(e){
-    console.warn("memoria piena");
-  }
-}
-
-function ensureFolderShape(folder){
-  if(!folder.folders) folder.folders = [];
-  if(!folder.files) folder.files = [];
-  if(!folder.cover) folder.cover = null;
-
-  folder.folders.forEach(ensureFolderShape);
-}
-
-function getCurrentFolder(){
-  let folder = { folders:data };
-
-  for(const i of currentPath){
-    folder = folder.folders[i];
-  }
-
-  return folder;
-}
-
-function getCurrentLevel(){
-  return getCurrentFolder().folders;
-}
-
-function getCurrentFiles(){
-  return getCurrentFolder().files || [];
-}
-
-function getPath(){
-  if(!currentPath.length) return "Home";
-
-  let names = ["Home"];
-  let folder = { folders:data };
-
-  for(const i of currentPath){
-    folder = folder.folders[i];
-    names.push(folder.name);
-  }
-
-  return names.join(" / ");
+function init(){
+  render();
 }
 
 
@@ -84,193 +53,109 @@ function getPath(){
 function render(){
 
   list.innerHTML = "";
-  pathBox.textContent = getPath();
 
-  backBtn.style.display = currentPath.length ? "block" : "none";
-  addFileBtn.style.display = currentPath.length ? "block" : "none";
+  const tx = db.transaction(["folders","files"], "readonly");
 
-  list.className =
-    currentView === "grid" ? "folderGrid" : "folderList";
+  const folderStore = tx.objectStore("folders");
+  const fileStore = tx.objectStore("files");
 
-  const folders = getCurrentLevel();
-  const files = getCurrentFiles();
+  folderStore.getAll().onsuccess = e => {
 
-  /* CARTELLE */
-  folders.forEach((folder,i)=>{
+    const folders = e.target.result.filter(f => f.parent === currentFolderId);
 
-    ensureFolderShape(folder);
+    folders.forEach(folder => {
 
-    const li = document.createElement("li");
-    li.className = "swipeRow";
+      const li = document.createElement("li");
+      li.textContent = "📁 " + folder.name;
 
-    const card = document.createElement("div");
-    card.className = "gridCard";
-
-    const imgWrap = document.createElement("div");
-    imgWrap.className = "gridImageWrap";
-
-    if(folder.cover){
-      const img = document.createElement("img");
-      img.src = folder.cover;
-      img.className = "gridCover";
-      imgWrap.appendChild(img);
-    }else{
-      const empty = document.createElement("div");
-      empty.className = "gridCoverEmpty";
-      empty.textContent = "📁";
-      imgWrap.appendChild(empty);
-    }
-
-    /* cambia immagine */
-    imgWrap.onclick = e=>{
-      e.stopPropagation();
-
-      fileInput.accept = "image/*";
-
-      fileInput.onchange = ev=>{
-        const file = ev.target.files[0];
-        if(!file) return;
-
-        const reader = new FileReader();
-        reader.onload = ()=>{
-          folder.cover = reader.result;
-          save();
-          render();
-        };
-        reader.readAsDataURL(file);
+      li.onclick = () => {
+        currentFolderId = folder.id;
+        render();
       };
 
-      fileInput.click();
-    };
+      enableSwipe(li,
+        ()=>renameFolder(folder),
+        null,
+        ()=>deleteFolder(folder)
+      );
 
-    const title = document.createElement("div");
-    title.className = "gridTitle";
-    title.textContent = folder.name;
+      list.appendChild(li);
+    });
+  };
 
-    card.appendChild(imgWrap);
-    card.appendChild(title);
+  fileStore.getAll().onsuccess = e => {
 
-    card.onclick = ()=>{
-      currentPath.push(i);
-      render();
-    };
+    const files = e.target.result.filter(f => f.parent === currentFolderId);
 
-    li.appendChild(card);
+    files.forEach(file => {
 
-    /* SWIPE CARTELLA */
-    enableSwipe(
-      li,
-      ()=>{ // rinomina
-        const nuovo = prompt("Nuovo nome", folder.name);
-        if(nuovo){
-          folder.name = nuovo;
-          render();
-        }
-      },
-      null,
-      ()=>{ // elimina
-        if(confirm("Eliminare cartella?")){
-          folders.splice(i,1);
-          render();
-        }
-      }
-    );
+      const li = document.createElement("li");
+      li.textContent = "📄 " + file.name;
 
-    list.appendChild(li);
-  });
+      li.onclick = () => openFile(file);
 
-  /* FILE */
-  files.forEach((file,i)=>{
+      enableSwipe(li,
+        ()=>renameFile(file),
+        null,
+        ()=>deleteFile(file)
+      );
 
-    const li = document.createElement("li");
-    li.className = "fileItem";
-    li.textContent = "📄 " + file.name.replace(".pdf","");
-
-    li.onclick = ()=>{
-      openFile(file);
-    };
-
-    /* SWIPE FILE */
-    enableSwipe(
-      li,
-      ()=>{ // rinomina
-        const nuovo = prompt("Nuovo nome", file.name);
-        if(nuovo){
-          file.name = nuovo;
-          render();
-        }
-      },
-      null,
-      ()=>{ // elimina
-        if(confirm("Eliminare file?")){
-          files.splice(i,1);
-          render();
-        }
-      }
-    );
-
-    list.appendChild(li);
-  });
-
-  save();
+      list.appendChild(li);
+    });
+  };
 }
 
 
 /* -------------------- CARTELLE -------------------- */
 
-addFolderBtn.onclick = ()=>{
+function addFolder(){
+
   const name = prompt("Nome cartella");
   if(!name) return;
 
-  getCurrentLevel().push({
+  const tx = db.transaction("folders","readwrite");
+
+  tx.objectStore("folders").add({
     name,
-    folders:[],
-    files:[],
-    cover:null
+    parent: currentFolderId
   });
 
-  render();
-};
+  tx.oncomplete = render;
+}
 
-backBtn.onclick = ()=>{
-  currentPath.pop();
-  render();
-};
+addFolderBtn.onclick = addFolder;
 
 
 /* -------------------- FILE -------------------- */
 
 addFileBtn.onclick = ()=>{
 
-  fileInput.accept = "application/pdf,image/*";
+  fileInput.accept = "application/pdf";
 
-  fileInput.onchange = e=>{
+  fileInput.onchange = e => {
+
     const file = e.target.files[0];
     if(!file) return;
 
     const reader = new FileReader();
+
     reader.onload = ()=>{
-      getCurrentFiles().push({
+
+      const tx = db.transaction("files","readwrite");
+
+      tx.objectStore("files").add({
         name:file.name,
-        data:reader.result
+        data:reader.result,
+        parent: currentFolderId
       });
-      render();
+
+      tx.oncomplete = render;
     };
 
     reader.readAsDataURL(file);
   };
 
   fileInput.click();
-};
-
-
-/* -------------------- VISTA -------------------- */
-
-viewToggleBtn.onclick = ()=>{
-  currentView =
-    currentView === "grid" ? "list" : "grid";
-
-  render();
 };
 
 
@@ -281,36 +166,23 @@ function openFile(file){
   currentViewerFile = file;
   pdfTitle.textContent = file.name;
 
-  function loadPDF(){
-    pdfFrame.srcdoc = `
-    <html>
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-    html,body{margin:0;height:100%;}
-    embed{width:100%;height:100%;}
-    </style>
-    </head>
-    <body>
-    <embed src="${file.data}" type="application/pdf">
-    </body>
-    </html>`;
-  }
+  pdfFrame.srcdoc = `
+  <html>
+  <body style="margin:0">
+  <embed src="${file.data}" width="100%" height="100%">
+  </body>
+  </html>
+  `;
 
-  loadPDF();
   pdfViewer.classList.remove("hidden");
-
-  window.onresize = loadPDF;
-  window.onorientationchange = loadPDF;
 }
 
 closePdfBtn.onclick = ()=>{
   pdfViewer.classList.add("hidden");
-  pdfFrame.src = "";
 };
 
 
-/* SHARE */
+/* -------------------- SHARE -------------------- */
 
 sharePdfBtn.onclick = async ()=>{
 
@@ -326,9 +198,7 @@ sharePdfBtn.onclick = async ()=>{
       {type:"application/pdf"}
     );
 
-    await navigator.share({
-      files:[pdfFile]
-    });
+    await navigator.share({ files:[pdfFile] });
   }
 };
 
@@ -349,6 +219,45 @@ function dataUrlToBlob(url){
 }
 
 
+/* -------------------- AZIONI -------------------- */
+
+function renameFolder(folder){
+  const name = prompt("Nuovo nome", folder.name);
+  if(!name) return;
+
+  const tx = db.transaction("folders","readwrite");
+  folder.name = name;
+  tx.objectStore("folders").put(folder);
+  tx.oncomplete = render;
+}
+
+function deleteFolder(folder){
+  if(!confirm("Eliminare cartella?")) return;
+
+  const tx = db.transaction("folders","readwrite");
+  tx.objectStore("folders").delete(folder.id);
+  tx.oncomplete = render;
+}
+
+function renameFile(file){
+  const name = prompt("Nuovo nome", file.name);
+  if(!name) return;
+
+  const tx = db.transaction("files","readwrite");
+  file.name = name;
+  tx.objectStore("files").put(file);
+  tx.oncomplete = render;
+}
+
+function deleteFile(file){
+  if(!confirm("Eliminare file?")) return;
+
+  const tx = db.transaction("files","readwrite");
+  tx.objectStore("files").delete(file.id);
+  tx.oncomplete = render;
+}
+
+
 /* -------------------- SWIPE -------------------- */
 
 function enableSwipe(li,onRename,onMove,onDelete){
@@ -364,6 +273,7 @@ function enableSwipe(li,onRename,onMove,onDelete){
     let diff = startX - endX;
 
     if(diff > 60){
+
       const action = prompt(
         "1 Rinomina\n3 Elimina"
       );
@@ -373,11 +283,3 @@ function enableSwipe(li,onRename,onMove,onDelete){
     }
   });
 }
-
-
-/* -------------------- AVVIO -------------------- */
-
-data.forEach(ensureFolderShape);
-render();
-
-console.log("APP PRONTA");
