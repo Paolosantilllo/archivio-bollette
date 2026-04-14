@@ -60,29 +60,31 @@ function render(){
   const folderStore = tx.objectStore("folders");
   const fileStore = tx.objectStore("files");
 
+  /* ---------------- CARTELLE ---------------- */
+
   folderStore.getAll().onsuccess = e => {
 
     const folders = e.target.result.filter(f => f.parent === currentFolderId);
 
     folders.forEach(folder => {
 
-      const li = document.createElement("li");
-      li.textContent = "📁 " + folder.name;
-
-li.onclick = () => {
-  pathStack.push(currentFolderId);
-  currentFolderId = folder.id;
-  render();
-};
-      enableSwipe(li,
-        ()=>renameFolder(folder),
+      const li = createSwipeRow(
+        "📁 " + folder.name,
+        () => {
+          pathStack.push(currentFolderId);
+          currentFolderId = folder.id;
+          render();
+        },
+        () => renameFolder(folder),
         null,
-        ()=>deleteFolder(folder)
+        () => deleteFolder(folder)
       );
 
       list.appendChild(li);
     });
   };
+
+  /* ---------------- FILE ---------------- */
 
   fileStore.getAll().onsuccess = e => {
 
@@ -90,22 +92,18 @@ li.onclick = () => {
 
     files.forEach(file => {
 
-      const li = document.createElement("li");
-      li.textContent = "📄 " + file.name;
-
-      li.onclick = () => openFile(file);
-
-      enableSwipe(li,
-        ()=>renameFile(file),
+      const li = createSwipeRow(
+        "📄 " + file.name,
+        () => openFile(file),
+        () => renameFile(file),
         null,
-        ()=>deleteFile(file)
+        () => deleteFile(file)
       );
 
       list.appendChild(li);
     });
   };
 }
-
 
 /* -------------------- CARTELLE -------------------- */
 
@@ -275,26 +273,155 @@ function deleteFile(file){
 
 /* -------------------- SWIPE -------------------- */
 
-function enableSwipe(li,onRename,onMove,onDelete){
+
+
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let open = false;
+
+  const MAX = 140;
+
+  const actions = document.createElement("div");
+  actions.className = "swipeActions";
+
+  const renameBtn = document.createElement("button");
+  renameBtn.className = "renameBtn";
+  renameBtn.textContent = "Rinomina";
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "deleteBtn";
+  deleteBtn.textContent = "Elimina";
+
+  renameBtn.onclick = e=>{
+    e.stopPropagation();
+    onRename();
+  };
+
+  deleteBtn.onclick = e=>{
+    e.stopPropagation();
+    onDelete();
+  };
+
+  actions.appendChild(renameBtn);
+  actions.appendChild(deleteBtn);
+  container.appendChild(actions);
+
+  content.classList.add("swipeContent");
+
+  container.addEventListener("touchstart", e=>{
+    startX = e.touches[0].clientX;
+    isDragging = true;
+  });
+
+  container.addEventListener("touchmove", e=>{
+    if(!isDragging) return;
+
+    currentX = e.touches[0].clientX;
+    let diff = startX - currentX;
+
+    if(diff < 0) diff = 0;
+
+    if(diff > MAX){
+      diff = MAX + (diff - MAX) / 4;
+    }
+
+    content.style.transform = `translateX(-${diff}px)`;
+  });
+
+  container.addEventListener("touchend", ()=>{
+    isDragging = false;
+
+    let diff = startX - currentX;
+
+    if(diff > 70){
+      openSwipe();
+    }else{
+      closeSwipe();
+    }
+  });
+
+  function openSwipe(){
+    content.style.transform = `translateX(-${MAX}px)`;
+    open = true;
+  }
+
+  function closeSwipe(){
+    content.style.transform = "translateX(0)";
+    open = false;
+  }
+
+  document.addEventListener("touchstart", e=>{
+    if(open && !container.contains(e.target)){
+      closeSwipe();
+    }
+  });
+
+  content.addEventListener("click", ()=>{
+    if(open){
+      closeSwipe();
+    }
+  });
+
+}
+function createSwipeRow(text, onClick, onRename, onMove, onDelete){
+
+  const li = document.createElement("li");
+  li.className = "swipeRow";
+
+  const content = document.createElement("div");
+  content.className = "swipeContent";
+  content.textContent = text;
+
+  const actions = document.createElement("div");
+  actions.className = "swipeActions";
+
+  if(onRename){
+    const btn = document.createElement("button");
+    btn.className = "renameBtn";
+    btn.textContent = "✏️";
+    btn.onclick = (e)=>{ e.stopPropagation(); onRename(); };
+    actions.appendChild(btn);
+  }
+
+  if(onDelete){
+    const btn = document.createElement("button");
+    btn.className = "deleteBtn";
+    btn.textContent = "🗑";
+    btn.onclick = (e)=>{ e.stopPropagation(); onDelete(); };
+    actions.appendChild(btn);
+  }
+
+  li.appendChild(actions);
+  li.appendChild(content);
+
+  content.onclick = onClick;
+
+  /* SWIPE TOUCH */
 
   let startX = 0;
 
-  li.addEventListener("touchstart",e=>{
+  content.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
   });
 
-  li.addEventListener("touchend",e=>{
-    let endX = e.changedTouches[0].clientX;
-    let diff = startX - endX;
+  content.addEventListener("touchmove", e=>{
+    let diff = startX - e.touches[0].clientX;
 
-    if(diff > 60){
-
-      const action = prompt(
-        "1 Rinomina\n3 Elimina"
-      );
-
-      if(action=="1") onRename();
-      if(action=="3") onDelete();
+    if(diff > 0){
+      content.style.transform = `translateX(-${Math.min(diff,120)}px)`;
     }
   });
+
+  content.addEventListener("touchend", e=>{
+    let diff = startX - e.changedTouches[0].clientX;
+
+    if(diff > 60){
+      content.style.transform = "translateX(-120px)";
+    }else{
+      content.style.transform = "translateX(0)";
+    }
+  });
+
+  return li;
 }
