@@ -273,97 +273,6 @@ function deleteFile(file){
 
 /* -------------------- SWIPE -------------------- */
 
-
-
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
-  let open = false;
-
-  const MAX = 140;
-
-  const actions = document.createElement("div");
-  actions.className = "swipeActions";
-
-  const renameBtn = document.createElement("button");
-  renameBtn.className = "renameBtn";
-  renameBtn.textContent = "Rinomina";
-
-  const deleteBtn = document.createElement("button");
-  deleteBtn.className = "deleteBtn";
-  deleteBtn.textContent = "Elimina";
-
-  renameBtn.onclick = e=>{
-    e.stopPropagation();
-    onRename();
-  };
-
-  deleteBtn.onclick = e=>{
-    e.stopPropagation();
-    onDelete();
-  };
-
-  actions.appendChild(renameBtn);
-  actions.appendChild(deleteBtn);
-  container.appendChild(actions);
-
-  content.classList.add("swipeContent");
-
-  container.addEventListener("touchstart", e=>{
-    startX = e.touches[0].clientX;
-    isDragging = true;
-  });
-
-  container.addEventListener("touchmove", e=>{
-    if(!isDragging) return;
-
-    currentX = e.touches[0].clientX;
-    let diff = startX - currentX;
-
-    if(diff < 0) diff = 0;
-
-    if(diff > MAX){
-      diff = MAX + (diff - MAX) / 4;
-    }
-
-    content.style.transform = `translateX(-${diff}px)`;
-  });
-
-  container.addEventListener("touchend", ()=>{
-    isDragging = false;
-
-    let diff = startX - currentX;
-
-    if(diff > 70){
-      openSwipe();
-    }else{
-      closeSwipe();
-    }
-  });
-
-  function openSwipe(){
-    content.style.transform = `translateX(-${MAX}px)`;
-    open = true;
-  }
-
-  function closeSwipe(){
-    content.style.transform = "translateX(0)";
-    open = false;
-  }
-
-  document.addEventListener("touchstart", e=>{
-    if(open && !container.contains(e.target)){
-      closeSwipe();
-    }
-  });
-
-  content.addEventListener("click", ()=>{
-    if(open){
-      closeSwipe();
-    }
-  });
-
-}
 function createSwipeRow(text, onClick, onRename, onMove, onDelete){
 
   const li = document.createElement("li");
@@ -395,22 +304,14 @@ function createSwipeRow(text, onClick, onRename, onMove, onDelete){
   li.appendChild(actions);
   li.appendChild(content);
 
-  content.onclick = onClick;
+  /* CLICK normale (IMPORTANTE) */
+  content.addEventListener("click", onClick);
 
-  /* SWIPE TOUCH */
-
+  /* SWIPE SEMPLICE */
   let startX = 0;
 
   content.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
-  });
-
-  content.addEventListener("touchmove", e=>{
-    let diff = startX - e.touches[0].clientX;
-
-    if(diff > 0){
-      content.style.transform = `translateX(-${Math.min(diff,120)}px)`;
-    }
   });
 
   content.addEventListener("touchend", e=>{
