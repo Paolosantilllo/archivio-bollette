@@ -27,6 +27,7 @@ let currentFolderId = null;
 let currentViewerFile = null;
 let pathStack = [];
 
+
 /* -------------------- ELEMENTI -------------------- */
 
 const list = document.getElementById("folders");
@@ -49,6 +50,21 @@ function init(){
 }
 
 
+/* -------------------- BACK -------------------- */
+
+backBtn.onclick = () => {
+
+  if(pathStack.length === 0){
+    currentFolderId = null;
+    render();
+    return;
+  }
+
+  currentFolderId = pathStack.pop();
+  render();
+};
+
+
 /* -------------------- RENDER -------------------- */
 
 function render(){
@@ -60,8 +76,7 @@ function render(){
   const folderStore = tx.objectStore("folders");
   const fileStore = tx.objectStore("files");
 
-  /* ---------------- CARTELLE ---------------- */
-
+  /* CARTELLE */
   folderStore.getAll().onsuccess = e => {
 
     const folders = e.target.result.filter(f => f.parent === currentFolderId);
@@ -84,8 +99,7 @@ function render(){
     });
   };
 
-  /* ---------------- FILE ---------------- */
-
+  /* FILE */
   fileStore.getAll().onsuccess = e => {
 
     const files = e.target.result.filter(f => f.parent === currentFolderId);
@@ -105,9 +119,10 @@ function render(){
   };
 }
 
+
 /* -------------------- CARTELLE -------------------- */
 
-function addFolder(){
+addFolderBtn.onclick = ()=>{
 
   const name = prompt("Nome cartella");
   if(!name) return;
@@ -120,9 +135,7 @@ function addFolder(){
   });
 
   tx.oncomplete = render;
-}
-
-addFolderBtn.onclick = addFolder;
+};
 
 
 /* -------------------- FILE -------------------- */
@@ -136,10 +149,8 @@ addFileBtn.onclick = ()=>{
     const file = e.target.files[0];
     if(!file) return;
 
-    /* reset input (importantissimo) */
     fileInput.value = "";
 
-    /* 🚫 blocco file troppo grandi */
     if(file.size > 5 * 1024 * 1024){
       alert("PDF troppo grande (max 5MB)");
       return;
@@ -155,14 +166,10 @@ addFileBtn.onclick = ()=>{
         name: file.name,
         data: reader.result,
         parent: currentFolderId,
-        type: "pdf",
         created: Date.now()
       });
 
-      tx.oncomplete = ()=>{
-        render();
-      };
-
+      tx.oncomplete = render;
     };
 
     reader.readAsDataURL(file);
@@ -304,18 +311,35 @@ function createSwipeRow(text, onClick, onRename, onMove, onDelete){
   li.appendChild(actions);
   li.appendChild(content);
 
-  /* CLICK normale (IMPORTANTE) */
+  /* CLICK */
   content.addEventListener("click", onClick);
 
-  /* SWIPE SEMPLICE */
+  /* SWIPE */
   let startX = 0;
+  let currentX = 0;
+  let dragging = false;
 
   content.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
+    dragging = true;
   });
 
-  content.addEventListener("touchend", e=>{
-    let diff = startX - e.changedTouches[0].clientX;
+  content.addEventListener("touchmove", e=>{
+    if(!dragging) return;
+
+    currentX = e.touches[0].clientX;
+    let diff = startX - currentX;
+
+    if(diff < 0) diff = 0;
+    if(diff > 120) diff = 120;
+
+    content.style.transform = `translateX(-${diff}px)`;
+  });
+
+  content.addEventListener("touchend", ()=>{
+    dragging = false;
+
+    let diff = startX - currentX;
 
     if(diff > 60){
       content.style.transform = "translateX(-120px)";
