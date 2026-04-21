@@ -121,10 +121,48 @@ main {
 
 .swipeRow {
   position: relative;
-  overflow: visible;
-  background: transparent;
+  overflow: hidden;
+  margin: 6px 10px;
+  border-radius: 16px;
 }
 
+/* CONTENUTO SOPRA */
+.swipeContent {
+  background: #e9e9ef;
+  border-radius: 16px;
+  transition: transform 0.25s ease;
+  position: relative;
+  z-index: 2; /* 🔥 IMPORTANTISSIMO */
+  touch-action: pan-y;
+}
+
+/* AZIONI SOTTO */
+.swipeActions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1; /* 🔥 sotto al contenuto */
+}
+
+/* BOTTONI */
+.swipeActions button {
+  border: none;
+  padding: 0 18px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+}
+
+/* COLORI */
+.renameBtn {
+  background: #ff9500;
+}
+
+.deleteBtn {
+  background: #ff3b30;
+}
 /* GRIGLIA CARTELLE */
 
 #folders.folderGrid {
