@@ -1,3 +1,5 @@
+const imageInput = document.getElementById("imageInput");
+
 /* -------------------- DATABASE -------------------- */
 
 let db;
