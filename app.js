@@ -53,14 +53,11 @@ function init(){
 /* -------------------- BACK -------------------- */
 
 backBtn.onclick = () => {
-
   if(pathStack.length === 0){
     currentFolderId = null;
-    render();
-    return;
+  } else {
+    currentFolderId = pathStack.pop();
   }
-
-  currentFolderId = pathStack.pop();
   render();
 };
 
@@ -91,7 +88,6 @@ function render(){
           render();
         },
         () => renameFolder(folder),
-        null,
         () => deleteFolder(folder)
       );
 
@@ -110,7 +106,6 @@ function render(){
         "📄 " + file.name,
         () => openFile(file),
         () => renameFile(file),
-        null,
         () => deleteFile(file)
       );
 
@@ -165,8 +160,7 @@ addFileBtn.onclick = ()=>{
       tx.objectStore("files").add({
         name: file.name,
         data: reader.result,
-        parent: currentFolderId,
-        created: Date.now()
+        parent: currentFolderId
       });
 
       tx.oncomplete = render;
@@ -221,7 +215,6 @@ sharePdfBtn.onclick = async ()=>{
     await navigator.share({ files:[pdfFile] });
   }
 };
-
 
 function dataUrlToBlob(url){
   const arr = url.split(",");
@@ -278,9 +271,11 @@ function deleteFile(file){
 }
 
 
-/* -------------------- SWIPE -------------------- */
+/* -------------------- SWIPE iOS PERFETTO -------------------- */
 
-function createSwipeRow(text, onClick, onRename, onMove, onDelete){
+let openedRow = null;
+
+function createSwipeRow(text, onClick, onRename, onDelete){
 
   const li = document.createElement("li");
   li.className = "swipeRow";
@@ -295,29 +290,43 @@ function createSwipeRow(text, onClick, onRename, onMove, onDelete){
   if(onRename){
     const btn = document.createElement("button");
     btn.className = "renameBtn";
-    btn.textContent = "✏️";
-    btn.onclick = (e)=>{ e.stopPropagation(); onRename(); };
+    btn.textContent = "Rinomina";
+    btn.onclick = e=>{
+      e.stopPropagation();
+      closeAllSwipes();
+      onRename();
+    };
     actions.appendChild(btn);
   }
 
   if(onDelete){
     const btn = document.createElement("button");
     btn.className = "deleteBtn";
-    btn.textContent = "🗑";
-    btn.onclick = (e)=>{ e.stopPropagation(); onDelete(); };
+    btn.textContent = "Elimina";
+    btn.onclick = e=>{
+      e.stopPropagation();
+      closeAllSwipes();
+      onDelete();
+    };
     actions.appendChild(btn);
   }
 
   li.appendChild(actions);
   li.appendChild(content);
 
-  /* CLICK */
-  content.addEventListener("click", onClick);
+  content.addEventListener("click", ()=>{
+    if(li.classList.contains("open")){
+      closeSwipe(li, content);
+    } else {
+      onClick();
+    }
+  });
 
-  /* SWIPE */
   let startX = 0;
   let currentX = 0;
   let dragging = false;
+
+  const MAX = 140;
 
   content.addEventListener("touchstart", e=>{
     startX = e.touches[0].clientX;
@@ -331,7 +340,10 @@ function createSwipeRow(text, onClick, onRename, onMove, onDelete){
     let diff = startX - currentX;
 
     if(diff < 0) diff = 0;
-    if(diff > 120) diff = 120;
+
+    if(diff > MAX){
+      diff = MAX + (diff - MAX) / 4;
+    }
 
     content.style.transform = `translateX(-${diff}px)`;
   });
@@ -341,12 +353,47 @@ function createSwipeRow(text, onClick, onRename, onMove, onDelete){
 
     let diff = startX - currentX;
 
-    if(diff > 60){
-      content.style.transform = "translateX(-120px)";
+    if(diff > 70){
+      openSwipe(li, content);
     }else{
-      content.style.transform = "translateX(0)";
+      closeSwipe(li, content);
     }
   });
 
   return li;
 }
+
+
+/* -------------------- GESTIONE SWIPE -------------------- */
+
+function openSwipe(li, content){
+  closeAllSwipes();
+
+  content.style.transform = "translateX(-140px)";
+  li.classList.add("open");
+
+  openedRow = { li, content };
+}
+
+function closeSwipe(li, content){
+  content.style.transform = "translateX(0)";
+  li.classList.remove("open");
+
+  if(openedRow && openedRow.li === li){
+    openedRow = null;
+  }
+}
+
+function closeAllSwipes(){
+  if(openedRow){
+    openedRow.content.style.transform = "translateX(0)";
+    openedRow.li.classList.remove("open");
+    openedRow = null;
+  }
+}
+
+document.addEventListener("touchstart", e=>{
+  if(openedRow && !openedRow.li.contains(e.target)){
+    closeAllSwipes();
+  }
+});
