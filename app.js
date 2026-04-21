@@ -80,41 +80,57 @@ function render(){
 
     const folders = e.target.result.filter(f => f.parent === currentFolderId);
 
-    folders.forEach(folder => {
+  folders.forEach(folder => {
 
-      const li = createSwipeRow(
-        "📁 " + folder.name,
-        () => {
-          pathStack.push(currentFolderId);
-          currentFolderId = folder.id;
-          render();
-        },
-        () => renameFolder(folder),
-        () => deleteFolder(folder)
-      );
+  const li = document.createElement("li");
+  li.className = "swipeRow";
 
-      list.appendChild(li);
-    });
+  const card = document.createElement("div");
+  card.className = "gridCard";
+
+  /* IMMAGINE */
+  const imgWrap = document.createElement("div");
+  imgWrap.className = "gridImageWrap";
+
+  if(folder.cover){
+    const img = document.createElement("img");
+    img.src = folder.cover;
+    img.className = "gridCover";
+    imgWrap.appendChild(img);
+  }else{
+    const empty = document.createElement("div");
+    empty.className = "gridCoverEmpty";
+    empty.textContent = "📁";
+    imgWrap.appendChild(empty);
+  }
+
+  /* TITOLO */
+  const title = document.createElement("div");
+  title.className = "gridTitle";
+  title.textContent = folder.name;
+
+  card.appendChild(imgWrap);
+  card.appendChild(title);
+
+  /* CLICK */
+  card.onclick = ()=>{
+    pathStack.push(currentFolderId);
+    currentFolderId = folder.id;
+    render();
   };
 
-  /* FILE */
-  fileStore.getAll().onsuccess = e => {
+  li.appendChild(card);
 
-    const files = e.target.result.filter(f => f.parent === currentFolderId);
+  /* SWIPE SOLO SU CARTELLE */
+  enableSwipe(
+    li,
+    () => renameFolder(folder),
+    () => deleteFolder(folder),
+    () => changeFolderImage(folder)
+  );
 
-    files.forEach(file => {
-
-      const li = createSwipeRow(
-        "📄 " + file.name,
-        () => openFile(file),
-        () => renameFile(file),
-        () => deleteFile(file)
-      );
-
-      list.appendChild(li);
-    });
-  };
-}
+  list.appendChild(li);
+});
 
 
 /* -------------------- CARTELLE -------------------- */
@@ -161,14 +177,14 @@ addFileBtn.onclick = ()=>{
 
       tx.objectStore("files").add({
         name: file.name,
-        data: reader.result,
+        data: file,
         parent: currentFolderId
       });
 
       tx.oncomplete = render;
     };
 
-    reader.readAsDataURL(file);
+reader.readAsArrayBuffer(file);
   };
 
   fileInput.click();
@@ -182,13 +198,9 @@ function openFile(file){
   currentViewerFile = file;
   pdfTitle.textContent = file.name;
 
-  pdfFrame.srcdoc = `
-  <html>
-  <body style="margin:0">
-  <embed src="${file.data}" width="100%" height="100%">
-  </body>
-  </html>
-  `;
+  const url = URL.createObjectURL(file.data);
+
+  pdfFrame.src = url;
 
   pdfViewer.classList.remove("hidden");
 }
@@ -371,10 +383,10 @@ function createSwipeRow(text, onClick, onRename, onDelete){
 function openSwipe(li, content){
   closeAllSwipes();
 
-  content.style.transform = "translateX(-140px)";
+  content.style.transform = "translateX(-160px)";
   li.classList.add("open");
 
-  openedRow = { li, content };
+  openedRow = {li, content};
 }
 
 function closeSwipe(li, content){
@@ -388,9 +400,7 @@ function closeSwipe(li, content){
 
 function closeAllSwipes(){
   if(openedRow){
-    openedRow.content.style.transform = "translateX(0)";
-    openedRow.li.classList.remove("open");
-    openedRow = null;
+    closeSwipe(openedRow.li, openedRow.content);
   }
 }
 
@@ -399,3 +409,94 @@ document.addEventListener("touchstart", e=>{
     closeAllSwipes();
   }
 });
+let openedRow = null;
+
+function enableSwipe(li, onRename, onDelete, onImage){
+
+  const content = li.firstChild;
+
+  const actions = document.createElement("div");
+  actions.className = "swipeActions";
+
+  if(onImage){
+    const imgBtn = document.createElement("button");
+    imgBtn.textContent = "Img";
+    imgBtn.style.background = "#34c759";
+
+    imgBtn.onclick = e=>{
+      e.stopPropagation();
+      onImage();
+      closeAllSwipes();
+    };
+
+    actions.appendChild(imgBtn);
+  }
+
+  if(onRename){
+    const renameBtn = document.createElement("button");
+    renameBtn.textContent = "Rinomina";
+    renameBtn.className = "renameBtn";
+
+    renameBtn.onclick = e=>{
+      e.stopPropagation();
+      onRename();
+      closeAllSwipes();
+    };
+
+    actions.appendChild(renameBtn);
+  }
+
+  if(onDelete){
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Elimina";
+    deleteBtn.className = "deleteBtn";
+
+    deleteBtn.onclick = e=>{
+      e.stopPropagation();
+      onDelete();
+      closeAllSwipes();
+    };
+
+    actions.appendChild(deleteBtn);
+  }
+
+  li.appendChild(actions);
+
+  let startX = 0;
+  let currentX = 0;
+  let dragging = false;
+
+  const MAX = 160;
+
+  content.addEventListener("touchstart", e=>{
+    startX = e.touches[0].clientX;
+    dragging = true;
+  });
+
+  content.addEventListener("touchmove", e=>{
+    if(!dragging) return;
+
+    currentX = e.touches[0].clientX;
+    let diff = startX - currentX;
+
+    if(diff < 0) diff = 0;
+
+    if(diff > MAX){
+      diff = MAX + (diff - MAX) / 3;
+    }
+
+    content.style.transform = `translateX(-${diff}px)`;
+  });
+
+  content.addEventListener("touchend", ()=>{
+    dragging = false;
+
+    let diff = startX - currentX;
+
+    if(diff > 70){
+      openSwipe(li, content);
+    }else{
+      closeSwipe(li, content);
+    }
+  });
+}
