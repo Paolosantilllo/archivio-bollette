@@ -86,7 +86,7 @@ main {
 }
 
 /* ========================= */
-/* 🔥 SWIPE FIX DEFINITIVO */
+/* 🔥 SWIPE SISTEMA */
 /* ========================= */
 
 .swipeRow {
@@ -94,19 +94,19 @@ main {
   overflow: hidden;
   margin: 6px 10px;
   border-radius: 16px;
-  width: 100%;
 }
 
-/* CONTENUTO SOPRA */
+/* CONTENUTO SOPRA (file) */
 .swipeContent {
   position: relative;
-  z-index: 2;
-  width: 100%;              /* 🔥 FIX */
-  height: 100%;             /* 🔥 FIX */
+  z-index: 3;
+  width: 100%;
+  height: 100%;
   background: #e9e9ef;
   border-radius: 16px;
   transition: transform 0.25s ease;
   touch-action: pan-y;
+  overflow: hidden;
 }
 
 /* AZIONI SOTTO */
@@ -125,6 +125,7 @@ main {
   padding: 0 18px;
   color: white;
   font-size: 14px;
+  cursor: pointer;
 }
 
 /* COLORI */
@@ -146,15 +147,30 @@ main {
   margin: 0;
 }
 
+/* 🔥 CARD (FONDAMENTALE PER SWIPE) */
 .gridCard {
-  width: 100%;              /* 🔥 FIX */
-  height: 100%;             /* 🔥 FIX */
+  position: relative;
+  z-index: 3;              /* sopra bottoni */
+  overflow: hidden;        /* nasconde bottoni */
+  touch-action: pan-y;
+
+  width: 100%;
+  height: 100%;
+
   background: #e9e9ef;
   border-radius: 22px;
   padding: 12px;
+
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  transition: transform 0.25s ease;
+}
+
+/* CLICK effetto */
+.gridCard:active {
+  transform: scale(0.97);
 }
 
 /* IMMAGINE */
@@ -207,6 +223,7 @@ main {
   border: none;
   color: white;
   font-size: 26px;
+  cursor: pointer;
 }
 
 #addFolder { background: #007aff; }
