@@ -8,14 +8,13 @@ const request = indexedDB.open("ArchivioDB", 1);
 
 request.onupgradeneeded = e => {
   db = e.target.result;
-
   db.createObjectStore("folders", { keyPath: "id", autoIncrement: true });
   db.createObjectStore("files", { keyPath: "id", autoIncrement: true });
 };
 
 request.onsuccess = e => {
   db = e.target.result;
-  init();
+  render();
 };
 
 request.onerror = () => alert("Errore database");
@@ -40,13 +39,6 @@ const pdfViewer = document.getElementById("pdfViewer");
 const pdfFrame = document.getElementById("pdfFrame");
 const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
-
-
-/* -------------------- INIT -------------------- */
-
-function init(){
-  render();
-}
 
 
 /* -------------------- BACK -------------------- */
@@ -78,8 +70,13 @@ function render(){
       const li = document.createElement("li");
       li.className = "swipeRow";
 
+      /* 🔥 CONTENUTO SWIPE */
       const content = document.createElement("div");
-      content.className = "gridCard";
+      content.className = "swipeContent";
+
+      /* CARD */
+      const card = document.createElement("div");
+      card.className = "gridCard";
 
       /* IMMAGINE */
       const imgWrap = document.createElement("div");
@@ -102,8 +99,10 @@ function render(){
       title.className = "gridTitle";
       title.textContent = folder.name;
 
-      content.appendChild(imgWrap);
-      content.appendChild(title);
+      card.appendChild(imgWrap);
+      card.appendChild(title);
+
+      content.appendChild(card);
       li.appendChild(content);
 
       /* CLICK */
@@ -113,6 +112,7 @@ function render(){
         render();
       };
 
+      /* SWIPE */
       enableSwipe(
         li,
         () => renameFolder(folder),
@@ -159,7 +159,6 @@ function render(){
 /* -------------------- CARTELLE -------------------- */
 
 addFolderBtn.onclick = () => {
-
   const name = prompt("Nome cartella");
   if(!name) return;
 
@@ -299,13 +298,13 @@ function changeFolderImage(folder){
 }
 
 
-/* -------------------- SWIPE iOS -------------------- */
+/* -------------------- SWIPE iOS PERFETTO -------------------- */
 
 let openedRow = null;
 
 function enableSwipe(li, onRename, onDelete, onImage){
 
-  const content = li.firstChild;
+  const content = li.querySelector(".swipeContent");
 
   const actions = document.createElement("div");
   actions.className = "swipeActions";
