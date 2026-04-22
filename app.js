@@ -1,5 +1,3 @@
-const imageInput = document.getElementById("imageInput");
-
 /* -------------------- DATABASE -------------------- */
 
 let db;
@@ -37,12 +35,12 @@ const addFolderBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
 const backBtn = document.getElementById("backBtn");
 const fileInput = document.getElementById("fileInput");
+const imageInput = document.getElementById("imageInput");
 
 const pdfViewer = document.getElementById("pdfViewer");
 const pdfFrame = document.getElementById("pdfFrame");
 const pdfTitle = document.getElementById("pdfTitle");
 const closePdfBtn = document.getElementById("closePdfBtn");
-const sharePdfBtn = document.getElementById("sharePdfBtn");
 
 
 /* -------------------- INIT -------------------- */
@@ -55,11 +53,7 @@ function init(){
 /* -------------------- BACK -------------------- */
 
 backBtn.onclick = () => {
-  if(pathStack.length === 0){
-    currentFolderId = null;
-  } else {
-    currentFolderId = pathStack.pop();
-  }
+  currentFolderId = pathStack.length ? pathStack.pop() : null;
   render();
 };
 
@@ -80,57 +74,100 @@ function render(){
 
     const folders = e.target.result.filter(f => f.parent === currentFolderId);
 
-  folders.forEach(folder => {
+    folders.forEach(folder => {
 
-  const li = document.createElement("li");
-  li.className = "swipeRow";
+      const li = document.createElement("li");
+      li.className = "swipeRow";
 
-  const card = document.createElement("div");
-  card.className = "gridCard";
+      const content = document.createElement("div");
+      content.className = "swipeContent";
 
-  /* IMMAGINE */
-  const imgWrap = document.createElement("div");
-  imgWrap.className = "gridImageWrap";
+      /* CARD */
+      const card = document.createElement("div");
+      card.className = "gridCard";
 
-  if(folder.cover){
-    const img = document.createElement("img");
-    img.src = folder.cover;
-    img.className = "gridCover";
-    imgWrap.appendChild(img);
-  }else{
-    const empty = document.createElement("div");
-    empty.className = "gridCoverEmpty";
-    empty.textContent = "📁";
-    imgWrap.appendChild(empty);
-  }
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "gridImageWrap";
 
-  /* TITOLO */
-  const title = document.createElement("div");
-  title.className = "gridTitle";
-  title.textContent = folder.name;
+      if(folder.cover){
+        const img = document.createElement("img");
+        img.src = folder.cover;
+        img.className = "gridCover";
+        imgWrap.appendChild(img);
+      }else{
+        const empty = document.createElement("div");
+        empty.className = "gridCoverEmpty";
+        empty.textContent = "📁";
+        imgWrap.appendChild(empty);
+      }
 
-  card.appendChild(imgWrap);
-  card.appendChild(title);
+      const title = document.createElement("div");
+      title.className = "gridTitle";
+      title.textContent = folder.name;
 
-  /* CLICK */
-  card.onclick = ()=>{
-    pathStack.push(currentFolderId);
-    currentFolderId = folder.id;
-    render();
+      card.appendChild(imgWrap);
+      card.appendChild(title);
+      content.appendChild(card);
+      li.appendChild(content);
+
+      /* CLICK */
+      content.onclick = ()=>{
+        if(li.classList.contains("open")){
+          closeAllSwipes();
+          return;
+        }
+        pathStack.push(currentFolderId);
+        currentFolderId = folder.id;
+        render();
+      };
+
+      /* SWIPE */
+      enableSwipe(
+        li,
+        () => renameFolder(folder),
+        () => deleteFolder(folder),
+        () => changeFolderImage(folder)
+      );
+
+      list.appendChild(li);
+    });
   };
 
-  li.appendChild(card);
+  /* FILE */
+  fileStore.getAll().onsuccess = e => {
 
-  /* SWIPE SOLO SU CARTELLE */
-  enableSwipe(
-    li,
-    () => renameFolder(folder),
-    () => deleteFolder(folder),
-    () => changeFolderImage(folder)
-  );
+    const files = e.target.result.filter(f => f.parent === currentFolderId);
 
-  list.appendChild(li);
-});
+    files.forEach(file => {
+
+      const li = document.createElement("li");
+      li.className = "swipeRow";
+
+      const content = document.createElement("div");
+      content.className = "swipeContent fileItem";
+      content.textContent = "📄 " + file.name;
+
+      content.onclick = ()=>{
+        if(li.classList.contains("open")){
+          closeAllSwipes();
+          return;
+        }
+        openFile(file);
+      };
+
+      li.appendChild(content);
+
+      enableSwipe(
+        li,
+        () => renameFile(file),
+        () => deleteFile(file),
+        null
+      );
+
+      list.appendChild(li);
+    });
+  };
+}
 
 
 /* -------------------- CARTELLE -------------------- */
@@ -164,11 +201,6 @@ addFileBtn.onclick = ()=>{
 
     fileInput.value = "";
 
-    if(file.size > 5 * 1024 * 1024){
-      alert("PDF troppo grande (max 5MB)");
-      return;
-    }
-
     const reader = new FileReader();
 
     reader.onload = ()=>{
@@ -177,14 +209,14 @@ addFileBtn.onclick = ()=>{
 
       tx.objectStore("files").add({
         name: file.name,
-        data: file,
+        data: reader.result,
         parent: currentFolderId
       });
 
       tx.oncomplete = render;
     };
 
-reader.readAsArrayBuffer(file);
+    reader.readAsDataURL(file);
   };
 
   fileInput.click();
@@ -198,9 +230,9 @@ function openFile(file){
   currentViewerFile = file;
   pdfTitle.textContent = file.name;
 
-  const url = URL.createObjectURL(file.data);
-
-  pdfFrame.src = url;
+  pdfFrame.srcdoc = `
+  <embed src="${file.data}" width="100%" height="100%">
+  `;
 
   pdfViewer.classList.remove("hidden");
 }
@@ -208,42 +240,6 @@ function openFile(file){
 closePdfBtn.onclick = ()=>{
   pdfViewer.classList.add("hidden");
 };
-
-
-/* -------------------- SHARE -------------------- */
-
-sharePdfBtn.onclick = async ()=>{
-
-  if(!currentViewerFile) return;
-
-  if(navigator.share){
-
-    const blob = dataUrlToBlob(currentViewerFile.data);
-
-    const pdfFile = new File(
-      [blob],
-      currentViewerFile.name,
-      {type:"application/pdf"}
-    );
-
-    await navigator.share({ files:[pdfFile] });
-  }
-};
-
-function dataUrlToBlob(url){
-  const arr = url.split(",");
-  const mime = arr[0].match(/:(.*?);/)[1];
-  const bstr = atob(arr[1]);
-
-  let n = bstr.length;
-  const u8 = new Uint8Array(n);
-
-  while(n--){
-    u8[n] = bstr.charCodeAt(n);
-  }
-
-  return new Blob([u8], {type:mime});
-}
 
 
 /* -------------------- AZIONI -------------------- */
@@ -285,21 +281,53 @@ function deleteFile(file){
 }
 
 
-/* -------------------- SWIPE iOS PERFETTO -------------------- */
+/* -------------------- IMMAGINE CARTELLA -------------------- */
+
+function changeFolderImage(folder){
+
+  imageInput.onchange = e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = ()=>{
+      folder.cover = reader.result;
+
+      const tx = db.transaction("folders","readwrite");
+      tx.objectStore("folders").put(folder);
+      tx.oncomplete = render;
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  imageInput.click();
+}
+
+
+/* -------------------- SWIPE iOS -------------------- */
 
 let openedRow = null;
 
-function createSwipeRow(text, onClick, onRename, onDelete){
+function enableSwipe(li, onRename, onDelete, onImage){
 
-  const li = document.createElement("li");
-  li.className = "swipeRow";
-
-  const content = document.createElement("div");
-  content.className = "swipeContent";
-  content.textContent = text;
+  const content = li.querySelector(".swipeContent");
 
   const actions = document.createElement("div");
   actions.className = "swipeActions";
+
+  if(onImage){
+    const btn = document.createElement("button");
+    btn.textContent = "Img";
+    btn.style.background = "#34c759";
+    btn.onclick = e=>{
+      e.stopPropagation();
+      onImage();
+      closeAllSwipes();
+    };
+    actions.appendChild(btn);
+  }
 
   if(onRename){
     const btn = document.createElement("button");
@@ -307,8 +335,8 @@ function createSwipeRow(text, onClick, onRename, onDelete){
     btn.textContent = "Rinomina";
     btn.onclick = e=>{
       e.stopPropagation();
-      closeAllSwipes();
       onRename();
+      closeAllSwipes();
     };
     actions.appendChild(btn);
   }
@@ -319,145 +347,10 @@ function createSwipeRow(text, onClick, onRename, onDelete){
     btn.textContent = "Elimina";
     btn.onclick = e=>{
       e.stopPropagation();
-      closeAllSwipes();
       onDelete();
+      closeAllSwipes();
     };
     actions.appendChild(btn);
-  }
-
-  li.appendChild(actions);
-  li.appendChild(content);
-
-  content.addEventListener("click", ()=>{
-    if(li.classList.contains("open")){
-      closeSwipe(li, content);
-    } else {
-      onClick();
-    }
-  });
-
-  let startX = 0;
-  let currentX = 0;
-  let dragging = false;
-
-  const MAX = 140;
-
-  content.addEventListener("touchstart", e=>{
-    startX = e.touches[0].clientX;
-    dragging = true;
-  });
-
-  content.addEventListener("touchmove", e=>{
-    if(!dragging) return;
-
-    currentX = e.touches[0].clientX;
-    let diff = startX - currentX;
-
-    if(diff < 0) diff = 0;
-
-    if(diff > MAX){
-      diff = MAX + (diff - MAX) / 4;
-    }
-
-    content.style.transform = `translateX(-${diff}px)`;
-  });
-
-  content.addEventListener("touchend", ()=>{
-    dragging = false;
-
-    let diff = startX - currentX;
-
-    if(diff > 70){
-      openSwipe(li, content);
-    }else{
-      closeSwipe(li, content);
-    }
-  });
-
-  return li;
-}
-
-
-/* -------------------- GESTIONE SWIPE -------------------- */
-
-function openSwipe(li, content){
-  closeAllSwipes();
-
-  content.style.transform = "translateX(-160px)";
-  li.classList.add("open");
-
-  openedRow = {li, content};
-}
-
-function closeSwipe(li, content){
-  content.style.transform = "translateX(0)";
-  li.classList.remove("open");
-
-  if(openedRow && openedRow.li === li){
-    openedRow = null;
-  }
-}
-
-function closeAllSwipes(){
-  if(openedRow){
-    closeSwipe(openedRow.li, openedRow.content);
-  }
-}
-
-document.addEventListener("touchstart", e=>{
-  if(openedRow && !openedRow.li.contains(e.target)){
-    closeAllSwipes();
-  }
-});
-let openedRow = null;
-
-function enableSwipe(li, onRename, onDelete, onImage){
-
-  const content = li.firstChild;
-
-  const actions = document.createElement("div");
-  actions.className = "swipeActions";
-
-  if(onImage){
-    const imgBtn = document.createElement("button");
-    imgBtn.textContent = "Img";
-    imgBtn.style.background = "#34c759";
-
-    imgBtn.onclick = e=>{
-      e.stopPropagation();
-      onImage();
-      closeAllSwipes();
-    };
-
-    actions.appendChild(imgBtn);
-  }
-
-  if(onRename){
-    const renameBtn = document.createElement("button");
-    renameBtn.textContent = "Rinomina";
-    renameBtn.className = "renameBtn";
-
-    renameBtn.onclick = e=>{
-      e.stopPropagation();
-      onRename();
-      closeAllSwipes();
-    };
-
-    actions.appendChild(renameBtn);
-  }
-
-  if(onDelete){
-    const deleteBtn = document.createElement("button");
-    deleteBtn.textContent = "Elimina";
-    deleteBtn.className = "deleteBtn";
-
-    deleteBtn.onclick = e=>{
-      e.stopPropagation();
-      onDelete();
-      closeAllSwipes();
-    };
-
-    actions.appendChild(deleteBtn);
   }
 
   li.appendChild(actions);
@@ -500,3 +393,31 @@ function enableSwipe(li, onRename, onDelete, onImage){
     }
   });
 }
+
+function openSwipe(li, content){
+  closeAllSwipes();
+  content.style.transform = "translateX(-160px)";
+  li.classList.add("open");
+  openedRow = {li, content};
+}
+
+function closeSwipe(li, content){
+  content.style.transform = "translateX(0)";
+  li.classList.remove("open");
+
+  if(openedRow && openedRow.li === li){
+    openedRow = null;
+  }
+}
+
+function closeAllSwipes(){
+  if(openedRow){
+    closeSwipe(openedRow.li, openedRow.content);
+  }
+}
+
+document.addEventListener("touchstart", e=>{
+  if(openedRow && !openedRow.li.contains(e.target)){
+    closeAllSwipes();
+  }
+});
