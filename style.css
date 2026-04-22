@@ -25,12 +25,10 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
 }
 
 .headerActions {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
@@ -40,31 +38,14 @@ h1 {
   height: 56px;
   border: none;
   border-radius: 18px;
-  padding: 0;
   font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: white;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
 }
 
-#backupBtn {
-  background: #007aff;
-}
+#backupBtn { background: #007aff; }
+#restoreBtn { background: #5856d6; }
 
-#restoreBtn {
-  background: #5856d6;
-}
-
-#backupBtn:disabled,
-#restoreBtn:disabled {
-  opacity: 0.55;
-  cursor: default;
-  box-shadow: none;
-}
+/* SEARCH */
 
 #search {
   width: 100%;
@@ -73,26 +54,19 @@ h1 {
   border-radius: 18px;
   border: none;
   background: #e5e5ea;
-  font-size: 16px;
-  box-sizing: border-box;
-  color: #111;
-}
-
-#search::placeholder {
-  color: #8e8e93;
 }
 
 /* MAIN */
 
 main {
-  padding: 10px 0 110px 0;
+  padding-bottom: 110px;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 15px 10px 15px;
+  padding: 10px 15px;
 }
 
 #backBtn {
@@ -101,17 +75,9 @@ main {
   color: white;
   padding: 10px 14px;
   border-radius: 10px;
-  font-size: 15px;
-  cursor: pointer;
 }
 
-#path {
-  font-size: 14px;
-  color: #666;
-  word-break: break-word;
-}
-
-/* LISTA BASE */
+/* LISTA */
 
 #folders {
   list-style: none;
@@ -119,20 +85,27 @@ main {
   margin: 0;
 }
 
+/* ========================= */
+/* 🔥 SWIPE FIX DEFINITIVO */
+/* ========================= */
+
 .swipeRow {
   position: relative;
   overflow: hidden;
   margin: 6px 10px;
   border-radius: 16px;
+  width: 100%;
 }
 
 /* CONTENUTO SOPRA */
 .swipeContent {
+  position: relative;
+  z-index: 2;
+  width: 100%;              /* 🔥 FIX */
+  height: 100%;             /* 🔥 FIX */
   background: #e9e9ef;
   border-radius: 16px;
   transition: transform 0.25s ease;
-  position: relative;
-  z-index: 2; /* 🔥 IMPORTANTISSIMO */
   touch-action: pan-y;
 }
 
@@ -143,34 +116,30 @@ main {
   top: 0;
   bottom: 0;
   display: flex;
-  z-index: 1; /* 🔥 sotto al contenuto */
+  z-index: 1;
 }
 
 /* BOTTONI */
 .swipeActions button {
   border: none;
   padding: 0 18px;
-  font-size: 14px;
   color: white;
-  cursor: pointer;
+  font-size: 14px;
 }
 
 /* COLORI */
-.renameBtn {
-  background: #ff9500;
-}
+.renameBtn { background: #ff9500; }
+.deleteBtn { background: #ff3b30; }
 
-.deleteBtn {
-  background: #ff3b30;
-}
-/* GRIGLIA CARTELLE */
+/* ========================= */
+/* 📁 GRID CARTELLE */
+/* ========================= */
 
 #folders.folderGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   padding: 0 12px;
-  box-sizing: border-box;
 }
 
 #folders.folderGrid .swipeRow {
@@ -178,25 +147,20 @@ main {
 }
 
 .gridCard {
+  width: 100%;              /* 🔥 FIX */
+  height: 100%;             /* 🔥 FIX */
   background: #e9e9ef;
   border-radius: 22px;
   padding: 12px;
-  min-height: 205px;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.gridCard:active {
-  transform: scale(0.96);
-}
-
+/* IMMAGINE */
 .gridImageWrap {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1;
   border-radius: 18px;
   overflow: hidden;
   background: #d7d7dd;
@@ -205,63 +169,26 @@ main {
 .gridCover {
   width: 100%;
   height: 100%;
-  border-radius: 18px;
   object-fit: cover;
-  object-position: center;
-  display: block;
 }
 
 .gridCoverEmpty {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 18px;
-  background: #d7d7dd;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 44px;
+  height: 100%;
 }
 
+/* TITOLO */
 .gridTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #111;
-  word-break: break-word;
-  line-height: 1.25;
-  padding: 0 2px 2px 2px;
 }
 
-/* FILE RESTANO IN LISTA */
-
-#folders.folderList {
-  display: block;
-  padding: 0;
-}
-
-#folders.folderList .swipeRow {
-  margin: 0;
-}
-
-.fileItem {
-  background: #e9e9ef;
-  padding: 16px;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 6px 10px;
-  border-radius: 16px;
-  transition: transform 0.18s ease;
-}
-
-.fileName {
-  flex: 1;
-  cursor: pointer;
-  word-break: break-word;
-}
-
-/* BOTTONI FLOTTANTI */
+/* ========================= */
+/* FLOATING BUTTONS */
+/* ========================= */
 
 .floatingButtons {
   position: fixed;
@@ -280,479 +207,13 @@ main {
   border: none;
   color: white;
   font-size: 26px;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
-#addFolder {
-  background: #007aff;
-}
+#addFolder { background: #007aff; }
+#addFile { background: #34c759; }
 
-#addFile {
-  background: #34c759;
-}
+/* ========================= */
 
 .hidden {
   display: none !important;
-}
-
-/* ACTION SHEET */
-
-#actionSheet {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 999;
-}
-
-#actionSheet.show {
-  display: block;
-}
-
-#actionSheetBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#actionSheetPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  background: #f2f2f7;
-  border-radius: 18px;
-  overflow: hidden;
-}
-
-.actionBtn,
-.cancelBtn {
-  width: 100%;
-  border: none;
-  background: #e9e9ef;
-  padding: 18px;
-  font-size: 18px;
-  cursor: pointer;
-  border-bottom: 1px solid #d7d7dd;
-}
-
-.deleteAction {
-  color: #ff3b30;
-}
-
-.cancelWrap {
-  margin-top: 8px;
-}
-
-.cancelBtn {
-  border-radius: 18px;
-  font-weight: 600;
-}
-
-/* PDF VIEWER */
-
-#pdfViewer{
-  position:fixed;
-  inset:0;
-  background:#f2f2f7;
-  display:flex;
-  flex-direction:column;
-  z-index:9999;
-}
-
-#pdfViewerHeader{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:10px;
-  background:#ffffff;
-  border-bottom:1px solid #ddd;
-}
-
-#closePdfBtn{
-  border:none;
-  background:#007aff;
-  color:white;
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:14px;
-  cursor:pointer;
-}
-
-#pdfTitle{
-  flex:1;
-  font-size:14px;
-  font-weight:600;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-
-.pdfActions{
-  display:flex;
-  gap:6px;
-}
-
-.pdfActions button{
-  border:none;
-  background:#007aff;
-  color:white;
-  border-radius:8px;
-  padding:6px 10px;
-  font-size:14px;
-  cursor:pointer;
-}
-
-#pdfFrame{
-  flex:1;
-  width:100%;
-  height:100%;
-  border:none;
-  background:white;
-}
-/* DEADLINE EDITOR */
-
-#deadlineEditor {
-  position: fixed;
-  inset: 0;
-  z-index: 1400;
-}
-
-#deadlineEditor.hidden {
-  display: none;
-}
-
-#deadlineEditorBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#deadlineEditorPanel {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #ffffff;
-  border-radius: 22px;
-  padding: 18px;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-  box-sizing: border-box;
-}
-
-.deadlineHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.deadlineHeader h3 {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 700;
-}
-
-#closeDeadlineEditorBtn {
-  border: none;
-  background: #f2f2f7;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  font-size: 18px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.deadlineForm {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.deadlineForm label {
-  display: block;
-  font-size: 14px;
-  color: #555;
-  margin-top: 6px;
-  font-weight: 600;
-}
-
-.deadlineForm input,
-.deadlineForm select {
-  width: 100%;
-  display: block;
-  box-sizing: border-box;
-  padding: 13px;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  background: #f2f2f7;
-  color: #111;
-  appearance: none;
-}
-
-#deadlineListBox {
-  margin-top: 18px;
-  margin-bottom: 18px;
-  background: #f2f2f7;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.deadlineItem {
-  padding: 12px 14px;
-  border-bottom: 1px solid #dddddd;
-  font-size: 14px;
-}
-
-.deadlineItem:last-child {
-  border-bottom: none;
-}
-
-.deadlineEmpty {
-  padding: 14px;
-  color: #777;
-  font-size: 14px;
-}
-
-.deadlineButtons {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.primaryBtn,
-.secondaryBtn,
-.dangerBtn {
-  width: 100%;
-  border: none;
-  padding: 14px;
-  border-radius: 14px;
-  font-size: 17px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.primaryBtn {
-  background: #007aff;
-  color: white;
-}
-
-.secondaryBtn {
-  background: #f2f2f7;
-  color: #111;
-}
-
-.dangerBtn {
-  background: #ff3b30;
-  color: white;
-}
-
-/* MODAL GENERICI */
-
-#renameModal,
-#moveModal,
-#folderModal {
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-}
-
-#renameModal.hidden,
-#moveModal.hidden,
-#folderModal.hidden {
-  display: none;
-}
-
-#renameBackdrop,
-#moveBackdrop,
-#folderBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.28);
-}
-
-#renamePanel,
-#movePanel,
-#folderPanel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #f2f2f7;
-  border-radius: 18px;
-  padding: 20px;
-  box-sizing: border-box;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
-}
-
-/* INPUT */
-
-#renameInput,
-#folderNameInput {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: #e9e9ef;
-  border-radius: 12px;
-  font-size: 16px;
-  margin-top: 10px;
-  box-sizing: border-box;
-}
-
-/* BOTTONI MODAL */
-
-.renameButtons,
-.folderButtons {
-  margin-top: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.renameButtons button,
-.folderButtons button {
-  flex: 1;
-  border: none;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-#renameConfirm,
-#folderConfirmBtn {
-  background: #007aff;
-  color: white;
-}
-
-#renameCancel,
-#folderCancelBtn {
-  background: #d7d7dd;
-  color: #111;
-}
-
-/* MOVE FILE */
-
-.moveHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-#closeMoveBtn {
-  border: none;
-  background: #e9e9ef;
-  border-radius: 10px;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
-}
-
-#moveCurrentFile {
-  margin-bottom: 10px;
-  font-size: 14px;
-  color: #444;
-}
-
-.moveFolderItem {
-  width: 100%;
-  border: none;
-  background: #e9e9ef;
-  padding: 14px;
-  margin-bottom: 6px;
-  border-radius: 10px;
-  text-align: left;
-  font-size: 15px;
-  cursor: pointer;
-}
-
-/* CONTATORE MANCANTI */
-
-.missingCount {
-  color: #ff3b30;
-  font-weight: 600;
-  margin-left: 4px;
-}
-
-/* RESPONSIVE */
-
-@media (min-width: 700px) {
-  #folders.folderGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (orientation: landscape) {
-  #pdfFrame {
-    height: calc(100vh - 56px);
-  }
-}
-
-@media (max-width: 600px) {
-  #pdfViewerHeader {
-    gap: 8px;
-    padding: 8px;
-  }
-
-  #pdfTitle {
-    font-size: 14px;
-  }
-
-  .pdfActions {
-    gap: 6px;
-  }
-
-  .pdfActions button {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-}
-/* SWIPE iOS STYLE DEFINITIVO */
-
-.swipeRow {
-  position: relative;
-  overflow: hidden;
-  margin: 6px 10px;
-  border-radius: 16px;
-}
-
-.swipeContent {
-  background: #e9e9ef;
-  border-radius: 16px;
-  transition: transform 0.25s ease;
-  touch-action: pan-y;
-}
-
-/* bottoni dietro */
-
-.swipeActions {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-}
-
-.swipeActions button {
-  border: none;
-  padding: 0 18px;
-  font-size: 14px;
-  color: white;
-  cursor: pointer;
-}
-
-/* colori */
-
-.renameBtn {
-  background: #ff9500;
-}
-
-.deleteBtn {
-  background: #ff3b30;
 }
