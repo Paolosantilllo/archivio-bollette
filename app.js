@@ -1,3 +1,5 @@
+const imageInput = document.getElementById("imageInput");
+
 /* -------------------- DATABASE -------------------- */
 
 let db;
@@ -16,9 +18,7 @@ request.onsuccess = e => {
   init();
 };
 
-request.onerror = () => {
-  alert("Errore database");
-};
+request.onerror = () => alert("Errore database");
 
 
 /* -------------------- STATO -------------------- */
@@ -35,7 +35,6 @@ const addFolderBtn = document.getElementById("addFolder");
 const addFileBtn = document.getElementById("addFile");
 const backBtn = document.getElementById("backBtn");
 const fileInput = document.getElementById("fileInput");
-const imageInput = document.getElementById("imageInput");
 
 const pdfViewer = document.getElementById("pdfViewer");
 const pdfFrame = document.getElementById("pdfFrame");
@@ -65,11 +64,11 @@ function render(){
   list.innerHTML = "";
 
   const tx = db.transaction(["folders","files"], "readonly");
-
   const folderStore = tx.objectStore("folders");
   const fileStore = tx.objectStore("files");
 
-  /* CARTELLE */
+  /* -------- CARTELLE -------- */
+
   folderStore.getAll().onsuccess = e => {
 
     const folders = e.target.result.filter(f => f.parent === currentFolderId);
@@ -80,12 +79,9 @@ function render(){
       li.className = "swipeRow";
 
       const content = document.createElement("div");
-      content.className = "swipeContent";
+      content.className = "gridCard";
 
-      /* CARD */
-      const card = document.createElement("div");
-      card.className = "gridCard";
-
+      /* IMMAGINE */
       const imgWrap = document.createElement("div");
       imgWrap.className = "gridImageWrap";
 
@@ -94,34 +90,29 @@ function render(){
         img.src = folder.cover;
         img.className = "gridCover";
         imgWrap.appendChild(img);
-      }else{
+      } else {
         const empty = document.createElement("div");
         empty.className = "gridCoverEmpty";
         empty.textContent = "📁";
         imgWrap.appendChild(empty);
       }
 
+      /* TITOLO */
       const title = document.createElement("div");
       title.className = "gridTitle";
       title.textContent = folder.name;
 
-      card.appendChild(imgWrap);
-      card.appendChild(title);
-      content.appendChild(card);
+      content.appendChild(imgWrap);
+      content.appendChild(title);
       li.appendChild(content);
 
       /* CLICK */
-      content.onclick = ()=>{
-        if(li.classList.contains("open")){
-          closeAllSwipes();
-          return;
-        }
+      content.onclick = () => {
         pathStack.push(currentFolderId);
         currentFolderId = folder.id;
         render();
       };
 
-      /* SWIPE */
       enableSwipe(
         li,
         () => renameFolder(folder),
@@ -133,7 +124,8 @@ function render(){
     });
   };
 
-  /* FILE */
+  /* -------- FILE -------- */
+
   fileStore.getAll().onsuccess = e => {
 
     const files = e.target.result.filter(f => f.parent === currentFolderId);
@@ -144,16 +136,10 @@ function render(){
       li.className = "swipeRow";
 
       const content = document.createElement("div");
-      content.className = "swipeContent fileItem";
+      content.className = "swipeContent";
       content.textContent = "📄 " + file.name;
 
-      content.onclick = ()=>{
-        if(li.classList.contains("open")){
-          closeAllSwipes();
-          return;
-        }
-        openFile(file);
-      };
+      content.onclick = () => openFile(file);
 
       li.appendChild(content);
 
@@ -172,7 +158,7 @@ function render(){
 
 /* -------------------- CARTELLE -------------------- */
 
-addFolderBtn.onclick = ()=>{
+addFolderBtn.onclick = () => {
 
   const name = prompt("Nome cartella");
   if(!name) return;
@@ -190,7 +176,7 @@ addFolderBtn.onclick = ()=>{
 
 /* -------------------- FILE -------------------- */
 
-addFileBtn.onclick = ()=>{
+addFileBtn.onclick = () => {
 
   fileInput.accept = "application/pdf";
 
@@ -203,7 +189,7 @@ addFileBtn.onclick = ()=>{
 
     const reader = new FileReader();
 
-    reader.onload = ()=>{
+    reader.onload = () => {
 
       const tx = db.transaction("files","readwrite");
 
@@ -231,13 +217,17 @@ function openFile(file){
   pdfTitle.textContent = file.name;
 
   pdfFrame.srcdoc = `
-  <embed src="${file.data}" width="100%" height="100%">
+    <html>
+      <body style="margin:0">
+        <embed src="${file.data}" width="100%" height="100%">
+      </body>
+    </html>
   `;
 
   pdfViewer.classList.remove("hidden");
 }
 
-closePdfBtn.onclick = ()=>{
+closePdfBtn.onclick = () => {
   pdfViewer.classList.add("hidden");
 };
 
@@ -285,24 +275,27 @@ function deleteFile(file){
 
 function changeFolderImage(folder){
 
-  imageInput.onchange = e=>{
+  imageInput.click();
+
+  imageInput.onchange = e => {
+
     const file = e.target.files[0];
     if(!file) return;
 
     const reader = new FileReader();
 
-    reader.onload = ()=>{
-      folder.cover = reader.result;
+    reader.onload = () => {
 
       const tx = db.transaction("folders","readwrite");
+
+      folder.cover = reader.result;
       tx.objectStore("folders").put(folder);
+
       tx.oncomplete = render;
     };
 
     reader.readAsDataURL(file);
   };
-
-  imageInput.click();
 }
 
 
@@ -312,7 +305,7 @@ let openedRow = null;
 
 function enableSwipe(li, onRename, onDelete, onImage){
 
-  const content = li.querySelector(".swipeContent");
+  const content = li.firstChild;
 
   const actions = document.createElement("div");
   actions.className = "swipeActions";
@@ -388,7 +381,7 @@ function enableSwipe(li, onRename, onDelete, onImage){
 
     if(diff > 70){
       openSwipe(li, content);
-    }else{
+    } else {
       closeSwipe(li, content);
     }
   });
